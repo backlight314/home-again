@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light dark;
+  --paper: #e4d9c0;
+  --paper-2: #d6c9ab;
+  --board: #2d2722;
+  --ink: #23344f;
+  --ink-soft: #2e3646;   /* 8.6:1 on --paper */
+  --stamp: #9c3b2e;       /* fills and borders only */
+  --stamp-text: #732619;  /* 7.4:1 on --paper, use for text */
+  --sage: #697a5c;        /* fills only */
+  --sage-text: #3a4d31;   /* 6.6:1 on --paper, completed-chapter text */
+  --print: #faf5e8;
+  --crayon: #d8a53a;
+  --display: "Petrona", "Iowan Old Style", Georgia, serif;
+  --type: "Courier Prime", "Courier New", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --page-bg: #cfc6b2;
+  --page-text: #2d2722;
+  --page-soft: #5e564a;
+  --chip: #ece4d3;
+  --chip-edge: #a89c84;
+
+  /* tablet sizing floors (GDD style guide) */
+  --tap-min: 64px;
+  --tap-gap: 24px;
+  --fs-body-min: 24px;
+  --fs-label-min: 20px;
+  --fs-prompt-min: 32px;
+  --motion: 500ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --chip: #2a251f; --chip-edge: #534a3c;
+  }
+}
+:root[data-theme="dark"] { --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --chip: #2a251f; --chip-edge: #534a3c; }
