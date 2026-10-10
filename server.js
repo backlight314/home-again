@@ -4,7 +4,8 @@ import path from 'node:path';
 import { chat, loadChat, resetChat } from './guide.js';
 import { buildGame } from './build.js';
 import { addPhoto, updatePhoto, addBack, addPortrait, addVoice, updateVoice, scanPhoto, nameFace, confirmFaces, setFaceRecognition } from './album.js';
-import { ROOT, MEDIA, TYPES, FILES, readJSON, loadMaterials, withMaterials, removeMaterial, progress } from './store.js';
+import { ROOT, TYPES, loadDoc, readMedia, storage, loadMaterials, withMaterials, removeMaterial, progress } from './store.js';
+import { upgradeMatching } from './faces.js';
 
 const PORT = Number(process.env.PORT) || 8787;
 const MAX_BODY = 40 * 1024 * 1024;
@@ -56,7 +57,7 @@ function safeJoin(root, urlPath) {
   return file;
 }
 
-const isBuilt = async () => !!(await readJSON(FILES.game, null));
+const isBuilt = async () => !!(await loadDoc('game', null));
 
 const routes = {
   'GET /api/chat': async () => {
@@ -77,12 +78,12 @@ const routes = {
   'POST /api/voices': (body) => addVoice(body),
   'POST /api/faces': (body) => setFaceRecognition(body),
   'GET /api/pack': async () => {
-    const pack = await readJSON(FILES.pack, null);
+    const pack = await loadDoc('pack', null);
     if (!pack) throw Object.assign(new Error('The album is not built yet.'), { status: 404 });
     return pack;
   },
   'GET /api/game': async () => {
-    const cfg = await readJSON(FILES.game, null);
+    const cfg = await loadDoc('game', null);
     if (!cfg) throw Object.assign(new Error('no game built yet'), { status: 404 });
     return cfg;
   }
@@ -129,7 +130,14 @@ http.createServer(async (req, res) => {
       if (!handler) return send(res, 404, { error: 'not found' });
       return send(res, 200, await handler(req.method === 'GET' ? {} : await readBody(req)));
     }
-    if (url.pathname.startsWith('/media/')) return serveFile(res, path.join(MEDIA, path.basename(url.pathname)));
+    // family photos and voices, from the local folder or the bucket; never cached by shared caches
+    if (url.pathname.startsWith('/media/')) {
+      try {
+        const { bytes, type } = await readMedia(url.pathname);
+        res.writeHead(200, { 'content-type': type, 'cache-control': 'private, max-age=3600' });
+        return res.end(bytes);
+      } catch { return send(res, 404, 'not found', 'text/plain'); }
+    }
     if (url.pathname === '/vendor/face-api.js') return serveFile(res, path.join(FACE_API, 'dist', 'face-api.js'));
     if (url.pathname.startsWith('/vendor/face-models/')) {
       return serveFile(res, path.join(FACE_API, 'model', path.basename(url.pathname)));
@@ -148,4 +156,8 @@ http.createServer(async (req, res) => {
   }
 }).listen(PORT, () => {
   console.log(`Home Again on http://localhost:${PORT}  (family: /family)`);
+  console.log(`Album stored in ${storage.documents}; photos and voices in ${storage.files}`);
 });
+
+// re-check existing face guesses whenever the matching rules change
+withMaterials(mat => { if (upgradeMatching(mat)) console.log('Face guesses re-checked with the current matching rules.'); });
