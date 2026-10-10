@@ -14,17 +14,26 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // Tries each model in turn. Short waits are retried; a used-up daily quota or a
 // model that stays overloaded moves on to the next model.
-export async function generate(models, params) {
+// A request Google never answers would otherwise hang for minutes.
+const TIMEOUT_MS = 60_000;
+
+export async function generate(models, params, { timeout = TIMEOUT_MS } = {}) {
   if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not set. Add it to .env and restart the server.');
   ai ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   let res, lastErr;
   models: for (const model of models) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        res = await ai.models.generateContent({ model, ...params });
+        res = await ai.models.generateContent({ model, ...params, config: { ...params.config, httpOptions: { timeout } } });
         break models;
       } catch (err) {
-        if (!(err instanceof ApiError)) throw err;
+        if (!(err instanceof ApiError)) {
+          // timeouts and dropped connections: worth one more try, then the next model
+          console.warn(`Gemini did not answer on ${model}: ${err.message}`);
+          lastErr = Object.assign(new Error("Gemini didn't answer in time. Try again in a moment."), { status: 504 });
+          if (attempt < 1) continue;
+          continue models;
+        }
         if (err.status === 401 || err.status === 403) throw Object.assign(new Error('Gemini rejected the API key. Check GEMINI_API_KEY in .env.'), { status: 502 });
         if (err.status === 429) {
           const secs = Number((/retry in ([\d.]+)s/i.exec(err.message) || /"retryDelay":\s*"([\d.]+)s"/.exec(err.message))?.[1] ?? 10);

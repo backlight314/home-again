@@ -4,9 +4,10 @@
 import { generate, MODELS } from './gemini.js';
 import { buildGame } from './build.js';
 import {
-  loadMaterials, saveMaterials, describeMaterials, progress, removeMaterial,
-  saveMedia, mediaPart, readJSON, writeJSON, newId, FILES
+  loadMaterials, withMaterials, describeMaterials, progress, removeMaterial, findDuplicate,
+  saveMedia, dropMedia, mediaPart, readJSON, writeJSON, newId, FILES
 } from './store.js';
+import { ingestFaces, learnPortrait } from './faces.js';
 
 const SYSTEM = `You are the guide on the family page of "Home Again", a gentle reminiscence game for an older relative who may be living with memory loss. You are talking with one of their family members. Your job is to learn enough about the person and the family to personalize the game, through a warm, natural conversation.
 
@@ -34,7 +35,7 @@ How to talk:
 - Make the reaction specific to their answer: notice a detail, show interest, or connect it to what comes next ("Dublin in 1950, so she grew up just after the war."). Avoid generic filler like "Thank you so much for sharing" or "That's wonderful", and don't repeat their whole answer back.
 - Ask exactly one short, plain question per message, about one thing. Never join two questions with "and" or "or". If you need two things, ask for the second one next time.
 - Follow their lead. Ask about what they just told you before moving on. If they mention the lake house, ask whether there is a photo from there. If they mention a sister, ask her name and whether she would record a message.
-- When they share a photo, look at it and react to what you actually see, then ask who is in it, what was happening, and roughly when. Never guess names or dates; ask. Only caption a photo with what they said about that specific photo.
+- When they share a photo, look at it and react to what you actually see, then ask who is in it, what was happening, and roughly when. Never state names or dates as fact; ask. Only caption a photo with what they said about that specific photo.
 - When they say who a photo of one person shows ("that's me", "here's Daniel"), save it as that person's portrait.
 - When they share a voice message, listen to it, save a transcript, and thank them for what they said in it. If you cannot clearly hear speech in it, say so and ask them to type what they said. Never make up a transcript.
 - Fit the questions to what they give you. Someone who writes long stories needs fewer questions; someone who answers in a few words needs easier, more specific ones.
@@ -48,9 +49,16 @@ Saving:
 - Relations are always relative to the player, not to the person you are talking with. If Mei, the player's daughter, says "my brother Daniel", Daniel is the player's son.
 - Use only what the family tells you or what is clearly visible. Never invent facts.
 - Save every family member the moment they are named, even before there is a photo of them.
-- Captions and years come only from the family's own words. Until they have said what a photo shows, do not describe it; ask. Write years exactly as they gave them ("around 1986" stays "1986").
+- Captions and years come only from the family's own words. Until they have said what a photo shows, do not describe it; ask. You may suggest an era from clear visual clues as a question ("The clothes look like the 1970s. Does that sound right?"), but save a year only once they confirm it. Write years exactly as they gave them ("around 1986" stays "1986").
 - A message sent with a photo may be about something else. Don't assume the words describe the photo; ask if it is unclear. When a later message answers your question about a photo, save it to that photo's id.
 - If they correct something, save the corrected version straight away.
+
+The album:
+- Family members can also add many photos and voice messages at once in the Album tab, and other relatives can add them through the album's share link. So the album may hold photos nobody has described yet; the context lists every photo with what is known about it.
+- Early on, mention once that they can add lots of photos at once in the Album tab and send its share link to other relatives.
+- Don't go through every photo. When an album photo would help with the chapter you are on, or with something the game still needs (a face for each close family member, a photo from each chapter, one strong photo with a story), call show_photo to pull it up. It appears in the chat for them too. Then ask about it. At most one album photo per message.
+- If the back of the print is attached, read any handwriting on it and ask them to confirm what it says before saving it.
+- The album recognizes faces it has been taught. A name marked as the album's guess is not confirmed, and neither is anything you work out yourself from other photos. Before saving who is in a photo, the family must have named those people in this conversation: ask first ("I think that's Bob and Alice. Is that right?"), and save with describe_photo's who only after they say yes. An unknown face is a good thing to ask about. They can also confirm guesses in the Album tab.
 
 Building:
 - When the checklist says the game is ready, offer to build it. Build it when they agree, or when they ask. You can build again later as more comes in.
@@ -96,7 +104,8 @@ const TOOLS = [{
         type: 'object',
         properties: {
           photoId: s,
-          caption: { ...s, description: 'Short description in the family\'s words: who, where, what was happening.' },
+          who: { ...s, description: 'Who is in it, by name, as the family said.' },
+          caption: { ...s, description: 'Short description in the family\'s words: where, what was happening.' },
           year: { ...s, description: 'Rough year or decade, e.g. "1986" or "1970s".' }
         },
         required: ['photoId', 'caption']
@@ -125,6 +134,11 @@ const TOOLS = [{
       }
     },
     {
+      name: 'show_photo',
+      description: 'Pull up a photo from the album so you can see it (and the back of the print, if added). It is shown in the chat for the family too.',
+      parametersJsonSchema: { type: 'object', properties: { photoId: s }, required: ['photoId'] }
+    },
+    {
       name: 'remove_item',
       description: 'Remove a saved photo, voice message, family member, or note when the family asks.',
       parametersJsonSchema: { type: 'object', properties: { id: s }, required: ['id'] }
@@ -137,7 +151,8 @@ const TOOLS = [{
   ]
 }];
 
-async function runTool(name, args, mat) {
+// Changes that only touch saved materials, applied one at a time on a fresh copy.
+async function applyTool(name, args, mat) {
   const find = (list, id) => mat[list].find(x => x.id === id);
   switch (name) {
     case 'save_player_details':
@@ -149,8 +164,10 @@ async function runTool(name, args, mat) {
       if (args.relation) f.relation = args.relation;
       if (args.note) f.note = args.note;
       if (args.portraitPhotoId) {
-        if (!find('photos', args.portraitPhotoId)) return { error: 'no photo with that id' };
-        f.photoId = args.portraitPhotoId;
+        const ph = find('photos', args.portraitPhotoId);
+        if (!ph) return { error: 'no photo with that id' };
+        f.photoId = ph.id;
+        learnPortrait(mat, ph, f);
       }
       return { saved: true, id: f.id };
     }
@@ -158,6 +175,8 @@ async function runTool(name, args, mat) {
       const ph = find('photos', args.photoId);
       if (!ph) return { error: 'no photo with that id' };
       ph.caption = args.caption;
+      // face guesses stay guesses: only a person confirms them, in the album
+      if (args.who) { ph.who = args.who; ph.whoSource = 'manual'; }
       if (args.year) ph.year = args.year;
       return { saved: true };
     }
@@ -173,22 +192,36 @@ async function runTool(name, args, mat) {
       return { saved: true };
     case 'remove_item':
       return (await removeMaterial(mat, args.id)) ? { removed: true } : { error: 'nothing with that id' };
-    case 'build_game': {
-      await saveMaterials(mat);
-      const g = await buildGame();
-      return { built: true, summary: g.summary, followUpQuestions: g.questions };
-    }
     default:
       return { error: 'unknown tool ' + name };
   }
 }
 
-// Stored history keeps uploads as {mediaRef: url} so chat.json stays small;
-// they are read back into inline data for each request.
-const hydrate = contents => Promise.all(contents.map(async c => ({
-  ...c,
-  parts: await Promise.all(c.parts.map(p => p.mediaRef ? mediaPart(p.mediaRef).catch(() => ({ text: '(file no longer available)' })) : p))
-})));
+// Returns the tool result, plus any photos the guide should see and show.
+async function runTool(name, args) {
+  if (name === 'build_game') {
+    const g = await buildGame();
+    return { result: { built: true, summary: g.summary, followUpQuestions: g.questions } };
+  }
+  if (name === 'show_photo') {
+    const ph = (await loadMaterials()).photos.find(p => p.id === args.photoId);
+    if (!ph) return { result: { error: 'no photo with that id' } };
+    const { id, who, caption, year, uploadedBy } = ph;
+    return {
+      result: { shown: true, id, who, caption, year, addedBy: uploadedBy, backOfPrint: !!ph.backUrl },
+      media: [{ text: `[Photo ${id}]` }, { mediaRef: ph.url }, ...(ph.backUrl ? [{ text: `[Back of photo ${id}]` }, { mediaRef: ph.backUrl }] : [])],
+      show: ph.url
+    };
+  }
+  return { result: await withMaterials(mat => applyTool(name, args, mat)) };
+}
+
+// Stored history keeps uploads as {mediaRef: url} so chat.json stays small. Only
+// the current exchange is sent with real images and audio; older attachments are
+// replaced with a note, so long conversations and big albums stay fast and cheap.
+const earlier = c => ({ ...c, parts: c.parts.map(p => p.mediaRef ? { text: '(attachment from earlier; use show_photo to look at a photo again)' } : p) });
+const hydrate = c => Promise.all(c.parts.map(p => p.mediaRef ? mediaPart(p.mediaRef).catch(() => ({ text: '(file no longer available)' })) : p))
+  .then(parts => ({ ...c, parts }));
 
 function contextPart(mat, built) {
   const prog = progress(mat, built);
@@ -202,39 +235,46 @@ function contextPart(mat, built) {
 export const loadChat = () => readJSON(FILES.chat, { contents: [], transcript: [] });
 export const resetChat = () => writeJSON(FILES.chat, { contents: [], transcript: [] });
 
-// body: { text, photos: [dataURL], voice: dataURL | null, start: bool }
+// body: { text, photos: [{ dataUrl, hash, faces? }], voice: dataURL | null, name, start: bool }
 export async function chat(body) {
   const chatState = await loadChat();
-  const mat = await loadMaterials();
   let built = !!(await readJSON(FILES.game, null));
 
-  // save uploads first so the guide can refer to them by id
+  // save uploads first (into the shared album) so the guide can refer to them by id
   const userParts = [], shown = [];
-  for (const dataUrl of body.photos || []) {
-    const ph = { id: newId('p'), url: await saveMedia(dataUrl, 'photo'), caption: '', year: '' };
-    mat.photos.push(ph);
-    userParts.push({ text: `[They shared a photo, id ${ph.id}]` }, { mediaRef: ph.url });
+  for (const { dataUrl, hash, faces } of body.photos || []) {
+    const url = await saveMedia(dataUrl, 'photo');
+    const { ph, dup } = await withMaterials(mat => {
+      const dup = findDuplicate(mat, hash);
+      if (dup) return { ph: dup, dup: true };
+      const ph = { id: newId('p'), url, hash: hash || '', who: '', whoSource: 'faces', caption: '', year: '', uploadedBy: (body.name || '').trim() };
+      mat.photos.push(ph);
+      if (faces) ingestFaces(mat, ph, faces);
+      return { ph };
+    });
+    if (dup) await dropMedia(url);
+    userParts.push({ text: dup ? `[They shared a photo that is already in the album, id ${ph.id}]` : `[They shared a photo, id ${ph.id}]` }, { mediaRef: ph.url });
     shown.push({ kind: 'photo', url: ph.url });
   }
   if (body.voice) {
     const v = { id: newId('v'), url: await saveMedia(body.voice, 'voice'), from: '', transcript: '' };
-    mat.voices.push(v);
+    await withMaterials(mat => { mat.voices.push(v); });
     userParts.push({ text: `[They recorded a voice message, id ${v.id}]` }, { mediaRef: v.url });
     shown.push({ kind: 'voice', url: v.url });
   }
   const text = (body.text || '').trim();
   if (body.start) userParts.push({ text: chatState.contents.length ? '[They came back to the page.]' : '[They just opened the page and have not said anything yet. Greet them and begin.]' });
   else userParts.push({ text: text || '[No message, just the attachment.]' });
-  await saveMaterials(mat);
 
   // the checklist rides along with this turn only; it is not stored in history
-  const turn = { role: 'user', parts: [contextPart(mat, built), ...userParts] };
-  const pending = [];
+  const turn = { role: 'user', parts: [contextPart(await loadMaterials(), built), ...userParts] };
+  const history = chatState.contents.map(earlier);
+  const pending = [], guideShown = [];
   let reply = '', failure = null;
   try {
     for (let step = 0; step < 8; step++) {
       const res = await generate(MODELS.guide, {
-        contents: await hydrate([...chatState.contents, turn, ...pending]),
+        contents: [...history, ...await Promise.all([turn, ...pending].map(hydrate))],
         config: { systemInstruction: SYSTEM, tools: TOOLS, thinkingConfig: { thinkingLevel: 'HIGH' } }
       });
       const content = res.candidates?.[0]?.content;
@@ -242,16 +282,17 @@ export async function chat(body) {
       pending.push(content);
       const calls = res.functionCalls || [];
       if (!calls.length) { reply = res.text || ''; break; }
-      const responses = [];
+      const responses = [], media = [];
       for (const call of calls) {
-        let result;
-        try { result = await runTool(call.name, call.args || {}, mat); }
-        catch (err) { result = { error: err.message }; }
-        if (call.name === 'build_game' && result.built) built = true;
-        responses.push({ functionResponse: { id: call.id, name: call.name, response: result } });
+        let out;
+        try { out = await runTool(call.name, call.args || {}); }
+        catch (err) { out = { result: { error: err.message } }; }
+        if (call.name === 'build_game' && out.result.built) built = true;
+        if (out.media) media.push(...out.media);
+        if (out.show && !guideShown.some(a => a.url === out.show)) guideShown.push({ kind: 'photo', url: out.show });
+        responses.push({ functionResponse: { id: call.id, name: call.name, response: out.result } });
       }
-      await saveMaterials(mat);
-      pending.push({ role: 'user', parts: responses });
+      pending.push({ role: 'user', parts: [...responses, ...media] });
     }
   } catch (err) { failure = err; }
 
@@ -262,8 +303,8 @@ export async function chat(body) {
   if (pending.at(-1)?.role !== 'model' || !reply) pending.push({ role: 'model', parts: [{ text: reply || '(I could not answer that message because of a connection problem.)' }] });
   chatState.contents.push({ role: 'user', parts: userParts }, ...pending);
   if (!body.start) chatState.transcript.push({ role: 'family', text, attachments: shown });
-  if (reply) chatState.transcript.push({ role: 'guide', text: reply });
+  if (reply) chatState.transcript.push({ role: 'guide', text: reply, attachments: guideShown });
   await writeJSON(FILES.chat, chatState);
   if (failure) throw failure;
-  return { reply, progress: progress(mat, built), materials: mat };
+  return { reply, attachments: guideShown, progress: progress(await loadMaterials(), built), materials: await loadMaterials() };
 }

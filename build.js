@@ -86,15 +86,19 @@ function resolve(cfg, mat) {
 export async function buildGame() {
   const mat = await loadMaterials();
   const parts = [{ text: describeMaterials(mat) }];
-  for (const ph of mat.photos) {
-    parts.push({ text: `Photo id ${ph.id}${ph.caption ? `: ${ph.caption}` : ''}${ph.year ? ` (${ph.year})` : ''}` });
+  // Only portraits and described photos can be used, so only those are sent as images;
+  // a large album of undescribed photos would just slow the build down.
+  const portraits = new Set(mat.people.map(f => f.photoId).filter(Boolean));
+  const usable = mat.photos.filter(ph => portraits.has(ph.id) || ph.caption).slice(-40);
+  for (const ph of usable) {
+    parts.push({ text: `Photo id ${ph.id}${ph.who ? `, shows ${ph.who}` : ''}${ph.caption ? `: ${ph.caption}` : ''}${ph.year ? ` (${ph.year})` : ''}` });
     try { parts.push(await mediaPart(ph.url)); } catch { parts.pop(); }
   }
   parts.push({ text: 'Build the game content from these materials.' });
   const res = await generate(MODELS.build, {
     contents: [{ role: 'user', parts }],
     config: { systemInstruction: SYSTEM, responseMimeType: 'application/json', responseJsonSchema: GAME_SCHEMA, thinkingConfig: { thinkingLevel: 'HIGH' } }
-  });
+  }, { timeout: 120_000 });
   if (!res.text) throw Object.assign(new Error('Gemini returned no game. Try again.'), { status: 502 });
   const cfg = resolve(JSON.parse(res.text), mat);
   await writeJSON(FILES.game, cfg);

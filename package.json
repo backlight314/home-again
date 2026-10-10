@@ -6,6 +6,7 @@
     "start": "node --env-file-if-exists=.env server.js"
   },
   "dependencies": {
-    "@google/genai": "^2.28.0"
+    "@google/genai": "^2.28.0",
+    "@vladmandic/face-api": "^1.7.15"
   }
 }

@@ -25,33 +25,42 @@
     --mine-text: #f3eddf;
     --accent: var(--stamp);
     --done: var(--sage);
+    --badge: #d8a53a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19;
-      --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a;
+      --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a; --badge: #c99a3a;
     }
   }
   :root[data-theme="dark"] {
     --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19;
-    --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a;
+    --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a; --badge: #c99a3a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body { background: var(--page-bg); color: var(--page-text); font-family: var(--sans); line-height: 1.5; }
-  button, textarea { font: inherit; color: inherit; }
+  button, textarea, input { font: inherit; color: inherit; }
   button { cursor: pointer; background: none; border: none; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
 
-  .app { height: 100dvh; display: grid; grid-template-rows: auto 1fr; max-width: 1120px; margin: 0 auto; }
+  .app { height: 100dvh; display: grid; grid-template-rows: auto auto 1fr; max-width: 1120px; margin: 0 auto; }
   header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px; }
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 6px; }
   header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 4vw, 32px); line-height: 1.1; }
+  header .sub { color: var(--page-soft); font-size: 15px; margin-top: 2px; }
   header .links { display: flex; gap: 16px; font-family: var(--type); font-size: 14px; }
   header .links a, header .links button { color: var(--page-soft); text-decoration: underline; }
 
-  .main { display: grid; grid-template-columns: 1fr 280px; gap: 16px; padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px)); min-height: 0; }
+  .tabs { display: flex; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--card-edge); margin: 0 0 12px; }
+  .tab { font-family: var(--type); font-size: 15px; padding: 8px 14px; border: 1px solid transparent; border-bottom: none; margin-bottom: -1px; color: var(--page-soft); }
+  .tab[aria-selected="true"] { background: var(--card); border-color: var(--card-edge); color: var(--page-text); font-weight: 700; }
+  .tab .count { font-weight: 400; color: var(--page-soft); }
+
+  .view { min-height: 0; padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .main { display: grid; grid-template-columns: 1fr 280px; gap: 16px; height: 100%; }
   @media (max-width: 820px) { .main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; } }
 
   /* conversation */
@@ -65,7 +74,9 @@
   .msg.family { align-self: flex-end; justify-items: end; }
   .msg.family .body { background: var(--mine); color: var(--mine-text); padding: 10px 14px; font-size: 16px; }
   .msg .att { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .msg.guide .att { justify-content: flex-start; }
   .msg .att img { width: 140px; height: 105px; object-fit: cover; border: 6px solid var(--field); box-shadow: 0 2px 6px rgba(40,30,15,.25); }
+  .msg.guide .att img { width: 220px; height: 165px; }
   .msg .att audio { width: 240px; max-width: 100%; }
   .msg.err .body { color: var(--accent); font-family: var(--type); font-size: 14px; }
   .typing { display: flex; gap: 5px; padding: 8px 0; }
@@ -73,7 +84,6 @@
   .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
   @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
 
-  /* composer */
   .composer { border-top: 1px solid var(--card-edge); padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .tray { display: flex; flex-wrap: wrap; gap: 8px; }
   .tray:empty { display: none; }
@@ -83,16 +93,15 @@
   .chip .x { width: 24px; height: 24px; font-size: 18px; line-height: 1; color: var(--page-soft); }
   .row { display: flex; gap: 8px; align-items: flex-end; }
   textarea { flex: 1; min-width: 0; resize: none; min-height: 44px; max-height: 180px; background: var(--field); border: 1px solid var(--card-edge); padding: 10px 12px; font-size: 16px; color: var(--page-text); }
-  .tool { height: 44px; min-width: 44px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--card-edge); background: var(--field); font-family: var(--type); font-size: 13px; }
+  .tool { height: 44px; min-width: 44px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--card-edge); background: var(--field); font-family: var(--type); font-size: 13px; white-space: nowrap; }
   .tool svg { width: 20px; height: 20px; flex: none; }
   .tool.live { border-color: var(--accent); color: var(--accent); }
-  .tool.send { background: var(--mine); color: var(--mine-text); border-color: var(--mine); }
+  .tool.send, .tool.primary { background: var(--mine); color: var(--mine-text); border-color: var(--mine); }
+  .tool.danger { color: var(--accent); }
   .tool:disabled { opacity: .45; cursor: default; }
-  .tool .lbl { display: inline; }
-  @media (max-width: 520px) { .tool .lbl { display: none; } }
+  @media (max-width: 520px) { .row .tool .lbl { display: none; } }
   .hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-  /* what the guide has gathered */
   aside { display: grid; gap: 14px; align-content: start; overflow-y: auto; min-height: 0; }
   .panel { background: var(--card); border: 1px solid var(--card-edge); padding: 14px; display: grid; gap: 10px; }
   .panel h2 { font-family: var(--type); font-size: 12px; letter-spacing: .12em; color: var(--page-soft); font-weight: 700; }
@@ -103,69 +112,211 @@
   .check li.done .box::after { content: ""; width: 8px; height: 4px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: rotate(-45deg) translate(1px, -1px); }
   .check .n { margin-left: auto; font-family: var(--type); font-size: 12px; color: var(--page-soft); }
   .play { display: block; text-align: center; font-family: var(--type); font-weight: 700; letter-spacing: .04em; padding: 10px; border: 2px solid var(--accent); color: var(--accent); text-decoration: none; }
-  .play[hidden] { display: none; }
-  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
-  .thumbs img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
   .people { font-size: 14px; color: var(--page-soft); }
-  /* on phones: a compact checklist above the conversation */
   @media (max-width: 820px) {
     aside { order: -1; overflow: visible; }
     .panel { padding: 8px 10px; gap: 6px; }
-    .panel h2 { display: none; }
-    .panel.saved { display: none; }
+    .panel h2, .panel.saved { display: none; }
     .check { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
     .check .n { margin-left: 0; }
     .play { padding: 6px; font-size: 14px; }
   }
+
+  /* album */
+  .album { height: 100%; overflow-y: auto; background: var(--card); border: 1px solid var(--card-edge); padding: 16px; position: relative; }
+  .album > * + * { margin-top: 16px; }
+  .album.dragging { outline: 3px dashed var(--accent); outline-offset: -8px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+  .bar label, .field { display: grid; gap: 4px; font-family: var(--type); font-size: 12px; letter-spacing: .06em; color: var(--page-soft); }
+  input[type=text] { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); min-width: 0; width: 100%; }
+  .bar label { width: 200px; }
+  .spacer { flex: 1; }
+  .hint { color: var(--page-soft); font-size: 15px; }
+  .status { font-family: var(--type); font-size: 14px; color: var(--page-soft); min-height: 1.4em; }
+  .status.err { color: var(--accent); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter { font-family: var(--type); font-size: 13px; padding: 4px 10px; border: 1px solid var(--card-edge); background: var(--field); }
+  .filter[aria-pressed="true"] { border-color: var(--page-text); font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .card { display: grid; gap: 6px; text-align: left; background: var(--field); padding: 6px 6px 8px; box-shadow: 0 2px 6px rgba(40,30,15,.18); position: relative; }
+  .card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--card-edge); }
+  .card .cap { font-size: 13px; line-height: 1.35; color: var(--page-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .card .cap.none { color: var(--page-soft); font-style: italic; }
+  .badge { position: absolute; top: 10px; left: 10px; font-family: var(--type); font-size: 11px; letter-spacing: .04em; background: var(--badge); color: #2d2722; padding: 1px 6px; }
+  .badge.face { left: auto; right: 10px; background: var(--mine); color: var(--mine-text); }
+  .empty { color: var(--page-soft); font-style: italic; }
+  .voices { display: grid; gap: 10px; }
+  .voice { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; background: var(--field); border: 1px solid var(--card-edge); padding: 10px; }
+  .voice audio { width: 100%; height: 36px; }
+  .voice .meta { display: grid; gap: 6px; }
+  .voice textarea { min-height: 54px; font-size: 15px; }
+  h3.section { font-family: var(--display); font-size: 22px; font-weight: 600; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+  /* photo detail */
+  dialog { border: 1px solid var(--card-edge); background: var(--card); color: var(--page-text); width: min(920px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; margin: auto; }
+  dialog::backdrop { background: rgba(20,14,8,.55); }
+  .detail { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; padding: 18px; }
+  @media (max-width: 720px) { .detail { grid-template-columns: minmax(0, 1fr); } }
+  .stage { display: grid; gap: 10px; align-content: start; }
+  .cropwrap { position: relative; user-select: none; touch-action: none; line-height: 0; }
+  .cropwrap img { width: 100%; max-height: 60dvh; object-fit: contain; display: block; background: var(--field); -webkit-user-drag: none; }
+  .cropwrap.cropping { cursor: crosshair; }
+  .cropbox { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); pointer-events: none; }
+  .backrow { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--page-soft); }
+  .backrow img { width: 96px; height: 72px; object-fit: cover; }
+  .form { display: grid; gap: 12px; align-content: start; }
+  .form .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .form .by { font-size: 13px; color: var(--page-soft); }
+  .cropui { display: grid; gap: 10px; border: 1px dashed var(--card-edge); padding: 10px; }
+  /* detected faces on the photo */
+  .facebox { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); padding: 0; }
+  .facebox.unknown { border-style: dashed; }
+  .facebox.active { border-color: var(--badge); }
+  .facebox .tag { position: absolute; left: -2px; top: 100%; margin-top: 3px; font-family: var(--type); font-size: 12px; line-height: 1.4; white-space: nowrap; padding: 1px 6px; background: var(--mine); color: var(--mine-text); }
+  .facebox.auto .tag, .facebox.suggested .tag { background: var(--badge); color: #2d2722; }
+  .facebox.unknown .tag { background: rgba(0,0,0,.65); color: #fff; }
+  .faceui { display: grid; gap: 10px; border: 1px solid var(--card-edge); background: var(--field); padding: 10px; }
+  .faceui .top { display: flex; gap: 10px; align-items: center; }
+  .faceui canvas { width: 64px; height: 64px; object-fit: cover; flex: none; background: var(--card-edge); }
+  .faceui .q { font-family: var(--display); font-size: 18px; }
+  .linkish { font-family: var(--type); font-size: 13px; color: var(--page-soft); text-decoration: underline; }
+  .badge.check { background: var(--accent); color: #fff; }
+  .close { position: absolute; top: 8px; right: 10px; font-size: 26px; line-height: 1; color: var(--page-soft); width: 36px; height: 36px; }
   @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1>Family Workshop</h1>
-    <div class="links"><button id="newChat">new conversation</button><a href="/">open the game</a></div>
+    <div>
+      <h1 id="title">Family Workshop</h1>
+      <p class="sub" id="subtitle" hidden></p>
+    </div>
+    <div class="links" id="links"><button id="newChat">new conversation</button><a href="/">open the game</a></div>
   </header>
 
-  <div class="main">
-    <section class="chat" aria-label="Conversation with the guide">
-      <div class="log" id="log" aria-live="polite"></div>
-      <div class="composer">
-        <div class="tray" id="tray"></div>
-        <div class="row">
-          <button class="tool" id="photoBtn" title="Add photos" aria-label="Add photos">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span class="lbl">Photo</span>
-          </button>
-          <input type="file" id="photoInput" class="hidden-input" accept="image/*" multiple tabindex="-1">
-          <button class="tool" id="micBtn" title="Record a voice message" aria-label="Record a voice message">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="lbl" id="micLbl">Voice</span>
-          </button>
-          <textarea id="input" rows="1" placeholder="Write to the guide" aria-label="Your message"></textarea>
-          <button class="tool send" id="sendBtn" aria-label="Send">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
-          </button>
-        </div>
-      </div>
-    </section>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" id="tabChat" aria-selected="true" aria-controls="viewChat">Talk with the guide</button>
+    <button class="tab" role="tab" id="tabAlbum" aria-selected="false" aria-controls="viewAlbum">Album <span class="count" id="albumCount"></span></button>
+  </nav>
 
-    <aside>
-      <div class="panel">
-        <h2>FOR THE GAME</h2>
-        <ul class="check" id="check"></ul>
-        <a class="play" id="play" href="/" hidden>PLAY THE GAME</a>
+  <!-- conversation -->
+  <div class="view" id="viewChat" role="tabpanel" aria-labelledby="tabChat">
+    <div class="main">
+      <section class="chat" aria-label="Conversation with the guide">
+        <div class="log" id="log" aria-live="polite"></div>
+        <div class="composer">
+          <div class="tray" id="tray"></div>
+          <div class="row">
+            <button class="tool" id="photoBtn" title="Add photos" aria-label="Add photos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span class="lbl">Photo</span>
+            </button>
+            <input type="file" id="photoInput" class="hidden-input" accept="image/*,.heic,.heif" multiple tabindex="-1">
+            <button class="tool" id="micBtn" title="Record a voice message" aria-label="Record a voice message">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="lbl">Voice</span>
+            </button>
+            <textarea id="input" rows="1" placeholder="Write to the guide" aria-label="Your message"></textarea>
+            <button class="tool send" id="sendBtn" aria-label="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+      <aside>
+        <div class="panel">
+          <h2>FOR THE GAME</h2>
+          <ul class="check" id="check"></ul>
+          <a class="play" id="play" href="/" hidden>PLAY THE GAME</a>
+        </div>
+        <div class="panel saved">
+          <h2>FAMILY SO FAR</h2>
+          <div class="people" id="people"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- album -->
+  <div class="view" id="viewAlbum" role="tabpanel" aria-labelledby="tabAlbum" hidden>
+    <section class="album" id="album" aria-label="Family album">
+      <div class="bar">
+        <label>YOUR NAME<input type="text" id="myName" placeholder="So we know who added what" autocomplete="name"></label>
+        <button class="tool primary" id="addPhotos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add photos</span>
+        </button>
+        <input type="file" id="albumInput" class="hidden-input" accept="image/*,.heic,.heif" multiple tabindex="-1">
+        <span class="spacer"></span>
+        <button class="linkish" id="faceToggle"></button>
+        <button class="tool" id="copyShare">Copy link for relatives</button>
       </div>
-      <div class="panel saved">
-        <h2>SHARED SO FAR</h2>
-        <div class="people" id="people"></div>
-        <div class="thumbs" id="thumbs"></div>
+      <p class="hint" id="albumHint">Drag in as many photos as you like, or use Add photos. Faces the album has learned are named automatically; check the guesses marked in yellow. Add when and the story if you know; the guide will ask about the rest. Old prints often have a date or names written on the back, so open a photo to add the back too.</p>
+      <div class="status" id="albumStatus" role="status"></div>
+      <div class="filters" role="group" aria-label="Show">
+        <button class="filter" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter" data-filter="needs" aria-pressed="false">Needs details</button>
+        <button class="filter" data-filter="faces" aria-pressed="false">Faces</button>
       </div>
-    </aside>
+      <div class="grid" id="grid"></div>
+
+      <h3 class="section">Voice messages
+        <button class="tool" id="albumMic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="lbl">Record a message</span>
+        </button>
+      </h3>
+      <p class="hint">A short hello, a memory, or something you'd want them to hear. They will hear your real voice in the game.</p>
+      <div class="voices" id="voices"></div>
+    </section>
   </div>
 </div>
+
+<!-- one photo, up close -->
+<dialog id="detail" aria-label="Photo details">
+  <button class="close" id="closeDetail" aria-label="Close">&times;</button>
+  <div class="detail">
+    <div class="stage">
+      <div class="cropwrap" id="cropwrap"><img id="dImg" alt="" draggable="false"><div id="faceLayer"></div><div class="cropbox" id="cropbox" hidden></div></div>
+      <div class="backrow" id="backRow"></div>
+    </div>
+    <div class="form">
+      <label class="field">WHO IS IN IT<input type="text" id="dWho" placeholder="Mom and Aunt Rose"></label>
+      <label class="field">ROUGHLY WHEN<input type="text" id="dYear" placeholder="1970s, or around 1986"></label>
+      <label class="field">THE STORY<textarea id="dCaption" placeholder="Where it was, what was happening"></textarea></label>
+      <span class="by" id="dBy"></span>
+      <button class="tool" id="dConfirm" hidden>Names look right</button>
+      <div class="faceui" id="faceUi" hidden>
+        <div class="top"><canvas id="fPreview" width="96" height="96"></canvas><span class="q" id="fQuestion"></span></div>
+        <label class="field">NAME<input type="text" id="fName" list="familyNames" placeholder="Bob"></label>
+        <label class="field" id="fRelWrap" hidden>HOW THEY ARE RELATED TO THEM<input type="text" id="fRel" placeholder="son"></label>
+        <div class="actions">
+          <button class="tool primary" id="fSave">Save name</button>
+          <button class="tool" id="fPortrait">Save as their portrait too</button>
+          <button class="tool" id="fClear" hidden>Remove name</button>
+          <button class="tool" id="fNotFace">Not a face</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="tool primary" id="dSave">Save</button>
+        <span class="tool" style="position:relative">Add back of photo<input type="file" id="dBack" accept="image/*,.heic,.heif" style="position:absolute;inset:0;opacity:0;cursor:pointer"></span>
+        <button class="tool" id="dCrop">Make a portrait</button>
+        <button class="tool danger" id="dRemove">Remove</button>
+      </div>
+      <div class="cropui" id="cropUi" hidden>
+        <span class="hint">Drag a box around one face on the photo.</span>
+        <label class="field">WHOSE FACE<input type="text" id="cPerson" list="familyNames" placeholder="Daniel"></label>
+        <label class="field" id="cRelWrap" hidden>HOW THEY ARE RELATED TO THEM<input type="text" id="cRel" placeholder="son"></label>
+        <div class="actions"><button class="tool primary" id="cSave" disabled>Save portrait</button><button class="tool" id="cCancel">Cancel</button></div>
+      </div>
+      <div class="status" id="dStatus" role="status"></div>
+    </div>
+  </div>
+</dialog>
+<datalist id="familyNames"></datalist>
 
 <script>
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const SHARE = location.pathname === '/share';
+  let mat = { profile: {}, people: [], photos: [], voices: [], notes: [] };
   let photos = [], voice = null, busy = false;
 
   async function api(method, url, body) {
@@ -174,109 +325,144 @@
     if (!res.ok) throw new Error(data.error || res.statusText);
     return data;
   }
+  function status(id, text, err) { $(id).textContent = text; $(id).classList.toggle('err', !!err); }
 
-  /* conversation log */
-  function addMessage(role, text, attachments = []) {
-    const el = document.createElement('div');
-    el.className = 'msg ' + role;
-    const who = role === 'guide' ? 'GUIDE' : role === 'family' ? 'YOU' : '';
-    const att = attachments.map(a => a.kind === 'photo'
-      ? `<img src="${esc(a.url)}" alt="shared photo">`
-      : `<audio controls preload="none" src="${esc(a.url)}"></audio>`).join('');
-    el.innerHTML = (who ? `<span class="who">${who}</span>` : '') +
-      (att ? `<div class="att">${att}</div>` : '') +
-      (text ? `<div class="body">${esc(text)}</div>` : '');
-    $('log').appendChild(el);
-    $('log').scrollTop = $('log').scrollHeight;
-  }
-  function typing(on) {
-    $('typing')?.remove();
-    if (!on) return;
-    const el = document.createElement('div');
-    el.className = 'msg guide'; el.id = 'typing';
-    el.innerHTML = '<span class="who">GUIDE</span><div class="typing" aria-label="The guide is writing"><i></i><i></i><i></i></div>';
-    $('log').appendChild(el);
-    $('log').scrollTop = $('log').scrollHeight;
-  }
+  // the visitor's name, remembered on this device so photos and messages are credited
+  const store = { get: k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+  $('myName').value = store.get('homeagain.name');
+  $('myName').addEventListener('change', () => store.set('homeagain.name', $('myName').value.trim()));
+  const myName = () => $('myName').value.trim();
 
-  /* gathered so far */
-  function showState({ progress, materials }) {
-    $('check').innerHTML = progress.items.map(i =>
-      `<li class="${i.done ? 'done' : ''}"><span class="box"></span>${esc(i.label)}${i.count ? `<span class="n">${i.count}</span>` : ''}</li>`).join('');
-    $('play').hidden = !progress.built;
-    $('people').textContent = materials.people.length
-      ? materials.people.map(f => f.name + (f.relation ? ' (' + f.relation + ')' : '')).join(', ')
-      : 'Nobody yet.';
-    $('thumbs').innerHTML = materials.photos.map(p => `<img src="${esc(p.url)}" alt="${esc(p.caption)}" title="${esc(p.caption)}">`).join('');
+  /* ---------- tabs ---------- */
+  function showTab(which) {
+    const album = which === 'album';
+    $('tabChat').setAttribute('aria-selected', !album); $('tabAlbum').setAttribute('aria-selected', album);
+    $('viewChat').hidden = album; $('viewAlbum').hidden = !album;
+    $('newChat').hidden = album;
+    if (album) { drawAlbum(); scanOlder(); }
   }
+  $('tabChat').onclick = () => showTab('chat');
+  $('tabAlbum').onclick = () => showTab('album');
 
-  /* sending */
-  async function send(extra = {}) {
-    if (busy) return;
-    const text = $('input').value.trim();
-    if (!extra.start && !text && !photos.length && !voice) return;
-    busy = true; setBusy();
-    const body = { text, photos: photos.map(p => p.dataUrl), voice: voice?.dataUrl || null, ...extra };
-    if (!extra.start) {
-      addMessage('family', text, [...photos.map(p => ({ kind: 'photo', url: p.dataUrl })), ...(voice ? [{ kind: 'voice', url: voice.url }] : [])]);
-      $('input').value = ''; autosize();
-      photos = []; voice = null; drawTray();
-    }
-    typing(true);
-    try {
-      const r = await api('POST', '/api/chat', body);
-      typing(false);
-      addMessage('guide', r.reply);
-      showState(r);
-    } catch (err) {
-      typing(false);
-      addMessage('err', err.message);
-    } finally { busy = false; setBusy(); $('input').focus(); }
-  }
-  function setBusy() { $('sendBtn').disabled = busy; }
-  $('sendBtn').onclick = () => send();
-  $('input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
-  function autosize() { const t = $('input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px'; }
-  $('input').addEventListener('input', autosize);
-
-  /* attachments waiting to be sent */
-  function drawTray() {
-    $('tray').innerHTML = photos.map((p, i) => `<span class="chip"><img src="${p.dataUrl}" alt=""><button class="x" data-photo="${i}" aria-label="Remove photo">&times;</button></span>`).join('') +
-      (voice ? `<span class="chip"><audio controls src="${voice.url}"></audio><button class="x" data-voice aria-label="Remove recording">&times;</button></span>` : '');
-  }
-  $('tray').onclick = e => {
-    if (e.target.dataset.photo !== undefined) photos.splice(+e.target.dataset.photo, 1);
-    else if (e.target.dataset.voice !== undefined) voice = null;
-    else return;
-    drawTray();
-  };
-
-  // Shrinks photos before upload so requests stay small.
-  function shrinkImage(file, max = 1280) {
+  /* ---------- reading photos: HEIC, shrinking, fingerprints ---------- */
+  let heicLib = null;
+  const loadHeicLib = () => heicLib ??= new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.onload = () => resolve(window.heic2any); s.onerror = () => reject(new Error('Could not load the iPhone photo converter.'));
+    document.head.appendChild(s);
+  });
+  const isHeic = f => /hei[cf]/i.test(f.type) || /\.hei[cf]$/i.test(f.name);
+  function imageFrom(blob) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
-        const k = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        resolve(c.toDataURL('image/jpeg', 0.85));
-      };
-      img.onerror = () => reject(new Error("Couldn't open " + file.name + '. Try a JPEG or PNG.'));
-      img.src = URL.createObjectURL(file);
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('unreadable'));
+      img.src = URL.createObjectURL(blob);
     });
   }
-  $('photoBtn').onclick = () => $('photoInput').click();
-  $('photoInput').onchange = async () => {
-    for (const file of $('photoInput').files) {
-      try { photos.push({ dataUrl: await shrinkImage(file) }); }
-      catch (err) { addMessage('err', err.message); }
+  // iPhone photos are HEIC, which most browsers can't open; convert those to JPEG first
+  async function openImage(file) {
+    try { return await imageFrom(file); }
+    catch {
+      if (!isHeic(file)) throw new Error("Couldn't open " + file.name + '. Try a JPEG or PNG.');
+      const convert = await loadHeicLib();
+      const out = await convert({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+      return imageFrom(Array.isArray(out) ? out[0] : out);
     }
-    $('photoInput').value = '';
-    drawTray(); $('input').focus();
+  }
+  function toCanvas(img, max = 1280, crop) {
+    const sx = crop ? crop.x : 0, sy = crop ? crop.y : 0, sw = crop ? crop.w : img.naturalWidth, sh = crop ? crop.h : img.naturalHeight;
+    const k = Math.min(1, max / Math.max(sw, sh));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+    c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    return c;
+  }
+  const toJpeg = (img, max, crop) => toCanvas(img, max, crop).toDataURL('image/jpeg', 0.85);
+  // difference hash: 9x8 grayscale, compare neighbours; similar pictures get similar bits
+  function fingerprint(img) {
+    const c = document.createElement('canvas'); c.width = 9; c.height = 8;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, 9, 8);
+    const d = g.getImageData(0, 0, 9, 8).data, lum = i => d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
+    let bits = '';
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += lum((y * 9 + x) * 4) > lum((y * 9 + x + 1) * 4) ? '1' : '0';
+    return bits.match(/.{4}/g).map(b => parseInt(b, 2).toString(16)).join('');
+  }
+  async function readPhoto(file, max, { faces = true } = {}) {
+    const img = await openImage(file);
+    const canvas = toCanvas(img, max);
+    const out = { dataUrl: canvas.toDataURL('image/jpeg', 0.85), hash: fingerprint(img) };
+    URL.revokeObjectURL(img.src);
+    // faces are found on the shrunk copy, so their boxes match the stored photo
+    if (faces) out.faces = await findFaces(canvas);
+    return out;
+  }
+
+  /* ---------- face recognition (runs on this device; only face descriptors are sent) ---------- */
+  const faceOn = () => mat.settings?.faces !== false;
+  let faceLib = null;
+  const loadFaces = () => faceLib ??= new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = '/vendor/face-api.js';
+    s.onload = async () => {
+      try {
+        const f = window.faceapi, uri = '/vendor/face-models';
+        await Promise.all([f.nets.ssdMobilenetv1.loadFromUri(uri), f.nets.faceLandmark68Net.loadFromUri(uri), f.nets.faceRecognitionNet.loadFromUri(uri)]);
+        resolve(f);
+      } catch (err) { reject(err); }
+    };
+    s.onerror = () => reject(new Error('face recognition did not load'));
+    document.head.appendChild(s);
+  }).catch(err => { console.warn('Face recognition unavailable:', err); faceLib = null; return null; });
+  // undefined means "not checked" (off or unavailable), so the photo can be scanned later
+  async function findFaces(source) {
+    if (!faceOn()) return undefined;
+    const f = await loadFaces();
+    if (!f) return undefined;
+    try {
+      const found = await f.detectAllFaces(source, new f.SsdMobilenetv1Options({ minConfidence: 0.5 })).withFaceLandmarks().withFaceDescriptors();
+      return found.filter(d => d.detection.box.width >= 24).map(d => {
+        const b = d.detection.box;
+        return { box: { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }, descriptor: Array.from(d.descriptor) };
+      });
+    } catch (err) { console.warn('Face detection failed:', err); return undefined; }
+  }
+  // photos added before face recognition (or while it was off) are checked in the background
+  let scanning = false;
+  async function scanOlder() {
+    const todo = mat.photos.filter(p => !p.scanned);
+    if (scanning || !faceOn() || !todo.length) return;
+    scanning = true;
+    try {
+      if (!(await loadFaces())) return;
+      for (const [i, ph] of todo.entries()) {
+        status('albumStatus', `Looking for faces in older photos (${i + 1} of ${todo.length})…`);
+        try {
+          const img = await imageFrom(await (await fetch(ph.url)).blob());
+          const faces = await findFaces(img);
+          URL.revokeObjectURL(img.src);
+          if (faces) await api('POST', `/api/photos/${ph.id}/faces`, { faces });
+        } catch (err) { console.warn(err); }
+      }
+      useState(await api('GET', '/api/album'));
+      status('albumStatus', 'Finished looking for faces.');
+    } finally { scanning = false; }
+  }
+  function drawFaceToggle() {
+    $('faceToggle').textContent = faceOn() ? 'Face recognition is on · turn off' : 'Face recognition is off · turn on';
+  }
+  $('faceToggle').onclick = async () => {
+    if (faceOn()) {
+      if (!confirm('Turn off face recognition? It will forget every face it has learned. Names you typed yourself stay.')) return;
+      await api('POST', '/api/faces', { on: false });
+    } else await api('POST', '/api/faces', { on: true });
+    useState(await api('GET', '/api/album'));
+    scanOlder();
   };
 
+  /* ---------- recording (shared by chat and album) ---------- */
   // Gemini can't hear the WebM that browsers record, so recordings are re-encoded
   // as 16 kHz mono WAV, which is plenty for speech and plays everywhere.
   async function toWav(blob) {
@@ -297,36 +483,122 @@
     samples.forEach((v, i) => view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, v)) * 0x7fff, true));
     return new Blob([view], { type: 'audio/wav' });
   }
+  const readDataUrl = blob => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob); });
 
-  // Records in the browser; the guide listens to the audio itself.
-  let recorder = null, recTimer = null;
-  $('micBtn').onclick = async () => {
-    if (recorder) { recorder.stop(); return; }
-    let stream;
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { return addMessage('err', 'The browser could not use the microphone. Check its permission and try again.'); }
-    const chunks = [];
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
-    recorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      clearInterval(recTimer);
-      const type = recorder.mimeType.split(';')[0] || 'audio/webm';
-      recorder = null;
-      $('micBtn').classList.remove('live'); $('micLbl').textContent = 'Voice';
-      try {
-        const wav = await toWav(new Blob(chunks, { type }));
-        const reader = new FileReader();
-        reader.onload = () => { voice = { dataUrl: reader.result, url: URL.createObjectURL(wav) }; drawTray(); };
-        reader.readAsDataURL(wav);
-      } catch { addMessage('err', "That recording couldn't be read. Please try again."); }
+  // Turns a button into a record/stop toggle; onDone gets { dataUrl, url } of the WAV.
+  function recorderButton(btn, onDone, onError) {
+    const lbl = btn.querySelector('.lbl'), idle = lbl.textContent;
+    let recorder = null, timer = null;
+    btn.onclick = async () => {
+      if (recorder) { recorder.stop(); return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch { return onError('The browser could not use the microphone. Check its permission and try again.'); }
+      const chunks = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        clearInterval(timer);
+        const type = recorder.mimeType.split(';')[0] || 'audio/webm';
+        recorder = null; btn.classList.remove('live'); lbl.textContent = idle;
+        try { const wav = await toWav(new Blob(chunks, { type })); onDone({ dataUrl: await readDataUrl(wav), url: URL.createObjectURL(wav) }); }
+        catch { onError("That recording couldn't be read. Please try again."); }
+      };
+      recorder.start();
+      const started = Date.now();
+      btn.classList.add('live');
+      const tick = () => { const s = Math.floor((Date.now() - started) / 1000); lbl.textContent = 'Stop ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+      tick(); timer = setInterval(tick, 500);
     };
-    recorder.start();
-    const started = Date.now();
-    $('micBtn').classList.add('live');
-    const tick = () => { const s = Math.floor((Date.now() - started) / 1000); $('micLbl').textContent = 'Stop ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-    tick(); recTimer = setInterval(tick, 500);
+  }
+
+  /* ---------- shared state ---------- */
+  const portraitIds = () => new Set(mat.people.map(f => f.photoId).filter(Boolean));
+  const needsDetails = ph => !ph.caption || !ph.year;
+  const guessed = ph => (ph.faces || []).some(f => f.status === 'auto' || f.status === 'suggested');
+  function useState(r) {
+    if (r.materials) mat = r.materials;
+    if (r.progress) {
+      $('check').innerHTML = r.progress.items.map(i =>
+        `<li class="${i.done ? 'done' : ''}"><span class="box"></span>${esc(i.label)}${i.count ? `<span class="n">${i.count}</span>` : ''}</li>`).join('');
+      $('play').hidden = !r.progress.built;
+    }
+    $('people').textContent = mat.people.length ? mat.people.map(f => f.name + (f.relation ? ' (' + f.relation + ')' : '')).join(', ') : 'Nobody yet.';
+    $('familyNames').innerHTML = mat.people.map(f => `<option value="${esc(f.name)}">`).join('');
+    $('albumCount').textContent = mat.photos.length ? '(' + mat.photos.length + ')' : '';
+    drawFaceToggle();
+    if (SHARE && mat.profile?.callName) $('subtitle').textContent = 'Add photos and voice messages for ' + mat.profile.callName + '. The family will see everything you add.';
+    if (!$('viewAlbum').hidden) drawAlbum();
+  }
+
+  /* ---------- conversation ---------- */
+  function addMessage(role, text, attachments = []) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + role;
+    const who = role === 'guide' ? 'GUIDE' : role === 'family' ? 'YOU' : '';
+    const att = attachments.map(a => a.kind === 'photo'
+      ? `<img src="${esc(a.url)}" alt="photo">`
+      : `<audio controls preload="none" src="${esc(a.url)}"></audio>`).join('');
+    el.innerHTML = (who ? `<span class="who">${who}</span>` : '') + (att ? `<div class="att">${att}</div>` : '') + (text ? `<div class="body">${esc(text)}</div>` : '');
+    $('log').appendChild(el);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+  function typing(on) {
+    $('typing')?.remove();
+    if (!on) return;
+    const el = document.createElement('div');
+    el.className = 'msg guide'; el.id = 'typing';
+    el.innerHTML = '<span class="who">GUIDE</span><div class="typing" aria-label="The guide is writing"><i></i><i></i><i></i></div>';
+    $('log').appendChild(el);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+  async function send(extra = {}) {
+    if (busy) return;
+    const text = $('input').value.trim();
+    if (!extra.start && !text && !photos.length && !voice) return;
+    busy = true; $('sendBtn').disabled = true;
+    const body = { text, photos: photos.map(({ dataUrl, hash, faces }) => ({ dataUrl, hash, faces })), voice: voice?.dataUrl || null, name: myName(), ...extra };
+    if (!extra.start) {
+      addMessage('family', text, [...photos.map(p => ({ kind: 'photo', url: p.dataUrl })), ...(voice ? [{ kind: 'voice', url: voice.url }] : [])]);
+      $('input').value = ''; autosize();
+      photos = []; voice = null; drawTray();
+    }
+    typing(true);
+    try {
+      const r = await api('POST', '/api/chat', body);
+      typing(false);
+      addMessage('guide', r.reply, r.attachments || []);
+      useState(r);
+    } catch (err) {
+      typing(false);
+      addMessage('err', err.message);
+    } finally { busy = false; $('sendBtn').disabled = false; $('input').focus(); }
+  }
+  $('sendBtn').onclick = () => send();
+  $('input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  function autosize() { const t = $('input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px'; }
+  $('input').addEventListener('input', autosize);
+
+  function drawTray() {
+    $('tray').innerHTML = photos.map((p, i) => `<span class="chip"><img src="${p.dataUrl}" alt=""><button class="x" data-photo="${i}" aria-label="Remove photo">&times;</button></span>`).join('') +
+      (voice ? `<span class="chip"><audio controls src="${voice.url}"></audio><button class="x" data-voice aria-label="Remove recording">&times;</button></span>` : '');
+  }
+  $('tray').onclick = e => {
+    if (e.target.dataset.photo !== undefined) photos.splice(+e.target.dataset.photo, 1);
+    else if (e.target.dataset.voice !== undefined) voice = null;
+    else return;
+    drawTray();
   };
+  $('photoBtn').onclick = () => $('photoInput').click();
+  $('photoInput').onchange = async () => {
+    for (const file of $('photoInput').files) {
+      try { photos.push(await readPhoto(file)); } catch (err) { addMessage('err', err.message); }
+    }
+    $('photoInput').value = '';
+    drawTray(); $('input').focus();
+  };
+  recorderButton($('micBtn'), v => { voice = v; drawTray(); }, msg => addMessage('err', msg));
 
   $('newChat').onclick = async () => {
     if (busy || !confirm('Start a new conversation? Everything already shared stays saved.')) return;
@@ -335,10 +607,281 @@
     send({ start: true });
   };
 
+  /* ---------- album ---------- */
+  let filter = 'all';
+  document.querySelectorAll('.filter').forEach(b => b.onclick = () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll('.filter').forEach(x => x.setAttribute('aria-pressed', x === b));
+    drawAlbum();
+  });
+  function drawAlbum() {
+    const faces = portraitIds();
+    const list = mat.photos.filter(ph => filter === 'needs' ? needsDetails(ph) && !faces.has(ph.id) : filter === 'faces' ? faces.has(ph.id) : true).slice().reverse();
+    $('grid').innerHTML = list.map(ph => {
+      const face = mat.people.find(f => f.photoId === ph.id);
+      const cap = [ph.who, ph.caption, ph.year].filter(Boolean).join(' · ');
+      return `<button class="card" data-photo="${ph.id}">
+        <img src="${esc(ph.url)}" alt="${esc(cap || 'photo')}" loading="lazy">
+        ${face ? `<span class="badge face">${esc(face.name)}</span>` : guessed(ph) ? '<span class="badge check">check names</span>' : needsDetails(ph) ? '<span class="badge">tell us more</span>' : ''}
+        <span class="cap${cap ? '' : ' none'}">${esc(cap || 'No details yet')}</span>
+      </button>`;
+    }).join('') || `<p class="empty">${filter === 'all' ? 'No photos yet.' : 'Nothing here.'}</p>`;
+    $('voices').innerHTML = mat.voices.slice().reverse().map(v => `<div class="voice" data-voice="${v.id}">
+      <div class="meta">
+        <audio controls preload="none" src="${esc(v.url)}"></audio>
+        <label class="field">FROM<input type="text" data-field="from" value="${esc(v.from)}" placeholder="Who is speaking"></label>
+        <label class="field">WHAT THEY SAID<textarea data-field="transcript" placeholder="Not transcribed yet">${esc(v.transcript)}</textarea></label>
+      </div>
+      <button class="tool danger" data-remove="${v.id}" aria-label="Remove voice message">Remove</button>
+    </div>`).join('') || '<p class="empty">No voice messages yet.</p>';
+  }
+  $('grid').onclick = e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.photo); };
+  $('voices').addEventListener('change', async e => {
+    const field = e.target.dataset.field, id = e.target.closest('.voice')?.dataset.voice;
+    if (!field || !id) return;
+    try { await api('PATCH', '/api/voices/' + id, { [field]: e.target.value }); useState(await api('GET', '/api/album')); }
+    catch (err) { status('albumStatus', err.message, true); }
+  });
+  $('voices').addEventListener('click', async e => {
+    const id = e.target.dataset.remove;
+    if (!id || !confirm('Remove this voice message?')) return;
+    useState(await api('DELETE', '/api/materials/' + id));
+  });
+
+  async function uploadPhotos(files) {
+    files = [...files].filter(f => f.type.startsWith('image/') || isHeic(f));
+    if (!files.length) return;
+    let added = 0, dups = 0, failed = 0;
+    if (faceOn() && !faceLib) { status('albumStatus', 'Getting face recognition ready…'); await loadFaces(); }
+    for (const [i, file] of files.entries()) {
+      status('albumStatus', `Adding ${i + 1} of ${files.length}…`);
+      try {
+        const p = await readPhoto(file);
+        const r = await api('POST', '/api/photos', { photo: p.dataUrl, hash: p.hash, faces: p.faces, uploadedBy: myName() });
+        r.duplicateOf ? dups++ : added++;
+      } catch { failed++; }
+    }
+    useState(await api('GET', '/api/album'));
+    status('albumStatus', [added && `${added} added`, dups && `${dups} already in the album, skipped`, failed && `${failed} couldn't be read`].filter(Boolean).join(' · '), failed > 0);
+  }
+  $('addPhotos').onclick = () => $('albumInput').click();
+  $('albumInput').onchange = async () => { await uploadPhotos($('albumInput').files); $('albumInput').value = ''; };
+  const albumEl = $('album');
+  albumEl.addEventListener('dragover', e => { e.preventDefault(); albumEl.classList.add('dragging'); });
+  albumEl.addEventListener('dragleave', e => { if (!albumEl.contains(e.relatedTarget)) albumEl.classList.remove('dragging'); });
+  albumEl.addEventListener('drop', e => { e.preventDefault(); albumEl.classList.remove('dragging'); uploadPhotos(e.dataTransfer.files); });
+
+  recorderButton($('albumMic'), async v => {
+    status('albumStatus', 'Saving your message…');
+    try {
+      await api('POST', '/api/voices', { audio: v.dataUrl, from: myName() });
+      useState(await api('GET', '/api/album'));
+      status('albumStatus', 'Message saved.');
+    } catch (err) { status('albumStatus', err.message, true); }
+  }, msg => status('albumStatus', msg, true));
+
+  $('copyShare').onclick = async () => {
+    const link = location.origin + '/share';
+    try { await navigator.clipboard.writeText(link); status('albumStatus', 'Link copied: ' + link); }
+    catch { prompt('Send this link to relatives:', link); }
+  };
+
+  /* ---------- photo detail, back of print, portrait crop ---------- */
+  let current = null, crop = null, dragStart = null;
+  function openDetail(id) {
+    current = mat.photos.find(p => p.id === id);
+    if (!current) return;
+    $('dImg').src = current.url;
+    $('dWho').value = current.who || ''; $('dYear').value = current.year || ''; $('dCaption').value = current.caption || '';
+    $('dBy').textContent = current.uploadedBy ? 'Added by ' + current.uploadedBy : '';
+    $('backRow').innerHTML = current.backUrl ? `<img src="${esc(current.backUrl)}" alt="back of the photo"><span>Back of the print</span>` : '';
+    stopCrop(); closeFace(); status('dStatus', '');
+    $('detail').showModal();
+    drawFaces();
+  }
+  function refreshCurrent() {
+    current = mat.photos.find(p => p.id === current?.id) || current;
+    $('dWho').value = current.who || '';
+    drawFaces();
+  }
+
+  // boxes over each detected face; click one to name it
+  let activeFace = null;
+  const personName = id => mat.people.find(p => p.id === id)?.name;
+  function drawFaces() {
+    const layer = $('faceLayer');
+    layer.innerHTML = '';
+    const faces = (current.faces || []).filter(f => f.status !== 'notface' && f.box.w > 0);
+    $('dConfirm').hidden = !guessed(current);
+    if (!$('cropUi').hidden || !$('dImg').naturalWidth) return;
+    const ir = imageRect(), wr = $('cropwrap').getBoundingClientRect();
+    for (const f of faces) {
+      const name = personName(f.personId);
+      const label = f.status === 'confirmed' && name ? name : f.status === 'auto' && name ? name + ' (guess)' : f.status === 'suggested' && name ? name + '?' : 'Who is this?';
+      const b = document.createElement('button');
+      b.className = 'facebox ' + (name ? f.status : 'unknown') + (activeFace === f.id ? ' active' : '');
+      Object.assign(b.style, { left: ir.left - wr.left + f.box.x * ir.k + 'px', top: ir.top - wr.top + f.box.y * ir.k + 'px', width: f.box.w * ir.k + 'px', height: f.box.h * ir.k + 'px' });
+      b.innerHTML = `<span class="tag">${esc(label)}</span>`;
+      b.setAttribute('aria-label', label);
+      b.onclick = () => openFace(f.id);
+      layer.appendChild(b);
+    }
+  }
+  $('dImg').addEventListener('load', () => { if ($('detail').open) drawFaces(); });
+  window.addEventListener('resize', () => { if ($('detail').open) drawFaces(); });
+
+  function openFace(id) {
+    const f = current.faces.find(x => x.id === id);
+    if (!f) return;
+    activeFace = id;
+    const name = personName(f.personId);
+    $('fQuestion').textContent = f.status === 'confirmed' && name ? 'This is ' + name + '.' : name ? 'Is this ' + name + '?' : 'Who is this?';
+    $('fName').value = name || '';
+    $('fRelWrap').hidden = true; $('fRel').value = '';
+    $('fClear').hidden = !f.personId;
+    // small preview of just this face
+    const c = $('fPreview'), g = c.getContext('2d');
+    g.clearRect(0, 0, c.width, c.height);
+    g.drawImage($('dImg'), f.box.x, f.box.y, f.box.w, f.box.h, 0, 0, c.width, c.height);
+    $('faceUi').hidden = false;
+    drawFaces();
+    $('fName').focus();
+  }
+  function closeFace() { activeFace = null; $('faceUi').hidden = true; }
+  $('fName').addEventListener('input', () => {
+    const n = $('fName').value.trim().toLowerCase();
+    $('fRelWrap').hidden = !n || mat.people.some(p => p.name.toLowerCase() === n);
+  });
+  async function faceAction(body) {
+    try {
+      await api('POST', `/api/photos/${current.id}/faces/${activeFace}`, body);
+      useState(await api('GET', '/api/album'));
+      closeFace(); refreshCurrent();
+    } catch (err) { status('dStatus', err.message, true); }
+  }
+  $('fSave').onclick = () => faceAction({ person: $('fName').value, relation: $('fRel').value });
+  $('fClear').onclick = () => faceAction({ clear: true });
+  $('fNotFace').onclick = () => faceAction({ notFace: true });
+  // one click: name the face and crop it (with some room around it) as their portrait
+  $('fPortrait').onclick = async () => {
+    const f = current.faces.find(x => x.id === activeFace), person = $('fName').value.trim();
+    if (!person) return status('dStatus', 'Write whose face this is.', true);
+    const img = $('dImg'), pad = 0.35;
+    const x = Math.max(0, f.box.x - f.box.w * pad), y = Math.max(0, f.box.y - f.box.h * pad);
+    const crop = { x, y, w: Math.min(img.naturalWidth - x, f.box.w * (1 + 2 * pad)), h: Math.min(img.naturalHeight - y, f.box.h * (1 + 2 * pad)) };
+    try {
+      await api('POST', `/api/photos/${current.id}/portrait`, { photo: toJpeg(img, 800, crop), person, relation: $('fRel').value.trim(), faceId: f.id });
+      useState(await api('GET', '/api/album'));
+      closeFace(); refreshCurrent();
+      status('dStatus', 'Saved as ' + person + "'s portrait.");
+    } catch (err) { status('dStatus', err.message, true); }
+  };
+  $('dConfirm').onclick = async () => {
+    try {
+      await api('POST', `/api/photos/${current.id}/confirm-faces`);
+      useState(await api('GET', '/api/album'));
+      refreshCurrent();
+      status('dStatus', 'Names confirmed. The album will recognize them better now.');
+    } catch (err) { status('dStatus', err.message, true); }
+  };
+  $('closeDetail').onclick = () => $('detail').close();
+  $('detail').addEventListener('close', stopCrop);
+  $('dSave').onclick = async () => {
+    try {
+      const patch = { year: $('dYear').value, caption: $('dCaption').value };
+      if ($('dWho').value.trim() !== (current.who || '')) patch.who = $('dWho').value;
+      await api('PATCH', '/api/photos/' + current.id, patch);
+      useState(await api('GET', '/api/album'));
+      $('detail').close();
+    } catch (err) { status('dStatus', err.message, true); }
+  };
+  $('dBack').onchange = async () => {
+    const file = $('dBack').files[0]; if (!file) return;
+    status('dStatus', 'Adding the back…');
+    try {
+      const p = await readPhoto(file, 1600, { faces: false });
+      const r = await api('POST', '/api/photos/' + current.id + '/back', { photo: p.dataUrl });
+      current = r.photo;
+      $('backRow').innerHTML = `<img src="${esc(current.backUrl)}" alt="back of the photo"><span>Back of the print</span>`;
+      useState(await api('GET', '/api/album'));
+      status('dStatus', 'Back added. The guide will read any writing on it with you.');
+    } catch (err) { status('dStatus', err.message, true); }
+    $('dBack').value = '';
+  };
+  $('dRemove').onclick = async () => {
+    if (!confirm('Remove this photo from the album?')) return;
+    useState(await api('DELETE', '/api/materials/' + current.id));
+    $('detail').close();
+  };
+
+  // drag a box on the shown image; coordinates are kept in the image's own pixels
+  function startCrop() { closeFace(); $('faceLayer').innerHTML = ''; $('cropUi').hidden = false; $('cropwrap').classList.add('cropping'); $('dCrop').hidden = true; crop = null; $('cSave').disabled = true; }
+  function stopCrop() { $('cropUi').hidden = true; $('cropwrap').classList.remove('cropping'); $('dCrop').hidden = false; $('cropbox').hidden = true; crop = null; dragStart = null; if (current && $('detail').open) drawFaces(); }
+  $('dCrop').onclick = startCrop;
+  $('cCancel').onclick = stopCrop;
+  // where the picture actually sits inside the img box (object-fit: contain leaves margins)
+  function imageRect() {
+    const img = $('dImg'), r = img.getBoundingClientRect();
+    const k = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight);
+    const w = img.naturalWidth * k, h = img.naturalHeight * k;
+    return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, w, h, k };
+  }
+  const wrap = $('cropwrap');
+  wrap.addEventListener('pointerdown', e => {
+    if ($('cropUi').hidden) return;
+    e.preventDefault(); // stop the browser from starting its own image drag
+    const ir = imageRect();
+    dragStart = { x: Math.min(Math.max(e.clientX - ir.left, 0), ir.w), y: Math.min(Math.max(e.clientY - ir.top, 0), ir.h), ir };
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!dragStart) return;
+    const { ir } = dragStart;
+    const x = Math.min(Math.max(e.clientX - ir.left, 0), ir.w), y = Math.min(Math.max(e.clientY - ir.top, 0), ir.h);
+    const box = { x: Math.min(x, dragStart.x), y: Math.min(y, dragStart.y), w: Math.abs(x - dragStart.x), h: Math.abs(y - dragStart.y) };
+    const wr = wrap.getBoundingClientRect();
+    Object.assign($('cropbox').style, { left: ir.left - wr.left + box.x + 'px', top: ir.top - wr.top + box.y + 'px', width: box.w + 'px', height: box.h + 'px' });
+    $('cropbox').hidden = false;
+    crop = { x: box.x / ir.k, y: box.y / ir.k, w: box.w / ir.k, h: box.h / ir.k };
+    $('cSave').disabled = crop.w < 20 || crop.h < 20;
+  });
+  wrap.addEventListener('pointerup', () => { dragStart = null; });
+  wrap.addEventListener('pointercancel', () => { dragStart = null; });
+  $('cPerson').addEventListener('input', () => {
+    const name = $('cPerson').value.trim().toLowerCase();
+    $('cRelWrap').hidden = !name || mat.people.some(f => f.name.toLowerCase() === name);
+  });
+  $('cSave').onclick = async () => {
+    const person = $('cPerson').value.trim();
+    if (!person) return status('dStatus', 'Write whose face this is.', true);
+    if (!crop) return status('dStatus', 'Drag a box around the face first.', true);
+    try {
+      const canvas = toCanvas($('dImg'), 800, crop);
+      // learn the face too, if one is found in the box
+      const found = (await findFaces(canvas)) || [];
+      const biggest = found.sort((a, b) => b.box.w * b.box.h - a.box.w * a.box.h)[0];
+      await api('POST', '/api/photos/' + current.id + '/portrait', { photo: canvas.toDataURL('image/jpeg', 0.85), person, relation: $('cRel').value.trim(), descriptor: biggest?.descriptor });
+      useState(await api('GET', '/api/album'));
+      stopCrop(); $('cPerson').value = ''; $('cRel').value = '';
+      status('dStatus', 'Saved as ' + person + "'s portrait.");
+    } catch (err) { status('dStatus', err.message, true); }
+  };
+
+  /* ---------- start ---------- */
   (async () => {
+    if (SHARE) {
+      // relatives with the link see only the album
+      document.title = 'Family Album';
+      $('title').textContent = 'Family Album';
+      $('subtitle').hidden = false; $('subtitle').textContent = 'Add photos and voice messages. The family will see everything you add.';
+      $('tabs').hidden = true; $('links').hidden = true; $('copyShare').hidden = true; $('faceToggle').hidden = true;
+      showTab('album');
+      try { useState(await api('GET', '/api/album')); scanOlder(); } catch { status('albumStatus', 'The album is not reachable right now.', true); }
+      return;
+    }
     try {
       const r = await api('GET', '/api/chat');
-      showState(r);
+      useState(r);
       r.transcript.forEach(m => addMessage(m.role, m.text, m.attachments));
       if (!r.transcript.length) send({ start: true });
     } catch {

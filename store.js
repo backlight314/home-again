@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { describeFaces, syncWho } from './faces.js';
 
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DATA = process.env.HOME_AGAIN_DATA || path.join(ROOT, 'data');
@@ -31,6 +32,21 @@ export async function writeJSON(file, value) {
 const emptyMaterials = () => ({ profile: {}, people: [], photos: [], voices: [], notes: [] });
 export const loadMaterials = () => readJSON(FILES.materials, emptyMaterials());
 export const saveMaterials = mat => writeJSON(FILES.materials, mat);
+
+// The album, the share link and the guide can all change materials at once, so
+// every change runs one at a time against a fresh copy. Keep slow work (Gemini
+// calls, file writes) outside fn.
+let queue = Promise.resolve();
+export function withMaterials(fn) {
+  const run = queue.then(async () => {
+    const mat = await loadMaterials();
+    const out = await fn(mat);
+    await saveMaterials(mat);
+    return out;
+  });
+  queue = run.catch(() => {});
+  return run;
+}
 export const newId = p => p + '_' + crypto.randomBytes(4).toString('hex');
 
 // Accepts a data: URL, writes the file under data/media, returns its public path.
@@ -59,10 +75,28 @@ export async function removeMaterial(mat, id) {
     if (!item) continue;
     mat[list] = mat[list].filter(x => x.id !== id);
     if (item.url) await dropMedia(item.url);
+    if (item.backUrl) await dropMedia(item.backUrl);
     if (list === 'photos') mat.people.forEach(f => { if (f.photoId === id) f.photoId = null; });
+    if (list === 'people') for (const ph of mat.photos) {
+      if (!ph.faces?.some(f => f.personId === id)) continue;
+      ph.faces.forEach(f => { if (f.personId === id) Object.assign(f, { personId: null, status: 'unknown' }); });
+      syncWho(ph, mat);
+    }
     return item;
   }
   return null;
+}
+
+// A photo is "described" once the family has said what it shows and roughly when.
+export const needsDetails = ph => !ph.caption || !ph.year;
+
+// Photos are fingerprinted in the browser (a 64-bit difference hash, as hex);
+// near-identical fingerprints mean the same picture uploaded twice.
+export function findDuplicate(mat, hash) {
+  if (!/^[0-9a-f]{16}$/.test(hash || '')) return null;
+  const bits = h => BigInt('0x' + h);
+  const distance = (a, b) => { let x = bits(a) ^ bits(b), n = 0; while (x) { n += Number(x & 1n); x >>= 1n; } return n; };
+  return mat.photos.find(ph => ph.hash && distance(ph.hash, hash) <= 4) || null;
 }
 
 // Plain-text account of everything saved, shared by the guide and the game builder.
@@ -76,8 +110,20 @@ export function describeMaterials(mat) {
   lines.push('', '## Family members');
   for (const f of mat.people) lines.push(`- ${f.name} (${f.relation || 'relation not given'})${f.photoId ? `, portrait photo id ${f.photoId}` : ', no portrait yet'}${f.note ? `. ${f.note}` : ''}`);
 
-  lines.push('', '## Photos');
-  for (const ph of mat.photos) lines.push(`- photo id ${ph.id}: ${ph.caption || 'not described yet'}${ph.year ? ` (${ph.year})` : ''}`);
+  lines.push('', '## Photos in the album');
+  const portraitOf = Object.fromEntries(mat.people.filter(f => f.photoId).map(f => [f.photoId, f.name]));
+  for (const ph of mat.photos) {
+    const bits = [
+      portraitOf[ph.id] ? `portrait of ${portraitOf[ph.id]}` : null,
+      describeFaces(mat, ph),
+      ph.who && (ph.whoSource !== 'faces' || !describeFaces(mat, ph)) ? `the family says it shows ${ph.who}` : null,
+      ph.caption || 'no story yet',
+      ph.year ? `(${ph.year})` : 'no year yet',
+      ph.backUrl ? 'has the back of the print too' : null,
+      ph.uploadedBy ? `added by ${ph.uploadedBy}` : null
+    ].filter(Boolean);
+    lines.push(`- photo id ${ph.id}: ${bits.join('; ')}`);
+  }
 
   lines.push('', '## Voice messages (the player hears the real recording)');
   for (const v of mat.voices) lines.push(`- voice id ${v.id}, from ${v.from || 'unknown'}: "${v.transcript || 'not transcribed yet'}"`);
