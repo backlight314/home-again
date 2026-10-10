@@ -7,11 +7,236 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/album.css">
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #e4d9c0;
+    --paper-2: #d6c9ab;
+    --board: #2d2722;
+    --ink: #23344f;
+    --ink-soft: #5b6478;
+    --stamp: #9c3b2e;
+    --sage: #697a5c;
+    --print: #faf5e8;
+    --crayon: #d8a53a;
+    --display: "Petrona", "Iowan Old Style", Georgia, serif;
+    --type: "Courier Prime", "Courier New", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --page-bg: #cfc6b2;
+    --page-text: #2d2722;
+    --page-soft: #5e564a;
+    --chip: #ece4d3;
+    --chip-edge: #a89c84;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --chip: #2a251f; --chip-edge: #534a3c;
+    }
+  }
+  :root[data-theme="dark"] { --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --chip: #2a251f; --chip-edge: #534a3c; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    background: var(--page-bg); color: var(--page-text); font-family: var(--sans); line-height: 1.5;
+    padding: calc(26px + env(safe-area-inset-top, 0px)) clamp(12px, 4vw, 48px) calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+  :focus-visible { outline: 3px solid var(--stamp); outline-offset: 2px; }
+
+  header { max-width: 900px; margin: 0 auto 18px; }
+  header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 4.4vw, 44px); line-height: 1.05; }
+  header p { color: var(--page-soft); font-size: 17px; max-width: 70ch; margin-top: 4px; }
+
+  .stage { max-width: 1000px; margin: 0 auto; display: grid; gap: 16px; }
+
+  /* the album */
+  .album { container-type: inline-size; background: var(--board); border-radius: 6px; padding: 14px 14px 20px; box-shadow: 0 14px 30px rgba(20,14,8,.4); }
+  .screen { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--paper); }
+  .scr { position: absolute; inset: 0; display: none; }
+  .scr.on { display: block; }
+  .page { position: absolute; inset: 0; background: var(--paper); }
+  .page::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background: radial-gradient(circle at 18% 12%, rgba(120,95,55,.16) 0 1.2cqw, transparent 1.3cqw),
+                radial-gradient(circle at 76% 81%, rgba(120,95,55,.13) 0 1.6cqw, transparent 1.7cqw),
+                radial-gradient(circle at 46% 48%, rgba(120,95,55,.08) 0 3cqw, transparent 3.1cqw);
+  }
+  .punch { position: absolute; left: 2.2cqw; width: 1.9cqw; height: 1.9cqw; border-radius: 50%; background: var(--board); box-shadow: inset 0 .2cqw .3cqw rgba(0,0,0,.6); }
+
+  /* top chrome: a tab and four letter strips */
+  .chrome { position: absolute; left: 0; right: 0; top: 0; display: none; justify-content: space-between; align-items: flex-start; padding: 0 2.6cqw; z-index: 7; pointer-events: none; }
+  .chrome.on { display: flex; }
+  .chrome > * { pointer-events: auto; }
+  .tab { font-family: var(--type); font-size: 2.4cqw; letter-spacing: .04em; background: var(--stamp); color: #f6ece0; padding: 1.2cqw 2.6cqw .9cqw; border-radius: 0 0 .6cqw .6cqw; }
+  .strips { display: flex; gap: .9cqw; padding-top: 1cqw; }
+  .strip { width: 7.2cqw; height: 4.6cqw; background: rgba(120,100,70,.14); border: .2cqw dashed rgba(80,65,40,.5); position: relative; }
+  .strip.got { background: var(--print); border: .2cqw solid rgba(80,65,40,.3); box-shadow: 0 .2cqw .4cqw rgba(40,30,15,.25); }
+  .strip.got::before { content: ""; position: absolute; left: -1cqw; right: -1cqw; top: -.9cqw; height: 1.9cqw; background: rgba(228,216,185,.85); border-left: .15cqw solid rgba(0,0,0,.08); border-right: .15cqw solid rgba(0,0,0,.08); transform: rotate(-1.4deg); }
+  .strip.got::after { content: ""; position: absolute; left: .9cqw; right: .9cqw; top: 1.6cqw; height: .22cqw; background: #6a6052; box-shadow: 0 .9cqw 0 #6a6052, 0 1.8cqw 0 #6a6052; }
+
+  /* page furniture */
+  .caption { position: absolute; font-family: var(--display); font-size: 4.3cqw; line-height: 1.12; color: var(--ink); max-width: 56%; }
+  .caption .sub { display: block; font-family: var(--type); font-size: 2.2cqw; color: var(--ink-soft); margin-top: .8cqw; letter-spacing: .02em; }
+  .pressbtn {
+    font-family: var(--type); font-weight: 700; font-size: 2.9cqw; letter-spacing: .04em;
+    padding: 1.3cqw 3cqw; background: var(--print); color: var(--ink);
+    border: .3cqw solid var(--ink); box-shadow: .7cqw .7cqw 0 rgba(35,52,79,.3);
+  }
+  .pressbtn:active { transform: translate(.3cqw, .3cqw); box-shadow: .4cqw .4cqw 0 rgba(35,52,79,.3); }
+  .pressbtn.red { border-color: var(--stamp); color: var(--stamp); box-shadow: .7cqw .7cqw 0 rgba(156,59,46,.28); }
+  .quietbtn { position: absolute; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); border-bottom: .2cqw solid var(--ink-soft); padding-bottom: .2cqw; letter-spacing: .03em; }
+  .hide { display: none !important; }
+
+  /* photo prints */
+  .print { background: var(--print); padding: 1.1cqw 1.1cqw 3.4cqw; box-shadow: .5cqw .9cqw 1.4cqw rgba(45,32,15,.3); display: block; }
+  .print svg, .print img { width: 100%; height: auto; display: block; }
+  .print .pname { font-family: var(--type); font-size: 2.6cqw; color: var(--ink); text-align: center; margin-top: 1cqw; }
+  .print.marked { outline: .4cqw solid var(--stamp); outline-offset: .5cqw; }
+  .corner { position: absolute; width: 2.6cqw; height: 2.6cqw; background: #3b342b; }
+  .corner.tl { left: 0; top: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
+  .corner.tr { right: 0; top: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+  .corner.bl { left: 0; bottom: 0; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+  .corner.br { right: 0; bottom: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+  .bird { position: absolute; z-index: 5; pointer-events: none; }
+  .bird svg { width: 100%; height: auto; display: block; }
+
+  /* opening */
+  .intro .title { position: absolute; left: 7cqw; top: 15cqw; font-family: var(--display); font-weight: 600; font-size: 11cqw; line-height: .92; color: var(--ink); letter-spacing: -.01em; }
+  .intro .title em { font-style: italic; font-weight: 400; display: block; }
+  .intro .sig { position: absolute; left: 7.4cqw; top: 38cqw; font-family: var(--type); font-size: 2.6cqw; color: var(--ink-soft); max-width: 44%; line-height: 1.5; }
+  .intro .go { position: absolute; left: 7.4cqw; bottom: 7cqw; }
+  .intro .housewrap { position: absolute; right: 5cqw; top: 9cqw; width: 36%; }
+  .torn { position: absolute; right: 7cqw; bottom: 6cqw; width: 26%; background: var(--print); padding: 2cqw; transform: rotate(3deg); box-shadow: .5cqw .9cqw 1.4cqw rgba(45,32,15,.3); font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); clip-path: polygon(0 3%, 9% 0, 22% 4%, 38% 0, 55% 4%, 72% 0, 88% 4%, 100% 1%, 100% 97%, 86% 100%, 68% 96%, 48% 100%, 30% 96%, 14% 100%, 0 97%); }
+
+  /* the house drawing */
+  .housewrap svg { width: 100%; height: auto; display: block; }
+  .wn { fill: #cdc2a6; transition: fill .5s; }
+  .wn.lit { fill: var(--crayon); }
+
+  /* hub */
+  .hub .housewrap { position: absolute; left: 5cqw; top: 13cqw; width: 34%; }
+  .hub .caption { left: 7cqw; top: 5.4cqw; }
+  .hub .list { position: absolute; right: 5cqw; top: 13cqw; width: 48%; }
+  .roomrow { display: flex; align-items: baseline; gap: 1.6cqw; width: 100%; text-align: left; padding: 1.5cqw 0 1.3cqw; border-bottom: .2cqw solid rgba(60,48,30,.3); }
+  .roomrow .n { font-family: var(--display); font-size: 4.6cqw; color: var(--ink); }
+  .roomrow .dots { flex: 1; border-bottom: .2cqw dotted rgba(60,48,30,.45); transform: translateY(-.8cqw); }
+  .roomrow .s { font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); white-space: nowrap; }
+  .roomrow.found .n { color: var(--sage); }
+  .roomrow.found .s { color: var(--sage); }
+
+  /* kitchen */
+  .kitchen .caption { left: 6cqw; top: 5cqw; }
+  .ktable { position: absolute; left: 50%; top: 27%; transform: translateX(-50%); width: 54%; }
+  .ktable svg { width: 100%; height: auto; display: block; }
+  .seat { position: absolute; width: 12cqw; height: 12cqw; }
+  .seat .ring { position: absolute; inset: 0; }
+  .seat .ring svg { width: 100%; height: 100%; }
+  .seat .lbl { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); }
+  .seat.target .lbl { font-family: var(--display); font-size: 5cqw; color: var(--stamp); }
+  .seat.filled { padding: .5cqw; background: var(--print); box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
+  .seat.filled svg { width: 100%; height: 100%; display: block; }
+  .krow { position: absolute; left: 0; right: 0; bottom: 4.4cqw; display: flex; justify-content: center; gap: 3.4cqw; z-index: 4; }
+  .krow .print { width: 18cqw; }
+  .krow .print:nth-child(1) { transform: rotate(-2.2deg); }
+  .krow .print:nth-child(2) { transform: rotate(1.4deg); }
+  .krow .print:nth-child(3) { transform: rotate(-1deg); }
+  .said { position: absolute; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 1.4cqw; background: var(--ink); color: #f3eddf; padding: 1.1cqw 2.6cqw; font-family: var(--type); font-size: 2.4cqw; max-width: 84%; }
+  .said[hidden] { display: none; }
+  .wave { display: flex; gap: .4cqw; align-items: center; height: 2.8cqw; flex: none; }
+  .wave i { width: .5cqw; background: var(--crayon); height: 40%; }
+  .wave i:nth-child(2) { height: 80%; } .wave i:nth-child(3) { height: 100%; } .wave i:nth-child(4) { height: 60%; } .wave i:nth-child(5) { height: 90%; }
+  .wave.on i { animation: bob .7s ease-in-out infinite alternate; }
+  .wave.on i:nth-child(2) { animation-delay: .1s; } .wave.on i:nth-child(3) { animation-delay: .2s; }
+  .wave.on i:nth-child(4) { animation-delay: .3s; } .wave.on i:nth-child(5) { animation-delay: .4s; }
+  @keyframes bob { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+  .kitchen .said { bottom: 28cqw; }
+
+  /* radio */
+  .radio-pg .caption { left: 6cqw; top: 5cqw; }
+  .setwrap { position: absolute; left: 50%; top: 26%; transform: translateX(-50%); width: 46%; }
+  .setwrap svg { width: 100%; height: auto; display: block; }
+  .needle { transition: transform .35s; transform-origin: 50% 50%; }
+  .station { position: absolute; left: 50%; transform: translateX(-50%); bottom: 13cqw; font-family: var(--type); font-size: 3cqw; color: var(--ink); letter-spacing: .03em; }
+  .station.clear { color: var(--stamp); }
+  .dialrow { position: absolute; left: 50%; transform: translateX(-50%); bottom: 4.4cqw; display: flex; gap: 2.4cqw; align-items: center; }
+  .dialrow .pressbtn { font-size: 2.6cqw; padding: 1.1cqw 2.4cqw; }
+
+  /* porch */
+  .porch .caption { left: 6cqw; top: 5cqw; }
+  .swing { position: absolute; left: 50%; top: 24%; transform: translateX(-50%) rotate(-1.6deg); width: 29%; }
+  .swing .print { width: 100%; }
+  .chain { position: absolute; top: 0; width: .35cqw; height: 24%; background: rgba(60,48,30,.5); }
+  .mic { position: absolute; left: 50%; transform: translateX(-50%); bottom: 4.6cqw; display: grid; place-items: center; width: 14cqw; height: 14cqw; border-radius: 50%; background: var(--print); border: .4cqw solid var(--ink); box-shadow: .6cqw .6cqw 0 rgba(35,52,79,.28); }
+  .mic.live { border-color: var(--stamp); box-shadow: .6cqw .6cqw 0 rgba(156,59,46,.3); }
+  .mic .m { width: 3.2cqw; height: 5.2cqw; background: var(--ink); border-radius: 1.6cqw; position: relative; }
+  .mic.live .m { background: var(--stamp); }
+  .mic .m::after { content: ""; position: absolute; left: -1.2cqw; right: -1.2cqw; top: 2cqw; height: 3cqw; border: .45cqw solid currentColor; border-top: 0; border-radius: 0 0 2.4cqw 2.4cqw; color: var(--ink); }
+  .mic.live .m::after { color: var(--stamp); }
+  .mic .mlbl { position: absolute; bottom: -4cqw; font-family: var(--type); font-size: 2.2cqw; color: var(--ink-soft); white-space: nowrap; }
+  .heard { position: absolute; right: 5cqw; bottom: 6cqw; width: 31%; font-family: var(--type); font-size: 2.4cqw; line-height: 1.45; color: var(--ink); border-left: .35cqw solid var(--stamp); padding-left: 1.6cqw; min-height: 9cqw; }
+  .followup { position: absolute; right: 5cqw; bottom: 26cqw; font-family: var(--display); font-style: italic; font-size: 3.2cqw; color: var(--ink-soft); }
+  .stamped { position: absolute; left: 6cqw; bottom: 9cqw; font-family: var(--type); font-size: 2.3cqw; letter-spacing: .14em; color: var(--stamp); border: .3cqw solid var(--stamp); padding: .8cqw 1.6cqw; transform: rotate(-4deg); }
+
+  /* attic */
+  .attic .caption { left: 6cqw; top: 5cqw; }
+  .shelfline { position: absolute; left: 6cqw; right: 6cqw; top: 36%; }
+  .shelfline .rule { position: absolute; left: 0; right: 0; top: 16.4cqw; border-bottom: .25cqw dashed rgba(60,48,30,.55); }
+  .shelfline .ends { position: absolute; left: 0; right: 0; top: 17.6cqw; display: flex; justify-content: space-between; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); letter-spacing: .04em; }
+  .mount { position: absolute; top: 0; width: 22cqw; height: 15cqw; }
+  .mount.open { border: .25cqw dashed rgba(60,48,30,.5); }
+  .mount.next { border: .3cqw solid var(--stamp); }
+  .mount.set { background: var(--print); padding: .7cqw; box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
+  .mount svg { width: 100%; height: 100%; display: block; }
+  .mount .num { position: absolute; left: -.3cqw; top: -3.4cqw; font-family: var(--type); font-size: 2.4cqw; color: var(--ink-soft); }
+  .boxrow { position: absolute; left: 6cqw; bottom: 4.4cqw; display: flex; gap: 2.2cqw; align-items: flex-end; }
+  .boxrow .pick { width: 16cqw; background: var(--print); padding: .6cqw; box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
+  .boxrow .pick:nth-child(2) { transform: rotate(-2deg); }
+  .boxrow .pick:nth-child(3) { transform: rotate(1.6deg); }
+  .boxrow .pick svg { width: 100%; height: auto; display: block; }
+  .boxrow .pick.gone { visibility: hidden; }
+  .boxlbl { position: absolute; left: 6cqw; bottom: 17cqw; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); letter-spacing: .04em; }
+
+  /* ending */
+  .ending .page { background: var(--paper-2); }
+  .ending .caption { left: 6cqw; top: 4.4cqw; }
+  .sheet { position: absolute; left: 50%; transform: translateX(-50%) rotate(-.7deg); top: 15cqw; width: 58%; background: var(--print); padding: 3cqw 3.4cqw 3.4cqw; box-shadow: .6cqw 1.2cqw 2cqw rgba(45,32,15,.32); }
+  .sheet .ln { font-family: var(--type); font-size: 2.7cqw; line-height: 1.5; color: var(--ink); padding: .5cqw 0 .9cqw; }
+  .sheet .ln + .ln { border-top: .2cqw dashed rgba(60,48,30,.35); }
+  .sheet .ln span { display: block; font-family: var(--display); font-style: italic; font-size: 2.3cqw; color: var(--ink-soft); margin-top: .3cqw; }
+  .sheet .ln.say { background: rgba(216,165,58,.26); }
+  .endrow { position: absolute; left: 0; right: 0; bottom: 3.4cqw; display: flex; justify-content: center; gap: 3cqw; align-items: center; }
+  .calltile { display: flex; align-items: center; gap: 1.6cqw; font-family: var(--type); font-size: 2.5cqw; color: var(--ink); background: var(--print); padding: 1cqw 2cqw; box-shadow: .4cqw .7cqw 1.2cqw rgba(45,32,15,.26); }
+  .calltile .av { width: 7cqw; }
+  .calltile .av svg { width: 100%; height: auto; display: block; }
+
+  /* overlays */
+  .ovl { position: absolute; inset: 0; z-index: 9; background: rgba(32,24,14,.6); display: none; place-items: center; }
+  .ovl.on { display: grid; }
+  .slip { width: 60%; display: grid; gap: 2.4cqw; justify-items: center; }
+  .slipcard { width: 100%; background: var(--print); padding: 3.4cqw 3.8cqw 3cqw; box-shadow: .8cqw 1.4cqw 2.4cqw rgba(20,12,4,.5);
+    clip-path: polygon(0 4%, 8% 0, 21% 5%, 35% 0, 51% 4%, 66% 0, 80% 5%, 92% 1%, 100% 4%, 100% 96%, 90% 100%, 76% 95%, 60% 100%, 44% 96%, 28% 100%, 13% 95%, 0 99%); }
+  .slipcard .kicker { font-family: var(--type); font-size: 2.2cqw; letter-spacing: .14em; color: var(--stamp); }
+  .slipcard p { font-family: var(--type); font-size: 3.2cqw; line-height: 1.5; color: var(--ink); margin: 1.4cqw 0 1.8cqw; }
+  .slipcard .foot { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; flex-wrap: wrap; }
+  .slipcard .who { font-family: var(--display); font-style: italic; font-size: 2.6cqw; color: var(--ink-soft); }
+  .hearbtn { display: flex; align-items: center; gap: 1.2cqw; font-family: var(--type); font-size: 2.4cqw; color: var(--ink); border-bottom: .25cqw solid var(--ink); padding-bottom: .3cqw; }
+  .restcard { background: var(--print); padding: 4cqw 5cqw; display: grid; gap: 2cqw; justify-items: center; text-align: center; box-shadow: .8cqw 1.4cqw 2.4cqw rgba(20,12,4,.45); }
+  .restcard h3 { font-family: var(--display); font-weight: 600; font-size: 4.6cqw; color: var(--ink); }
+  .restcard p { font-family: var(--type); font-size: 2.6cqw; color: var(--ink-soft); }
+  .restcard .row { display: flex; gap: 2.4cqw; flex-wrap: wrap; justify-content: center; }
+
+  /* review strip */
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls .lbl { font-family: var(--type); color: var(--page-soft); font-size: 14px; letter-spacing: .04em; margin-right: 4px; }
+  .controls button { font-family: var(--type); background: var(--chip); border: 1px solid var(--chip-edge); padding: 7px 13px; font-size: 14px; }
+  .controls button[aria-current="true"] { border-color: var(--stamp); color: var(--stamp); }
+  .note { color: var(--page-soft); font-size: 15px; max-width: 76ch; }
+  @media (prefers-reduced-motion: reduce) { .wave.on i { animation: none; } .needle, .wn { transition: none; } }
+</style>
 </head>
-<body>
+<body data-mode="home">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="person" viewBox="0 0 100 80">
@@ -19,63 +244,69 @@
     <path d="M12 80c2-19 16-27 38-27s36 8 38 27z" style="fill:var(--cloth)"/>
     <circle cx="50" cy="32" r="16" style="fill:var(--skin)"/>
     <path d="M34 31c0-13 9-19 17-19 9 0 16 7 15 19-4-7-9-10-16-10-6 0-11 3-16 10z" style="fill:var(--hair)"/>
-    <rect width="100" height="80" fill="none" stroke="rgba(60,45,20,.18)" stroke-width="2"/>
   </symbol>
   <symbol id="sc-lake" viewBox="0 0 120 80">
-    <rect width="120" height="80" fill="#b9c9bb"/><circle cx="94" cy="19" r="8" fill="#e0c781"/>
-    <path d="M0 47l28-21 26 21 22-15 44 15v7H0z" fill="#7d8d6e"/><rect y="51" width="120" height="29" fill="#8198a0"/>
-    <path d="M45 60h27l-6 8H51z" fill="#efe7d6"/><path d="M58 41v19l12-4z" fill="#f4eee0"/>
+    <rect width="120" height="80" fill="#5d6f86"/><rect y="48" width="120" height="32" fill="#3d4a5c"/>
+    <ellipse cx="60" cy="58" rx="48" ry="14" fill="#2c3542"/>
+    <rect x="18" y="28" width="84" height="32" rx="4" fill="#c9b08a"/>
+    <circle cx="36" cy="44" r="10" fill="#2b241f"/><circle cx="36" cy="44" r="5" fill="#8a9aab"/>
+    <rect x="58" y="34" width="36" height="16" fill="#7aa3b8"/>
   </symbol>
   <symbol id="sc-snow" viewBox="0 0 120 80">
-    <rect width="120" height="80" fill="#cfd4d6"/><rect y="53" width="120" height="27" fill="#eeeae0"/>
-    <path d="M30 55l12-28 12 28z" fill="#6b7a62"/><path d="M26 59l16-25 16 25z" fill="#5a6a54"/>
-    <rect x="40" y="57" width="4" height="8" fill="#6b5a44"/><circle cx="86" cy="45" r="8" fill="#f8f5ec"/><circle cx="86" cy="34" r="6" fill="#f8f5ec"/>
+    <rect width="120" height="80" fill="#c5d6c0"/>
+    <ellipse cx="60" cy="62" rx="40" ry="10" fill="#6a8f5c"/>
+    <ellipse cx="60" cy="50" rx="28" ry="8" fill="#e8dcc8"/>
+    <circle cx="44" cy="46" r="8" fill="#f4f0e6"/><circle cx="76" cy="46" r="8" fill="#f4f0e6"/>
+    <rect x="56" y="28" width="8" height="18" fill="#6a8f5c"/>
+    <ellipse cx="60" cy="26" rx="14" ry="10" fill="#4e7a48"/>
+    <circle cx="88" cy="38" r="4" fill="#c9a24a"/>
   </symbol>
   <symbol id="sc-garden" viewBox="0 0 120 80">
-    <rect width="120" height="80" fill="#c6cdb4"/><rect y="50" width="120" height="30" fill="#8c9a74"/>
-    <g fill="#bf7a72"><circle cx="24" cy="46" r="5"/><circle cx="50" cy="52" r="5"/><circle cx="82" cy="44" r="5"/><circle cx="102" cy="54" r="5"/></g>
-    <rect x="60" y="15" width="29" height="21" fill="#e8e0cc"/><path d="M56 17l19-11 19 11z" fill="#9c6a50"/>
+    <rect width="120" height="80" fill="#e8c9a0"/>
+    <rect y="46" width="120" height="34" fill="#c4a06a"/>
+    <ellipse cx="60" cy="58" rx="42" ry="12" fill="#8a6244"/>
+    <ellipse cx="60" cy="52" rx="34" ry="8" fill="#e2c48a"/>
+    <rect x="28" y="38" width="18" height="14" fill="#c45c4a"/>
+    <rect x="52" y="34" width="16" height="18" fill="#f4f0e6"/>
+    <circle cx="86" cy="44" r="8" fill="#f4f0e6"/>
+    <ellipse cx="18" cy="40" rx="8" ry="12" fill="#4e7a48"/>
   </symbol>
   <symbol id="bird" viewBox="0 0 100 70">
-    <polygon points="12,52 62,34 88,50 52,62" fill="#f7f2e4" stroke="#6b6151" stroke-width="1.6"/>
-    <polygon points="40,50 58,11 74,46" fill="#e4dbc6" stroke="#6b6151" stroke-width="1.6"/>
-    <polygon points="46,52 70,24 80,48" fill="#d3c8ae" stroke="#6b6151" stroke-width="1.6"/>
-    <polygon points="12,52 2,36 30,46" fill="#f7f2e4" stroke="#6b6151" stroke-width="1.6"/>
-    <polygon points="88,50 97,38 80,38" fill="#f7f2e4" stroke="#6b6151" stroke-width="1.6"/>
+    <polygon points="12,52 62,34 88,50 52,62" fill="#fff6ea" stroke="#2b241f" stroke-width="3"/>
+    <polygon points="40,50 58,11 74,46" fill="#ffd27a" stroke="#2b241f" stroke-width="3"/>
+    <polygon points="12,52 2,36 30,46" fill="#fff6ea" stroke="#2b241f" stroke-width="3"/>
   </symbol>
   <symbol id="house" viewBox="0 0 120 96">
-    <g fill="none" stroke="#3c3326" stroke-width="2.2" stroke-linejoin="round">
-      <path d="M10 44L60 8l50 36"/><path d="M18 44v46h84V44"/><path d="M52 90V66h16v24"/>
-      <path d="M10 90h100"/><path d="M86 20h10v12"/>
-    </g>
-    <rect class="wn w-kitchen" x="28" y="52" width="18" height="13"/>
-    <rect class="wn w-radio" x="74" y="52" width="18" height="13"/>
-    <rect class="wn w-porch" x="28" y="72" width="15" height="13"/>
-    <rect class="wn w-attic" x="52" y="26" width="16" height="12"/>
-    <g fill="none" stroke="#3c3326" stroke-width="2.2">
-      <rect x="28" y="52" width="18" height="13"/><rect x="74" y="52" width="18" height="13"/>
-      <rect x="28" y="72" width="15" height="13"/><rect x="52" y="26" width="16" height="12"/>
-    </g>
+    <path d="M8 46 L60 6 l52 40 v46 H8z" fill="#c9784a" stroke="#2b241f" stroke-width="3"/>
+    <path d="M8 46 L60 6 l52 40" fill="#8a4f2e" stroke="#2b241f" stroke-width="3"/>
+    <rect class="wn w-kitchen" x="22" y="52" width="22" height="16" fill="#8ebdd9" stroke="#2b241f" stroke-width="2.4"/>
+    <rect class="wn w-radio" x="76" y="52" width="22" height="16" fill="#8ebdd9" stroke="#2b241f" stroke-width="2.4"/>
+    <rect class="wn w-porch" x="22" y="74" width="18" height="14" fill="#8ebdd9" stroke="#2b241f" stroke-width="2.4"/>
+    <rect class="wn w-attic" x="52" y="24" width="16" height="14" fill="#8ebdd9" stroke="#2b241f" stroke-width="2.4"/>
+    <rect x="52" y="70" width="16" height="22" fill="#4a2c1c" stroke="#2b241f" stroke-width="2.4"/>
+  </symbol>
+  <symbol id="sc-table" viewBox="0 0 120 80">
+    <rect width="120" height="80" fill="#d9c9a8"/><rect y="52" width="120" height="28" fill="#b48f66"/>
+    <ellipse cx="60" cy="56" rx="44" ry="13" fill="#efe3c8" stroke="#6b5a44" stroke-width="1.4"/>
+    <g><circle cx="34" cy="34" r="8" fill="#d9b394"/><path d="M22 52c1-9 6-13 12-13s11 4 12 13z" fill="#4f6279"/></g>
+    <g><circle cx="60" cy="30" r="8" fill="#d9b394"/><path d="M48 50c1-9 6-13 12-13s11 4 12 13z" fill="#6f6480"/></g>
+    <g><circle cx="86" cy="34" r="8" fill="#e0bb9b"/><path d="M74 52c1-9 6-13 12-13s11 4 12 13z" fill="#6b8078"/></g>
+    <circle cx="60" cy="54" r="5" fill="#c98f52"/>
   </symbol>
   <symbol id="pencilring" viewBox="0 0 100 100">
-    <ellipse cx="50" cy="50" rx="44" ry="42" fill="none" stroke="#9c3b2e" stroke-width="3" stroke-dasharray="2 0" transform="rotate(-6 50 50)" opacity=".9"/>
-    <ellipse cx="50" cy="50" rx="46" ry="44" fill="none" stroke="#9c3b2e" stroke-width="1.8" transform="rotate(5 50 50)" opacity=".55"/>
+    <ellipse cx="50" cy="50" rx="44" ry="42" fill="none" stroke="#9c3b2e" stroke-width="3" transform="rotate(-6 50 50)"/>
   </symbol>
   <symbol id="table" viewBox="0 0 200 72">
-    <ellipse cx="100" cy="36" rx="95" ry="30" fill="none" stroke="#3c3326" stroke-width="2.4"/>
-    <ellipse cx="100" cy="36" rx="95" ry="30" fill="#cfc0a0" opacity=".55"/>
-    <path d="M40 58c20 8 100 8 120 0" fill="none" stroke="#3c3326" stroke-width="1.6" opacity=".5"/>
+    <ellipse cx="100" cy="36" rx="96" ry="32" fill="#c4a06a" stroke="#2b241f" stroke-width="3"/>
+    <ellipse cx="100" cy="32" rx="86" ry="24" fill="#e2c48a"/>
   </symbol>
   <symbol id="radioset" viewBox="0 0 180 110">
-    <rect x="4" y="8" width="172" height="94" rx="8" fill="#b89a6d" stroke="#3c3326" stroke-width="2.4"/>
-    <rect x="16" y="22" width="88" height="66" rx="4" fill="#d8c8a6" stroke="#3c3326" stroke-width="2"/>
-    <g stroke="#3c3326" stroke-width="1.6" opacity=".75">
-      <path d="M24 32h72M24 42h72M24 52h72M24 62h72M24 72h72M24 80h72"/>
-    </g>
-    <circle cx="140" cy="44" r="22" fill="#efe6cf" stroke="#3c3326" stroke-width="2.2"/>
-    <g class="needle" id="needle"><path d="M140 26v18" stroke="#9c3b2e" stroke-width="3.4" stroke-linecap="round"/></g>
-    <circle cx="140" cy="44" r="4" fill="#3c3326"/>
-    <rect x="122" y="76" width="36" height="12" rx="3" fill="#d8c8a6" stroke="#3c3326" stroke-width="2"/>
+    <rect x="4" y="8" width="172" height="94" rx="10" fill="#6b4a32" stroke="#2b241f" stroke-width="4"/>
+    <rect x="16" y="22" width="88" height="66" rx="4" fill="#1b140f" stroke="#2b241f" stroke-width="3"/>
+    <g stroke="#c9784a" stroke-width="2"><path d="M24 32h72M24 44h72M24 56h72M24 68h72M24 80h72"/></g>
+    <circle cx="140" cy="44" r="24" fill="#f3e2c7" stroke="#2b241f" stroke-width="3"/>
+    <g class="needle" id="needle"><path d="M140 24v20" stroke="#c45c4a" stroke-width="4" stroke-linecap="round"/></g>
+    <circle cx="140" cy="44" r="5" fill="#2b241f"/>
   </symbol>
   <symbol id="sc-table" viewBox="0 0 120 80">
     <rect width="120" height="80" fill="#d9c9a8"/><rect y="52" width="120" height="28" fill="#b48f66"/>
@@ -89,7 +320,7 @@
 
 <header>
   <h1>Home Again</h1>
-  <p>A family album you can step into. Open the cover, pick a page, and each visit adds a memory to the album. Names, photos, voices and songs are placeholders.</p>
+  <p>One evening in a family album. The bird brings a letter torn in four, each room holds a piece, and the family reads it at the end. Names, photos, voices and songs are placeholders.</p>
 </header>
 
 <div class="stage">
@@ -97,35 +328,31 @@
 
     <div class="chrome" id="chrome">
       <button class="tab" id="restBtn">REST</button>
+      <div class="strips" aria-label="Letter pieces found">
+        <span class="strip" id="pc0"></span><span class="strip" id="pc1"></span><span class="strip" id="pc2"></span><span class="strip" id="pc3"></span>
+      </div>
     </div>
 
-    <!-- cover -->
-    <section class="scr intro on" id="s-intro" aria-label="Cover">
+    <!-- opening -->
+    <section class="scr intro on" id="s-intro" aria-label="Opening">
       <div class="page"></div>
       <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
       <div class="title">Home<em>Again</em></div>
-      <div class="sig">Your family left you something.<br>Come and look.</div>
+      <div class="sig">The house has been quiet.<br>The bird has something for you.</div>
       <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
       <div class="bird" style="left:41%;top:9%;width:13%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="pressbtn go" data-go="shelf" style="position:absolute;left:7.4cqw;bottom:4cqw">COME IN</button>
+      <div class="torn">a letter, torn in four</div>
+      <button class="pressbtn go" data-go="hub" style="position:absolute;left:7.4cqw;bottom:7cqw">COME IN</button>
     </section>
 
-    <!-- the shelf of albums -->
-    <section class="scr album-pg shelf-pg" id="s-shelf" aria-label="The albums">
-      <div class="desk"></div>
-      <div class="caption shelfcap">Which album today?<span class="sub">TAP ONE TO OPEN IT</span></div>
-      <div class="books" id="books"></div>
-      <div class="bird" style="left:5%;bottom:4%;width:8%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="quietbtn closebtn" data-go="intro">close the albums</button>
-    </section>
-
-    <!-- one album's page -->
-    <section class="scr album-pg" id="s-album" aria-label="The album page">
-      <div class="desk"></div>
-      <div class="sheetpg" id="sheetpg"></div>
-      <div id="tags"></div>
-      <div class="bird" style="left:11%;bottom:3%;width:8%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="quietbtn closebtn" data-go="shelf">close the book</button>
+    <!-- hub -->
+    <section class="scr hub" id="s-hub" aria-label="The house">
+      <div class="page"></div>
+      <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
+      <div class="caption" id="hubCaption">Which room tonight?</div>
+      <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
+      <div class="bird" style="left:30%;top:7%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <div class="list" id="rooms"></div>
     </section>
 
     <!-- kitchen -->
@@ -141,8 +368,22 @@
       <div class="bird" style="left:3%;top:46%;width:10%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
       <div class="said" id="kSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="kSaidText"></span></div>
       <div class="krow" id="kRow"></div>
-      <button class="pressbtn red hide" id="kNext" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
-      <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
+      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
+    </section>
+
+    <!-- radio -->
+    <section class="scr radio-pg" id="s-radio" aria-label="Radio room">
+      <div class="page"></div>
+      <div class="caption" id="rCap">Turn the dial until a song comes in<span class="sub">RADIO ROOM</span></div>
+      <div class="setwrap"><svg viewBox="0 0 180 110"><use href="#radioset"/></svg></div>
+      <div class="station" id="station">static</div>
+      <div class="dialrow">
+        <button class="pressbtn" id="tuneL">&#9664; TUNE</button>
+        <button class="pressbtn" id="tuneR">TUNE &#9654;</button>
+        <button class="pressbtn red hide" id="keepSong">KEEP THIS ONE</button>
+      </div>
+      <div class="bird" style="left:4%;top:48%;width:10%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
 
     <!-- porch -->
@@ -156,24 +397,47 @@
       <div class="heard" id="pHeard">tap the microphone and talk</div>
       <div class="stamped hide" id="pStamp">SAVED TO STORIES</div>
       <button class="mic" id="mic" aria-label="Tap and talk"><span class="m"></span><span class="mlbl">tap and talk</span></button>
-      <button class="pressbtn red hide" id="porchTake" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
-      <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
+      <button class="pressbtn red hide" id="porchTake" style="position:absolute;right:3cqw;top:9cqw">TAKE THE PIECE</button>
+      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
 
-    <div class="toast" id="toast" role="status"></div>
+    <!-- attic -->
+    <section class="scr attic" id="s-attic" aria-label="Attic">
+      <div class="page"></div>
+      <div class="caption" id="aCap">Which one came first?<span class="sub">ATTIC, THE PHOTO BOX</span></div>
+      <div class="shelfline" id="shelf"><div class="rule"></div><div class="ends"><span>EARLIER</span><span>LATER</span></div></div>
+      <div class="boxlbl">the photo box</div>
+      <div class="boxrow" id="box"></div>
+      <div class="bird" style="right:5%;top:46%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <button class="pressbtn red hide" id="atticTake" style="position:absolute;right:3cqw;bottom:6cqw">TAKE THE PIECE</button>
+      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
+    </section>
 
-    <!-- memory reveal -->
-    <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">
-      <div class="memcard">
-        <div class="print" id="mPrint"><div class="sepia"><svg viewBox="0 0 120 80"><use id="mUse" href="#sc-table"/></svg></div><div class="pname" id="mCap"></div></div>
-        <div class="side">
-          <p class="line" id="mLine"></p>
-          <div class="memrow">
-            <button class="hearbtn" id="mPlay"><span class="wave" id="mWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
-            <span class="by" id="mBy"></span>
+    <!-- ending -->
+    <section class="scr ending" id="s-ending" aria-label="The letter">
+      <div class="page"></div>
+      <div class="caption">The letter is whole<span class="sub">ALL FOUR WINDOWS LIT</span></div>
+      <div class="housewrap" style="position:absolute;right:4cqw;top:4cqw;width:17%"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
+      <div class="sheet" id="sheet"></div>
+      <div class="bird" style="left:5%;bottom:22%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <div class="endrow">
+        <button class="pressbtn" id="hearLetter">HEAR THE LETTER</button>
+        <div class="calltile"><span class="av"><svg viewBox="0 0 100 80" style="--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240"><use href="#person"/></svg></span>Mei is here now<button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button></div>
+      </div>
+    </section>
+
+    <!-- piece slip -->
+    <div class="ovl" id="reveal" role="dialog" aria-label="A piece of the letter">
+      <div class="slip">
+        <div class="slipcard">
+          <div class="kicker" id="rKick">PIECE ONE OF FOUR</div>
+          <p id="rLine"></p>
+          <div class="foot">
+            <button class="hearbtn" id="rPlay"><span class="wave" id="rWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
+            <span class="who" id="rBy"></span>
           </div>
-          <button class="pressbtn" id="mDone">PUT IT IN THE ALBUM</button>
         </div>
+        <button class="pressbtn" id="rDone">PUT IT IN THE LETTER</button>
       </div>
     </div>
 
@@ -181,19 +445,254 @@
     <div class="ovl" id="rest" role="dialog" aria-label="Rest">
       <div class="restcard">
         <h3>Take your time</h3>
-        <p>the album will wait for you</p>
-        <div class="row"><button class="pressbtn" id="restKeep">KEEP PLAYING</button><button class="pressbtn red" id="restHome">BACK TO THE ALBUM</button></div>
+        <p>the house will wait for you</p>
+        <div class="row"><button class="pressbtn" id="restKeep">KEEP PLAYING</button><button class="pressbtn red" id="restHome">BACK TO THE HOUSE</button></div>
       </div>
     </div>
 
   </div></div>
 
   <div class="controls" id="controls"><span class="lbl">JUMP TO</span></div>
-  <p class="note">The jump buttons are for reviewing the design only. In the game the player moves through the album page.</p>
+  <p class="note">The jump buttons are for reviewing the design only. In the game the player moves through rooms from the house page, and a finished room can be tapped again to reread its piece.</p>
 </div>
 
-<script src="js/data.js"></script>
-<script src="js/strings.js"></script>
-<script src="js/app.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const letter = [
+    { room: 'Kitchen', line: 'Dear Mom, your chair at the table is still yours every Sunday.', by: 'Mei' },
+    { room: 'Radio room', line: 'That song was playing the night Dad asked you to dance.', by: 'Daniel' },
+    { room: 'Porch', line: 'I still think about the day at the lake, when you let me steer.', by: 'Mei' },
+    { room: 'Attic', line: 'Every picture in this house is someone who loves you. We do.', by: 'Aunt Rose' }
+  ];
+  const ordinals = ['PIECE ONE OF FOUR', 'PIECE TWO OF FOUR', 'PIECE THREE OF FOUR', 'PIECE FOUR OF FOUR'];
+  const found = [false, false, false, false];
+  const keys = ['kitchen', 'radio', 'porch', 'attic'];
+  const wins = ['w-kitchen', 'w-radio', 'w-porch', 'w-attic'];
+  const people = {
+    Mei: '--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240',
+    Daniel: '--bg:#bcc7d2;--skin:#cda683;--cloth:#4f6279;--hair:#44352a',
+    'Aunt Rose': '--bg:#c3cfc4;--skin:#e0bb9b;--cloth:#6b8078;--hair:#a9a396'
+  };
+  const face = n => '<svg viewBox="0 0 100 80" style="' + people[n] + '"><use href="#person"/></svg>';
+  let timers = [], pending = -1, rereading = false;
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  const clearAll = () => { timers.forEach(clearTimeout); timers = []; };
+
+  function paintProgress() {
+    found.forEach((f, i) => $('pc' + i).classList.toggle('got', f));
+    document.querySelectorAll('.housewrap svg').forEach(svg => {
+      wins.forEach((w, i) => { const el = svg.querySelector('.' + w); if (el) el.classList.toggle('lit', found[i]); });
+    });
+  }
+  function buildRooms() {
+    const box = $('rooms'); box.innerHTML = '';
+    letter.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.className = 'roomrow' + (found[i] ? ' found' : '');
+      b.innerHTML = '<span class="n">' + p.room + '</span><span class="dots"></span><span class="s">' + (found[i] ? 'piece found' : 'piece waiting') + '</span>';
+      b.onclick = () => { if (found[i]) { rereading = true; openSlip(i); } else show(keys[i]); };
+      box.appendChild(b);
+    });
+    const n = found.filter(Boolean).length;
+    $('hubCaption').innerHTML = (n === 0 ? 'Which room tonight?' : n < 4 ? 'Where is the next piece?' : 'The letter is ready') + '<span class="sub">' + n + ' OF 4 PIECES FOUND</span>';
+  }
+  function show(name) {
+    clearAll();
+    document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
+    $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
+    document.querySelectorAll('#controls button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === name));
+    paintProgress();
+    if (name === 'hub') buildRooms();
+    if (name === 'kitchen') initKitchen();
+    if (name === 'radio') initRadio();
+    if (name === 'porch') initPorch();
+    if (name === 'attic') initAttic();
+    if (name === 'ending') initEnding();
+  }
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => show(b.dataset.go));
+
+  function openSlip(i) {
+    pending = i;
+    $('rKick').textContent = rereading ? 'FROM THE ' + letter[i].room.toUpperCase() : ordinals[i];
+    $('rLine').textContent = letter[i].line;
+    $('rBy').textContent = 'recorded by ' + letter[i].by;
+    $('rWave').classList.remove('on');
+    $('rDone').textContent = rereading ? 'BACK TO THE HOUSE' : 'PUT IT IN THE LETTER';
+    $('reveal').classList.add('on');
+  }
+  $('rPlay').onclick = () => { $('rWave').classList.add('on'); later(() => $('rWave').classList.remove('on'), 2600); };
+  $('rDone').onclick = () => {
+    $('reveal').classList.remove('on');
+    if (rereading) { rereading = false; show('hub'); return; }
+    found[pending] = true; paintProgress();
+    if (found.every(Boolean)) show('ending'); else show('hub');
+  };
+  $('restBtn').onclick = () => $('rest').classList.add('on');
+  $('restKeep').onclick = () => $('rest').classList.remove('on');
+  $('restHome').onclick = () => { $('rest').classList.remove('on'); show('hub'); };
+
+  /* kitchen */
+  const plan = [
+    { seat: 'seatC', who: 'Mei', hint: { Daniel: 'Daniel: "That is me, Mom. Look for Mei."', 'Aunt Rose': 'Rose: "That is me, your sister. Look for Mei."' }, hello: 'Mei: "Hi Mom, it is me."' },
+    { seat: 'seatL', who: 'Daniel', hint: { 'Aunt Rose': 'Rose: "That is me again. Daniel is the other one."' }, hello: 'Daniel: "Hi Mom, I brought the bread."' }
+  ];
+  let round = 0;
+  const ring = '<span class="ring"><svg viewBox="0 0 100 100"><use href="#pencilring"/></svg></span>';
+  function setSeat(el, state, who) {
+    el.className = 'seat' + (state === 'target' ? ' target' : state === 'filled' ? ' filled' : '');
+    if (state === 'filled') el.innerHTML = face(who);
+    else if (state === 'target') el.innerHTML = ring + '<span class="lbl">?</span>';
+    else el.innerHTML = '<span class="lbl">empty</span>';
+  }
+  function initKitchen() {
+    round = 0;
+    setSeat($('seatL'), 'empty'); setSeat($('seatC'), 'target'); setSeat($('seatR'), 'empty');
+    $('kSaid').hidden = true;
+    $('kCap').innerHTML = 'Who sits in the circled chair?<span class="sub">KITCHEN, SUNDAY</span>';
+    drawFaces(['Daniel', 'Mei', 'Aunt Rose']);
+  }
+  function drawFaces(list) {
+    const row = $('kRow'); row.innerHTML = '';
+    list.forEach(n => {
+      const b = document.createElement('button');
+      b.className = 'print';
+      b.innerHTML = face(n) + '<div class="pname">' + n + '</div>';
+      b.onclick = () => pick(n, b, list);
+      row.appendChild(b);
+    });
+  }
+  function said(t) { $('kSaidText').textContent = t; $('kSaid').hidden = false; }
+  function pick(n, btn, list) {
+    const p = plan[round];
+    if (n !== p.who) { btn.classList.add('marked'); said(p.hint[n]); return; }
+    setSeat($(p.seat), 'filled', n);
+    said(p.hello);
+    drawFaces(list.filter(x => x !== n));
+    round++;
+    if (round < plan.length) {
+      setSeat($(plan[round].seat), 'target');
+      $('kCap').innerHTML = 'And the next chair?<span class="sub">KITCHEN, SUNDAY</span>';
+    } else {
+      $('kCap').innerHTML = 'Everyone is home. Something is under the table.<span class="sub">KITCHEN, SUNDAY</span>';
+      later(() => { rereading = false; openSlip(0); }, 2100);
+    }
+  }
+
+  /* radio */
+  const bands = [
+    { t: 'static', clear: false }, { t: 'a song from 1974', clear: true },
+    { t: 'static', clear: false }, { t: 'faint talking', clear: false }
+  ];
+  let bi = 0, deg = 0;
+  function paintBand() {
+    const b = bands[bi];
+    $('station').textContent = b.t;
+    $('station').classList.toggle('clear', b.clear);
+    $('keepSong').classList.toggle('hide', !b.clear);
+    $('rCap').innerHTML = (b.clear ? 'Where did you hear this one?' : 'Turn the dial until a song comes in') + '<span class="sub">RADIO ROOM</span>';
+  }
+  function tune(step) {
+    bi = (bi + step + bands.length) % bands.length; deg += step * 48;
+    const n = document.getElementById('needle');
+    if (n) n.style.transform = 'rotate(' + deg + 'deg)';
+    paintBand();
+  }
+  function initRadio() { bi = 0; deg = 0; const n = document.getElementById('needle'); if (n) n.style.transform = 'none'; paintBand(); }
+  $('tuneL').onclick = () => tune(-1);
+  $('tuneR').onclick = () => tune(1);
+  $('keepSong').onclick = () => { rereading = false; openSlip(1); };
+
+  /* porch */
+  const story = 'Dad let me steer the boat and I was so scared. He kept laughing.';
+  let talking = false;
+  function initPorch() {
+    talking = false;
+    $('mic').classList.remove('live');
+    $('pHeard').textContent = 'tap the microphone and talk';
+    $('pStamp').classList.add('hide'); $('pFollow').classList.add('hide'); $('porchTake').classList.add('hide');
+    $('pCap').innerHTML = 'Tell me about this day at the lake<span class="sub">PORCH, LATE AFTERNOON</span>';
+  }
+  $('mic').onclick = () => {
+    if (talking) return;
+    talking = true;
+    $('mic').classList.add('live');
+    $('pCap').innerHTML = 'I am listening<span class="sub">PORCH, LATE AFTERNOON</span>';
+    let i = 0;
+    const step = () => {
+      i += 2; $('pHeard').textContent = story.slice(0, i);
+      if (i < story.length) later(step, 65);
+      else later(() => {
+        $('mic').classList.remove('live');
+        $('pStamp').classList.remove('hide'); $('pFollow').classList.remove('hide');
+        $('pCap').innerHTML = 'Thank you for telling me<span class="sub">PORCH, LATE AFTERNOON</span>';
+        later(() => $('porchTake').classList.remove('hide'), 900);
+      }, 500);
+    };
+    step();
+  };
+  $('porchTake').onclick = () => { rereading = false; openSlip(2); };
+
+  /* attic */
+  const pics = ['sc-garden', 'sc-lake', 'sc-snow'];
+  let set = [];
+  function drawAttic() {
+    const sh = $('shelf');
+    sh.querySelectorAll('.mount').forEach(m => m.remove());
+    const lefts = ['0%', '39%', '78%'];
+    for (let i = 0; i < 3; i++) {
+      const m = document.createElement('div');
+      m.className = 'mount ' + (set[i] ? 'set' : (i === set.length ? 'next' : 'open'));
+      m.style.left = lefts[i];
+      m.innerHTML = '<span class="num">' + (i + 1) + '</span>' + (set[i] ? '<svg viewBox="0 0 120 80"><use href="#' + set[i] + '"/></svg>' : '');
+      sh.appendChild(m);
+    }
+    const box = $('box'); box.innerHTML = '';
+    pics.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'pick' + (set.includes(p) ? ' gone' : '');
+      b.innerHTML = '<svg viewBox="0 0 120 80"><use href="#' + p + '"/></svg>';
+      b.setAttribute('aria-label', 'photo');
+      b.onclick = () => { if (set.length < 3 && !set.includes(p)) { set.push(p); drawAttic(); } };
+      box.appendChild(b);
+    });
+    if (set.length === 3) {
+      $('aCap').innerHTML = 'That looks right<span class="sub">ATTIC, THE PHOTO BOX</span>';
+      later(() => $('atticTake').classList.remove('hide'), 700);
+    } else {
+      $('aCap').innerHTML = 'Which one came first?<span class="sub">ATTIC, THE PHOTO BOX</span>';
+      $('atticTake').classList.add('hide');
+    }
+  }
+  function initAttic() { set = []; drawAttic(); }
+  $('atticTake').onclick = () => { rereading = false; openSlip(3); };
+
+  /* ending */
+  function initEnding() {
+    $('sheet').innerHTML = letter.map((p, i) => '<div class="ln" id="ln' + i + '">' + p.line + '<span>' + p.by + '</span></div>').join('');
+  }
+  $('hearLetter').onclick = () => {
+    clearAll();
+    document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
+    letter.forEach((_, i) => later(() => {
+      document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
+      const el = $('ln' + i); if (el) el.classList.add('say');
+    }, i * 2200));
+    later(() => document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say')), letter.length * 2200);
+  };
+  $('sayHello').onclick = () => { $('sayHello').textContent = 'CALLING MEI'; };
+
+  /* review strip */
+  [['intro','Opening'],['hub','House'],['kitchen','Kitchen'],['radio','Radio room'],['porch','Porch'],['attic','Attic'],['ending','Ending']]
+    .forEach(([k, label]) => {
+      const b = document.createElement('button'); b.textContent = label; b.dataset.jump = k;
+      b.onclick = () => { $('reveal').classList.remove('on'); $('rest').classList.remove('on'); rereading = false; show(k); };
+      $('controls').appendChild(b);
+    });
+  const rb = document.createElement('button'); rb.textContent = 'Start over';
+  rb.onclick = () => { found.fill(false); $('reveal').classList.remove('on'); show('intro'); };
+  $('controls').appendChild(rb);
+
+  show('intro');
+</script>
 </body>
 </html>
