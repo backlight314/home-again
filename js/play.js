@@ -59,6 +59,39 @@
     return '<svg viewBox="0 0 120 80"><use href="#' + (m.scene || 'sc-table') + '"></use></svg>';
   };
 
+  // A read-aloud button toggles: press to play (button turns red with a stop square), press again to stop.
+  let reader = null; // { btn, idle, cleanup, id }
+  let readId = 0;
+  function clearReader() {
+    if (!reader) return;
+    const { btn, idle, cleanup } = reader;
+    reader = null;
+    btn.classList.remove('reading');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.innerHTML = idle;
+    if (cleanup) cleanup();
+  }
+  // run(done) starts the audio and calls done() when it ends by itself; cleanup() undoes any side effects on stop
+  function beginRead(btn, run, cleanup) {
+    hush();
+    const id = ++readId;
+    const idle = btn.innerHTML;
+    run(() => {
+      if (reader && reader.id === id) clearReader();
+    });
+    reader = { btn, idle, cleanup, id };
+    btn.classList.add('reading');
+    btn.setAttribute('aria-pressed', 'true');
+    btn.innerHTML = '<span class="stopico" aria-hidden="true"></span>' + (btn.classList.contains('hearbtn') ? 'stop' : 'STOP');
+  }
+  function toggleRead(btn, run, cleanup) {
+    if (reader && reader.btn === btn) {
+      hush();
+      return;
+    }
+    beginRead(btn, run, cleanup);
+  }
+
   function hush() {
     if (familyAudio) {
       familyAudio.pause();
@@ -69,6 +102,7 @@
       porchStop = null;
     }
     if (window.HomeAgainVoice) HomeAgainVoice.stop();
+    clearReader();
   }
 
   function speak(text, role, speaker) {
@@ -185,6 +219,42 @@
       fly.classList.add('opening');
     }, 1000);
     setTimeout(() => fly.remove(), 2100);
+  }
+
+  // the reverse of openBook: the cover swings shut over the page, then the book settles back on the shelf
+  function closeBook() {
+    const book = chapter(currentBook);
+    const scr = $('screen').getBoundingClientRect();
+    const fly = document.createElement('div');
+    fly.className = 'bookfly zoomed opening';
+    fly.style.setProperty('--bk', book.color);
+    fly.style.transition = 'none';
+    fly.style.cssText += ';left:0px;top:0px;width:' + scr.width + 'px;height:' + scr.height + 'px';
+    fly.innerHTML =
+      '<span class="plate">' + book.title + '</span><span class="prog">' +
+      (complete(book) ? S.bookComplete : S.bookProgress(done(book), book.memories.length)) + '</span>';
+    $('screen').appendChild(fly);
+    void fly.offsetWidth;
+    fly.style.transition = '';
+    fly.classList.remove('opening'); // swings shut
+    setTimeout(() => {
+      hubInside = false;
+      show('shelf', true);
+      const el = [...$('books').children].find((b) => b.getAttribute('aria-label') === book.title);
+      const r = el && el.getBoundingClientRect();
+      if (el) el.style.visibility = 'hidden';
+      if (r) {
+        fly.style.left = r.left - scr.left + 'px';
+        fly.style.top = r.top - scr.top + 'px';
+        fly.style.width = r.width + 'px';
+        fly.style.height = r.height + 'px';
+      }
+      fly.classList.remove('zoomed');
+      setTimeout(() => {
+        fly.remove();
+        if (el) el.style.visibility = '';
+      }, 1000);
+    }, 1000);
   }
 
   function buildAlbum() {
@@ -459,7 +529,12 @@
     if (name === 'ending') initEnding();
   }
 
-  function playFamilyVoice() {
+  function playFamilyVoice(done) {
+    const finish = () => {
+      const w = $('mWave');
+      if (w) w.classList.remove('on');
+      if (done) done();
+    };
     $('mWave').classList.add('on');
     hush();
     const url = pack.voice && pack.voice.audioDataUrl;
@@ -467,13 +542,13 @@
     const line = m && m.line;
     if (url) {
       familyAudio = new Audio(url);
-      familyAudio.onended = () => $('mWave').classList.remove('on');
+      familyAudio.onended = finish;
       familyAudio.play().catch(() => {
-        speak(line, 'letter', m && m.by).then(() => $('mWave').classList.remove('on'));
+        speak(line, 'letter', m && m.by).then(finish);
       });
       return;
     }
-    speak(line, 'letter', m && m.by).then(() => $('mWave').classList.remove('on'));
+    speak(line, 'letter', m && m.by).then(finish);
   }
 
   function openMemory(id) {
@@ -490,7 +565,7 @@
     pr.classList.remove('developed');
     $('reveal').classList.add('on');
     later(() => pr.classList.add('developed'), 300);
-    speak(m.line, 'letter', m.by);
+    beginRead($('mPlay'), (done) => speak(m.line, 'letter', m.by).then(done));
   }
 
   function setSeat(el, state, who) {
@@ -594,12 +669,16 @@
     }
   }
 
+  // the needle sweeps across the dial: one fixed angle per station, from -60 to +60 degrees
+  function needleAngle(i, n) {
+    return n > 1 ? -60 + (120 * i) / (n - 1) : 0;
+  }
+
   function tune(step) {
     const list = bands();
     bi = (bi + step + list.length) % list.length;
-    deg += step * 48;
     const n = document.getElementById('needle');
-    if (n) n.style.transform = 'rotate(' + deg + 'deg)';
+    if (n) n.style.transform = 'rotate(' + needleAngle(bi, list.length) + 'deg)';
     paintBand();
   }
 
@@ -607,7 +686,7 @@
     bi = 0;
     deg = 0;
     const n = document.getElementById('needle');
-    if (n) n.style.transform = 'none';
+    if (n) n.style.transform = 'rotate(' + needleAngle(0, bands().length) + 'deg)';
     paintBand();
     speak((pack.rooms.radio && pack.rooms.radio.prompt) || 'Turn the dial until a song comes in');
   }
@@ -649,6 +728,7 @@
     later(() => $('porchTake').classList.remove('hide'), 900);
   }
 
+  let porchTalkId = 0;
   function porchTalk() {
     if (talking) {
       finishPorch();
@@ -658,8 +738,11 @@
     $('mic').classList.add('live');
     $('pCap').innerHTML = 'I am listening. Tap again when you are done.<span class="sub">YESTERDAY · GARDEN</span>';
     $('pHeard').textContent = 'listening…';
-    speak('I am listening.');
-    porchStop = HomeAgainVoice.listen(
+    // wait for the spoken prompt to end so the mic never hears the app's own voice
+    const talkId = ++porchTalkId;
+    speak('I am listening.').then(() => {
+      if (!talking || talkId !== porchTalkId) return;
+      porchStop = HomeAgainVoice.listen(
       (text) => {
         if (text) $('pHeard').textContent = text;
       },
@@ -675,6 +758,7 @@
         step();
       }
     );
+    });
     later(() => {
       if (talking) finishPorch();
     }, 12000);
@@ -751,10 +835,8 @@
       '</span>' +
       callName +
       ' is here now<button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button>';
-    $('sayHello').onclick = () => {
-      $('sayHello').textContent = 'CALLING ' + callName.toUpperCase();
-      speak('Hello, ' + callName + '. We are here with you.', 'warm');
-    };
+    $('sayHello').onclick = () =>
+      toggleRead($('sayHello'), (done) => speak('Hello, ' + callName + '. We are here with you.', 'warm').then(done));
     speak('This week is whole.');
   }
 
@@ -772,11 +854,12 @@
     document.querySelectorAll('#view-play [data-go]').forEach((b) => {
       b.onclick = () => {
         if (b.dataset.go === 'hub') leaveHouse();
+        else if (b.dataset.go === 'shelf' && !$('s-intro').classList.contains('on')) closeBook();
         else show(b.dataset.go);
       };
     });
 
-    $('mPlay').onclick = () => playFamilyVoice();
+    $('mPlay').onclick = () => toggleRead($('mPlay'), (done) => playFamilyVoice(done));
     $('mDone').onclick = () => {
       $('reveal').classList.remove('on');
       if (rereading) {
@@ -801,20 +884,30 @@
     $('mic').onclick = porchTalk;
     $('porchTake').onclick = () => keepMemory('porch');
     $('atticTake').onclick = () => keepMemory('attic');
-    $('hearLetter').onclick = () => {
-      clearAll();
-      hush();
-      document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
-      letter.forEach((p, i) =>
-        later(() => {
+    $('hearLetter').onclick = () =>
+      toggleRead(
+        $('hearLetter'),
+        (done) => {
+          clearAll();
           document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
-          const el = $('ln' + i);
-          if (el) el.classList.add('say');
-          speak(p.line, 'letter', p.by);
-        }, i * 4200)
+          letter.forEach((p, i) =>
+            later(() => {
+              document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+              const el = $('ln' + i);
+              if (el) el.classList.add('say');
+              speak(p.line, 'letter', p.by);
+            }, i * 4200)
+          );
+          later(() => {
+            document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+            done();
+          }, letter.length * 4200);
+        },
+        () => {
+          clearAll();
+          document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+        }
       );
-      later(() => document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say')), letter.length * 4200);
-    };
 
     const debug = new URLSearchParams(location.search).has('debug');
     const controls = $('controls');
