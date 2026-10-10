@@ -1,0 +1,4 @@
+node_modules/
+# family photos, voices and notes stay on this machine
+data/
+.env

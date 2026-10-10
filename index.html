@@ -93,6 +93,9 @@
   .print svg, .print img { width: 100%; height: auto; display: block; }
   .print .pname { font-family: var(--type); font-size: 2.6cqw; color: var(--ink); text-align: center; margin-top: 1cqw; }
   .print.marked { outline: .4cqw solid var(--stamp); outline-offset: .5cqw; }
+  /* family photos stand in for the drawn faces (5:4) and scenes (3:2) */
+  img.ph-face { aspect-ratio: 5 / 4; object-fit: cover; }
+  img.ph-scene { aspect-ratio: 3 / 2; object-fit: cover; }
   .corner { position: absolute; width: 2.6cqw; height: 2.6cqw; background: #3b342b; }
   .corner.tl { left: 0; top: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
   .corner.tr { right: 0; top: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
@@ -136,7 +139,7 @@
   .seat .lbl { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); }
   .seat.target .lbl { font-family: var(--display); font-size: 5cqw; color: var(--stamp); }
   .seat.filled { padding: .5cqw; background: var(--print); box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
-  .seat.filled svg { width: 100%; height: 100%; display: block; }
+  .seat.filled svg, .seat.filled img { width: 100%; height: 100%; display: block; }
   .krow { position: absolute; left: 0; right: 0; bottom: 4.4cqw; display: flex; justify-content: center; gap: 3.4cqw; z-index: 4; }
   .krow .print { width: 18cqw; }
   .krow .print:nth-child(1) { transform: rotate(-2.2deg); }
@@ -188,13 +191,13 @@
   .mount.open { border: .25cqw dashed rgba(60,48,30,.5); }
   .mount.next { border: .3cqw solid var(--stamp); }
   .mount.set { background: var(--print); padding: .7cqw; box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
-  .mount svg { width: 100%; height: 100%; display: block; }
+  .mount svg, .mount img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .mount .num { position: absolute; left: -.3cqw; top: -3.4cqw; font-family: var(--type); font-size: 2.4cqw; color: var(--ink-soft); }
   .boxrow { position: absolute; left: 6cqw; bottom: 4.4cqw; display: flex; gap: 2.2cqw; align-items: flex-end; }
   .boxrow .pick { width: 16cqw; background: var(--print); padding: .6cqw; box-shadow: .3cqw .6cqw 1cqw rgba(45,32,15,.3); }
   .boxrow .pick:nth-child(2) { transform: rotate(-2deg); }
   .boxrow .pick:nth-child(3) { transform: rotate(1.6deg); }
-  .boxrow .pick svg { width: 100%; height: auto; display: block; }
+  .boxrow .pick svg, .boxrow .pick img { width: 100%; height: auto; display: block; }
   .boxrow .pick.gone { visibility: hidden; }
   .boxlbl { position: absolute; left: 6cqw; bottom: 17cqw; font-family: var(--type); font-size: 2.3cqw; color: var(--ink-soft); letter-spacing: .04em; }
 
@@ -209,7 +212,7 @@
   .endrow { position: absolute; left: 0; right: 0; bottom: 3.4cqw; display: flex; justify-content: center; gap: 3cqw; align-items: center; }
   .calltile { display: flex; align-items: center; gap: 1.6cqw; font-family: var(--type); font-size: 2.5cqw; color: var(--ink); background: var(--print); padding: 1cqw 2cqw; box-shadow: .4cqw .7cqw 1.2cqw rgba(45,32,15,.26); }
   .calltile .av { width: 7cqw; }
-  .calltile .av svg { width: 100%; height: auto; display: block; }
+  .calltile .av svg, .calltile .av img { width: 100%; height: auto; display: block; }
 
   /* overlays */
   .ovl { position: absolute; inset: 0; z-index: 9; background: rgba(32,24,14,.6); display: none; place-items: center; }
@@ -306,7 +309,7 @@
 
 <header>
   <h1>Home Again</h1>
-  <p>One evening in a family album. The bird brings a letter torn in four, each room holds a piece, and the family reads it at the end. Names, photos, voices and songs are placeholders.</p>
+  <p id="headNote">One evening in a family album. The bird brings a letter torn in four, each room holds a piece, and the family reads it at the end. Names, photos, voices and songs are placeholders until the family builds their own on the <a href="/family" style="color:inherit">family page</a>.</p>
 </header>
 
 <div class="stage">
@@ -377,7 +380,7 @@
       <div class="page"></div>
       <div class="caption" id="pCap">Tell me about this day at the lake<span class="sub">PORCH, LATE AFTERNOON</span></div>
       <div class="chain" style="left:36%"></div><div class="chain" style="right:36%"></div>
-      <div class="swing"><div class="print"><svg viewBox="0 0 120 80"><use href="#sc-lake"/></svg><div class="pname">the lake, summer</div></div></div>
+      <div class="swing"><div class="print" id="pPrint"></div></div>
       <div class="bird" style="left:5%;bottom:10%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
       <div class="followup hide" id="pFollow">Then what happened?</div>
       <div class="heard" id="pHeard">tap the microphone and talk</div>
@@ -408,7 +411,7 @@
       <div class="bird" style="left:5%;bottom:22%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
       <div class="endrow">
         <button class="pressbtn" id="hearLetter">HEAR THE LETTER</button>
-        <div class="calltile"><span class="av"><svg viewBox="0 0 100 80" style="--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240"><use href="#person"/></svg></span>Mei is here now<button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button></div>
+        <div class="calltile"><span class="av" id="callFace"></span><span id="callName"></span><button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button></div>
       </div>
     </section>
 
@@ -444,25 +447,85 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const letter = [
-    { room: 'Kitchen', line: 'Dear Mom, your chair at the table is still yours every Sunday.', by: 'Mei' },
-    { room: 'Radio room', line: 'That song was playing the night Dad asked you to dance.', by: 'Daniel' },
-    { room: 'Porch', line: 'I still think about the day at the lake, when you let me steer.', by: 'Mei' },
-    { room: 'Attic', line: 'Every picture in this house is someone who loves you. We do.', by: 'Aunt Rose' }
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  /* game content: these placeholders are replaced by the family's build from /api/game */
+  const avatars = [
+    '--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240',
+    '--bg:#bcc7d2;--skin:#cda683;--cloth:#4f6279;--hair:#44352a',
+    '--bg:#c3cfc4;--skin:#e0bb9b;--cloth:#6b8078;--hair:#a9a396',
+    '--bg:#d6c7b4;--skin:#c99a78;--cloth:#8a5f4a;--hair:#2f2620',
+    '--bg:#c9c9d6;--skin:#e3c2a4;--cloth:#5b5b78;--hair:#7a6a5a'
   ];
+  let content = {
+    callName: 'Mom',
+    people: [
+      { name: 'Daniel', relation: 'your son', selfIntro: 'That is me, Mom.', hello: 'Hi Mom, I brought the bread.' },
+      { name: 'Mei', relation: 'your daughter', selfIntro: 'That is me, Mom.', hello: 'Hi Mom, it is me.' },
+      { name: 'Aunt Rose', relation: 'your sister', selfIntro: 'That is me, your sister.', hello: 'Hello, my dear.' }
+    ],
+    seats: ['Mei', 'Daniel'],
+    kitchenPlace: 'KITCHEN, SUNDAY',
+    song: 'a song from 1974',
+    songQuestion: 'Where did you hear this one?',
+    porch: { photo: 'sc-lake', label: 'the lake, summer', prompt: 'Tell me about this day at the lake', followUp: 'Then what happened?', story: 'Dad let me steer the boat and I was so scared. He kept laughing.' },
+    atticPhotos: ['sc-garden', 'sc-lake', 'sc-snow'],
+    letter: [
+      { line: 'Dear Mom, your chair at the table is still yours every Sunday.', by: 'Mei' },
+      { line: 'That song was playing the night Dad asked you to dance.', by: 'Daniel' },
+      { line: 'I still think about the day at the lake, when you let me steer.', by: 'Mei' },
+      { line: 'Every picture in this house is someone who loves you. We do.', by: 'Aunt Rose' }
+    ],
+    caller: 'Mei'
+  };
+
+  function useFamilyBuild(g) {
+    if (!g || !g.people?.length || g.letter?.length !== 4) return;
+    const song = g.radio.song;
+    content = {
+      callName: g.player.callName || content.callName,
+      people: g.people.map(p => ({ name: p.name, relation: p.relation, selfIntro: p.selfIntro, hello: p.hello, photo: p.photo })),
+      seats: g.kitchen.seats.length ? g.kitchen.seats : [g.people[0].name],
+      kitchenPlace: g.kitchen.place || content.kitchenPlace,
+      song: [song.title, song.artist].filter(Boolean).join(', ') + (song.year ? ' · ' + song.year : ''),
+      songQuestion: g.radio.question || content.songQuestion,
+      porch: { photo: g.porch.photo || content.porch.photo, label: g.porch.photoLabel, prompt: g.porch.prompt, followUp: g.porch.followUp, story: g.porch.sampleStory },
+      atticPhotos: new Set(g.attic.photos).size >= 2 ? g.attic.photos : content.atticPhotos,
+      letter: g.letter.map(l => ({ line: l.line, by: l.by, voice: l.voice })),
+      caller: g.ending.caller || g.people[0].name
+    };
+    $('headNote').textContent = 'One evening in a family album, made for ' + content.callName + ' by the family.';
+  }
+
+  const roomNames = ['Kitchen', 'Radio room', 'Porch', 'Attic'];
   const ordinals = ['PIECE ONE OF FOUR', 'PIECE TWO OF FOUR', 'PIECE THREE OF FOUR', 'PIECE FOUR OF FOUR'];
   const found = [false, false, false, false];
   const keys = ['kitchen', 'radio', 'porch', 'attic'];
   const wins = ['w-kitchen', 'w-radio', 'w-porch', 'w-attic'];
-  const people = {
-    Mei: '--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240',
-    Daniel: '--bg:#bcc7d2;--skin:#cda683;--cloth:#4f6279;--hair:#44352a',
-    'Aunt Rose': '--bg:#c3cfc4;--skin:#e0bb9b;--cloth:#6b8078;--hair:#a9a396'
+  const person = n => content.people.find(p => p.name === n);
+  const face = n => {
+    const p = person(n), i = Math.max(0, content.people.indexOf(p));
+    return p?.photo
+      ? '<img class="ph-face" src="' + esc(p.photo) + '" alt="' + esc(n) + '">'
+      : '<svg viewBox="0 0 100 80" style="' + avatars[i % avatars.length] + '"><use href="#person"/></svg>';
   };
-  const face = n => '<svg viewBox="0 0 100 80" style="' + people[n] + '"><use href="#person"/></svg>';
-  let timers = [], pending = -1, rereading = false;
+  // a scene is either one of the drawn symbols (sc-*) or a photo URL
+  const scene = s => s.startsWith('sc-')
+    ? '<svg viewBox="0 0 120 80"><use href="#' + s + '"/></svg>'
+    : '<img class="ph-scene" src="' + esc(s) + '" alt="">';
+  let timers = [], pending = -1, rereading = false, voice = null;
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
-  const clearAll = () => { timers.forEach(clearTimeout); timers = []; };
+  const stopVoice = () => { if (voice) { voice.pause(); voice = null; } };
+  const clearAll = () => { timers.forEach(clearTimeout); timers = []; stopVoice(); };
+  // plays a recorded voice, or just waits when there is none; calls done afterwards
+  function speak(url, fallbackMs, done) {
+    stopVoice();
+    if (!url) return later(done, fallbackMs);
+    const a = voice = new Audio(url);
+    const finish = () => { if (voice === a) { voice = null; done(); } };
+    a.onended = finish; a.onerror = () => later(finish, fallbackMs);
+    a.play().catch(() => later(finish, fallbackMs));
+  }
 
   function paintProgress() {
     found.forEach((f, i) => $('pc' + i).classList.toggle('got', f));
@@ -472,10 +535,10 @@
   }
   function buildRooms() {
     const box = $('rooms'); box.innerHTML = '';
-    letter.forEach((p, i) => {
+    roomNames.forEach((room, i) => {
       const b = document.createElement('button');
       b.className = 'roomrow' + (found[i] ? ' found' : '');
-      b.innerHTML = '<span class="n">' + p.room + '</span><span class="dots"></span><span class="s">' + (found[i] ? 'piece found' : 'piece waiting') + '</span>';
+      b.innerHTML = '<span class="n">' + room + '</span><span class="dots"></span><span class="s">' + (found[i] ? 'piece found' : 'piece waiting') + '</span>';
       b.onclick = () => { if (found[i]) { rereading = true; openSlip(i); } else show(keys[i]); };
       box.appendChild(b);
     });
@@ -499,15 +562,17 @@
 
   function openSlip(i) {
     pending = i;
-    $('rKick').textContent = rereading ? 'FROM THE ' + letter[i].room.toUpperCase() : ordinals[i];
-    $('rLine').textContent = letter[i].line;
-    $('rBy').textContent = 'recorded by ' + letter[i].by;
+    const piece = content.letter[i];
+    $('rKick').textContent = rereading ? 'FROM THE ' + roomNames[i].toUpperCase() : ordinals[i];
+    $('rLine').textContent = piece.line;
+    $('rBy').textContent = (piece.voice ? 'recorded by ' : 'from ') + piece.by;
     $('rWave').classList.remove('on');
     $('rDone').textContent = rereading ? 'BACK TO THE HOUSE' : 'PUT IT IN THE LETTER';
     $('reveal').classList.add('on');
   }
-  $('rPlay').onclick = () => { $('rWave').classList.add('on'); later(() => $('rWave').classList.remove('on'), 2600); };
+  $('rPlay').onclick = () => { $('rWave').classList.add('on'); speak(content.letter[pending].voice, 2600, () => $('rWave').classList.remove('on')); };
   $('rDone').onclick = () => {
+    stopVoice();
     $('reveal').classList.remove('on');
     if (rereading) { rereading = false; show('hub'); return; }
     found[pending] = true; paintProgress();
@@ -518,11 +583,8 @@
   $('restHome').onclick = () => { $('rest').classList.remove('on'); show('hub'); };
 
   /* kitchen */
-  const plan = [
-    { seat: 'seatC', who: 'Mei', hint: { Daniel: 'Daniel: "That is me, Mom. Look for Mei."', 'Aunt Rose': 'Rose: "That is me, your sister. Look for Mei."' }, hello: 'Mei: "Hi Mom, it is me."' },
-    { seat: 'seatL', who: 'Daniel', hint: { 'Aunt Rose': 'Rose: "That is me again. Daniel is the other one."' }, hello: 'Daniel: "Hi Mom, I brought the bread."' }
-  ];
-  let round = 0;
+  const seatIds = ['seatC', 'seatL'];
+  let plan = [], round = 0;
   const ring = '<span class="ring"><svg viewBox="0 0 100 100"><use href="#pencilring"/></svg></span>';
   function setSeat(el, state, who) {
     el.className = 'seat' + (state === 'target' ? ' target' : state === 'filled' ? ' filled' : '');
@@ -530,19 +592,24 @@
     else if (state === 'target') el.innerHTML = ring + '<span class="lbl">?</span>';
     else el.innerHTML = '<span class="lbl">empty</span>';
   }
+  const kCap = text => $('kCap').innerHTML = text + '<span class="sub">' + esc(content.kitchenPlace) + '</span>';
   function initKitchen() {
     round = 0;
+    plan = content.seats.slice(0, 2).map((who, i) => ({ seat: seatIds[i], who }));
+    // the seated people always appear in the row, topped up to three faces
+    const faces = [...content.seats, ...content.people.map(p => p.name)].filter((n, i, a) => a.indexOf(n) === i).slice(0, 3);
+    faces.sort((a, b) => content.people.indexOf(person(a)) - content.people.indexOf(person(b)));
     setSeat($('seatL'), 'empty'); setSeat($('seatC'), 'target'); setSeat($('seatR'), 'empty');
     $('kSaid').hidden = true;
-    $('kCap').innerHTML = 'Who sits in the circled chair?<span class="sub">KITCHEN, SUNDAY</span>';
-    drawFaces(['Daniel', 'Mei', 'Aunt Rose']);
+    kCap('Who sits in the circled chair?');
+    drawFaces(faces);
   }
   function drawFaces(list) {
     const row = $('kRow'); row.innerHTML = '';
     list.forEach(n => {
       const b = document.createElement('button');
       b.className = 'print';
-      b.innerHTML = face(n) + '<div class="pname">' + n + '</div>';
+      b.innerHTML = face(n) + '<div class="pname">' + esc(n) + '</div>';
       b.onclick = () => pick(n, b, list);
       row.appendChild(b);
     });
@@ -550,32 +617,28 @@
   function said(t) { $('kSaidText').textContent = t; $('kSaid').hidden = false; }
   function pick(n, btn, list) {
     const p = plan[round];
-    if (n !== p.who) { btn.classList.add('marked'); said(p.hint[n]); return; }
+    if (n !== p.who) { btn.classList.add('marked'); said(n + ': "' + person(n).selfIntro + ' Look for ' + p.who + '."'); return; }
     setSeat($(p.seat), 'filled', n);
-    said(p.hello);
+    said(n + ': "' + person(n).hello + '"');
     drawFaces(list.filter(x => x !== n));
     round++;
     if (round < plan.length) {
       setSeat($(plan[round].seat), 'target');
-      $('kCap').innerHTML = 'And the next chair?<span class="sub">KITCHEN, SUNDAY</span>';
+      kCap('And the next chair?');
     } else {
-      $('kCap').innerHTML = 'Everyone is home. Something is under the table.<span class="sub">KITCHEN, SUNDAY</span>';
+      kCap('Everyone is home. Something is under the table.');
       later(() => { rereading = false; openSlip(0); }, 2100);
     }
   }
 
   /* radio */
-  const bands = [
-    { t: 'static', clear: false }, { t: 'a song from 1974', clear: true },
-    { t: 'static', clear: false }, { t: 'faint talking', clear: false }
-  ];
-  let bi = 0, deg = 0;
+  let bands = [], bi = 0, deg = 0;
   function paintBand() {
     const b = bands[bi];
     $('station').textContent = b.t;
     $('station').classList.toggle('clear', b.clear);
     $('keepSong').classList.toggle('hide', !b.clear);
-    $('rCap').innerHTML = (b.clear ? 'Where did you hear this one?' : 'Turn the dial until a song comes in') + '<span class="sub">RADIO ROOM</span>';
+    $('rCap').innerHTML = esc(b.clear ? content.songQuestion : 'Turn the dial until a song comes in') + '<span class="sub">RADIO ROOM</span>';
   }
   function tune(step) {
     bi = (bi + step + bands.length) % bands.length; deg += step * 48;
@@ -583,26 +646,32 @@
     if (n) n.style.transform = 'rotate(' + deg + 'deg)';
     paintBand();
   }
-  function initRadio() { bi = 0; deg = 0; const n = document.getElementById('needle'); if (n) n.style.transform = 'none'; paintBand(); }
+  function initRadio() {
+    bands = [{ t: 'static', clear: false }, { t: content.song, clear: true }, { t: 'static', clear: false }, { t: 'faint talking', clear: false }];
+    bi = 0; deg = 0; const n = document.getElementById('needle'); if (n) n.style.transform = 'none'; paintBand();
+  }
   $('tuneL').onclick = () => tune(-1);
   $('tuneR').onclick = () => tune(1);
   $('keepSong').onclick = () => { rereading = false; openSlip(1); };
 
   /* porch */
-  const story = 'Dad let me steer the boat and I was so scared. He kept laughing.';
   let talking = false;
+  const pCap = text => $('pCap').innerHTML = esc(text) + '<span class="sub">PORCH, LATE AFTERNOON</span>';
   function initPorch() {
     talking = false;
+    $('pPrint').innerHTML = scene(content.porch.photo) + '<div class="pname">' + esc(content.porch.label) + '</div>';
+    $('pFollow').textContent = content.porch.followUp;
     $('mic').classList.remove('live');
     $('pHeard').textContent = 'tap the microphone and talk';
     $('pStamp').classList.add('hide'); $('pFollow').classList.add('hide'); $('porchTake').classList.add('hide');
-    $('pCap').innerHTML = 'Tell me about this day at the lake<span class="sub">PORCH, LATE AFTERNOON</span>';
+    pCap(content.porch.prompt);
   }
   $('mic').onclick = () => {
     if (talking) return;
     talking = true;
     $('mic').classList.add('live');
-    $('pCap').innerHTML = 'I am listening<span class="sub">PORCH, LATE AFTERNOON</span>';
+    pCap('I am listening');
+    const story = content.porch.story;
     let i = 0;
     const step = () => {
       i += 2; $('pHeard').textContent = story.slice(0, i);
@@ -610,7 +679,7 @@
       else later(() => {
         $('mic').classList.remove('live');
         $('pStamp').classList.remove('hide'); $('pFollow').classList.remove('hide');
-        $('pCap').innerHTML = 'Thank you for telling me<span class="sub">PORCH, LATE AFTERNOON</span>';
+        pCap('Thank you for telling me');
         later(() => $('porchTake').classList.remove('hide'), 900);
       }, 500);
     };
@@ -618,30 +687,29 @@
   };
   $('porchTake').onclick = () => { rereading = false; openSlip(2); };
 
-  /* attic */
-  const pics = ['sc-garden', 'sc-lake', 'sc-snow'];
-  let set = [];
+  /* attic: every order is accepted, so the box is just shuffled */
+  let pics = [], set = [];
   function drawAttic() {
     const sh = $('shelf');
     sh.querySelectorAll('.mount').forEach(m => m.remove());
-    const lefts = ['0%', '39%', '78%'];
-    for (let i = 0; i < 3; i++) {
+    const total = pics.length;
+    for (let i = 0; i < total; i++) {
       const m = document.createElement('div');
       m.className = 'mount ' + (set[i] ? 'set' : (i === set.length ? 'next' : 'open'));
-      m.style.left = lefts[i];
-      m.innerHTML = '<span class="num">' + (i + 1) + '</span>' + (set[i] ? '<svg viewBox="0 0 120 80"><use href="#' + set[i] + '"/></svg>' : '');
+      m.style.left = (total === 1 ? 39 : i * 78 / (total - 1)) + '%';
+      m.innerHTML = '<span class="num">' + (i + 1) + '</span>' + (set[i] ? scene(set[i]) : '');
       sh.appendChild(m);
     }
     const box = $('box'); box.innerHTML = '';
     pics.forEach(p => {
       const b = document.createElement('button');
       b.className = 'pick' + (set.includes(p) ? ' gone' : '');
-      b.innerHTML = '<svg viewBox="0 0 120 80"><use href="#' + p + '"/></svg>';
+      b.innerHTML = scene(p);
       b.setAttribute('aria-label', 'photo');
-      b.onclick = () => { if (set.length < 3 && !set.includes(p)) { set.push(p); drawAttic(); } };
+      b.onclick = () => { if (set.length < total && !set.includes(p)) { set.push(p); drawAttic(); } };
       box.appendChild(b);
     });
-    if (set.length === 3) {
+    if (set.length === total) {
       $('aCap').innerHTML = 'That looks right<span class="sub">ATTIC, THE PHOTO BOX</span>';
       later(() => $('atticTake').classList.remove('hide'), 700);
     } else {
@@ -649,23 +717,35 @@
       $('atticTake').classList.add('hide');
     }
   }
-  function initAttic() { set = []; drawAttic(); }
+  function initAttic() {
+    set = [];
+    pics = [...new Set(content.atticPhotos)];
+    // shuffle so the box rarely shows them already in order
+    for (let tries = 0; tries < 8 && pics.length > 1 && pics.every((p, i) => p === content.atticPhotos[i]); tries++) pics.sort(() => Math.random() - .5);
+    drawAttic();
+  }
   $('atticTake').onclick = () => { rereading = false; openSlip(3); };
 
   /* ending */
   function initEnding() {
-    $('sheet').innerHTML = letter.map((p, i) => '<div class="ln" id="ln' + i + '">' + p.line + '<span>' + p.by + '</span></div>').join('');
+    $('sheet').innerHTML = content.letter.map((p, i) => '<div class="ln" id="ln' + i + '">' + esc(p.line) + '<span>' + esc(p.by) + '</span></div>').join('');
+    $('callFace').innerHTML = face(content.caller);
+    $('callName').textContent = content.caller + ' is here now';
+    $('sayHello').textContent = 'SAY HELLO';
   }
+  // reads the letter line by line, in each person's own voice when they recorded one
   $('hearLetter').onclick = () => {
     clearAll();
-    document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
-    letter.forEach((_, i) => later(() => {
-      document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
+    const lines = () => document.querySelectorAll('.sheet .ln');
+    const read = i => {
+      lines().forEach(l => l.classList.remove('say'));
+      if (i >= content.letter.length) return;
       const el = $('ln' + i); if (el) el.classList.add('say');
-    }, i * 2200));
-    later(() => document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say')), letter.length * 2200);
+      speak(content.letter[i].voice, 2200, () => read(i + 1));
+    };
+    read(0);
   };
-  $('sayHello').onclick = () => { $('sayHello').textContent = 'CALLING MEI'; };
+  $('sayHello').onclick = () => { $('sayHello').textContent = 'CALLING ' + content.caller.toUpperCase(); };
 
   /* review strip */
   [['intro','Opening'],['hub','House'],['kitchen','Kitchen'],['radio','Radio room'],['porch','Porch'],['attic','Attic'],['ending','Ending']]
@@ -679,6 +759,8 @@
   $('controls').appendChild(rb);
 
   show('intro');
+  // opened from the server: swap in the family's build if there is one
+  fetch('/api/game').then(r => r.ok ? r.json() : null).then(g => { useFamilyBuild(g); }).catch(() => {});
 </script>
 </body>
 </html>

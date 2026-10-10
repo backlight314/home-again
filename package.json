@@ -1,0 +1,11 @@
+{
+  "name": "home-again",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.28.0"
+  }
+}

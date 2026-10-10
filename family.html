@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Family Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #23344f;
+    --stamp: #9c3b2e;
+    --sage: #697a5c;
+    --crayon: #d8a53a;
+    --display: "Petrona", "Iowan Old Style", Georgia, serif;
+    --type: "Courier Prime", "Courier New", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --page-bg: #cfc6b2;
+    --page-text: #2d2722;
+    --page-soft: #5e564a;
+    --card: #faf5e8;
+    --card-edge: #a89c84;
+    --field: #fffdf7;
+    --accent: var(--stamp);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19; --accent: #d77a6a;
+    }
+  }
+  :root[data-theme="dark"] { --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19; --accent: #d77a6a; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg); color: var(--page-text); font-family: var(--sans); line-height: 1.5;
+    padding: calc(26px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 20px; }
+
+  header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 5vw, 42px); line-height: 1.05; }
+  header p { color: var(--page-soft); font-size: 17px; max-width: 64ch; margin-top: 6px; }
+  header nav { margin-top: 10px; font-family: var(--type); font-size: 14px; }
+  header nav a { color: var(--accent); }
+
+  section { background: var(--card); border: 1px solid var(--card-edge); padding: 20px; display: grid; gap: 14px; }
+  section h2 { font-family: var(--display); font-weight: 600; font-size: 24px; display: flex; gap: 10px; align-items: baseline; }
+  section h2 .num { font-family: var(--type); font-size: 14px; color: var(--accent); letter-spacing: .08em; }
+  section > p.hint { color: var(--page-soft); font-size: 15px; max-width: 64ch; margin-top: -8px; }
+
+  label { display: grid; gap: 4px; font-family: var(--type); font-size: 13px; letter-spacing: .03em; color: var(--page-soft); }
+  input[type=text], textarea, select { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); width: 100%; }
+  textarea { min-height: 84px; resize: vertical; }
+  .grid2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  .btn { font-family: var(--type); font-weight: 700; font-size: 15px; letter-spacing: .04em; padding: 9px 16px; background: var(--field); color: var(--page-text); border: 2px solid var(--page-text); }
+  .btn.primary { border-color: var(--accent); color: var(--accent); }
+  .btn.big { font-size: 17px; padding: 12px 22px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .link { background: none; border: none; font-family: var(--type); font-size: 13px; color: var(--page-soft); text-decoration: underline; padding: 0; }
+  .filebtn { position: relative; overflow: hidden; display: inline-block; }
+  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .items { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .item { border: 1px solid var(--card-edge); background: var(--field); padding: 8px; display: grid; gap: 6px; align-content: start; }
+  .item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--card-edge); }
+  .item .t { font-weight: 600; font-size: 15px; }
+  .item .s { font-size: 13px; color: var(--page-soft); }
+  .item audio { width: 100%; height: 34px; }
+  .list { display: grid; gap: 8px; }
+  .list .item { grid-template-columns: 1fr auto; align-items: start; }
+
+  .recorder { display: flex; align-items: center; gap: 12px; }
+  .recdot { width: 14px; height: 14px; border-radius: 50%; background: var(--card-edge); }
+  .recdot.on { background: var(--stamp); animation: pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { from { opacity: .4; } to { opacity: 1; } }
+  .preview audio { width: 100%; }
+
+  .agent { border: 2px solid var(--accent); }
+  .status { font-family: var(--type); font-size: 14px; color: var(--page-soft); min-height: 1.5em; }
+  .status.err { color: var(--accent); }
+  .summary { font-family: var(--display); font-size: 19px; line-height: 1.45; }
+  .rooms { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .room { border: 1px solid var(--card-edge); background: var(--field); padding: 12px; display: grid; gap: 6px; align-content: start; }
+  .room h3 { font-family: var(--type); font-size: 13px; letter-spacing: .1em; color: var(--accent); font-weight: 700; }
+  .room .line { font-family: var(--display); font-style: italic; font-size: 16px; }
+  .room .meta { font-size: 13px; color: var(--page-soft); }
+  .room .thumbs { display: flex; gap: 6px; }
+  .room .thumbs img { width: 56px; height: 42px; object-fit: cover; }
+  .qs { display: grid; gap: 10px; }
+  .qs label { font-family: var(--sans); font-size: 15px; color: var(--page-text); letter-spacing: 0; }
+  .empty { color: var(--page-soft); font-size: 14px; font-style: italic; }
+  @media (prefers-reduced-motion: reduce) { .recdot.on { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Family Workshop</h1>
+    <p>Add photos, voices and the stories you know. The guide reads everything, fills the four rooms of the game with your family, and asks you about anything it couldn't work out.</p>
+    <nav><a href="/">Open the game &rarr;</a></nav>
+  </header>
+
+  <section id="about">
+    <h2><span class="num">01</span>About them</h2>
+    <p class="hint">The person who will play. Only what you are comfortable sharing.</p>
+    <div class="grid2">
+      <label>Their name<input type="text" data-p="name" placeholder="Margaret Chen"></label>
+      <label>What the family calls them<input type="text" data-p="callName" placeholder="Mom, Grandma Meg"></label>
+    </div>
+    <label>Places that matter<input type="text" data-p="hometown" placeholder="the lake house in Wisconsin, the bakery on Main St"></label>
+    <label>Music they love<input type="text" data-p="music" placeholder="Nat King Cole, the song from their wedding"></label>
+    <label>Things they love<textarea data-p="loves" placeholder="gardening, Sunday dinners, card games with Rose"></textarea></label>
+    <label>Please avoid<textarea data-p="avoid" placeholder="Don't mention Dad's passing. The old apartment upsets her."></textarea></label>
+    <div class="row"><button class="btn" id="saveProfile">SAVE</button><span class="status" id="profileStatus"></span></div>
+  </section>
+
+  <section id="family">
+    <h2><span class="num">02</span>The family</h2>
+    <p class="hint">The people who show up at the kitchen table. A clear photo of just their face works best.</p>
+    <div class="items" id="peopleList"></div>
+    <div class="grid2">
+      <label>Name<input type="text" id="fName" placeholder="Mei"></label>
+      <label>Relation to them<input type="text" id="fRel" placeholder="daughter"></label>
+    </div>
+    <label>Something about them (optional)<input type="text" id="fNote" placeholder="brings bread every Sunday, lives nearby"></label>
+    <div class="row">
+      <span class="btn filebtn">CHOOSE PORTRAIT<input type="file" id="fPhoto" accept="image/*"></span>
+      <span class="status" id="fPhotoName"></span>
+      <button class="btn primary" id="addPerson">ADD PERSON</button>
+    </div>
+  </section>
+
+  <section id="photos">
+    <h2><span class="num">03</span>Photos</h2>
+    <p class="hint">Places, trips, holidays, the house. A caption and a rough year help the guide put them in order.</p>
+    <div class="items" id="photoList"></div>
+    <div class="grid2">
+      <label>Caption<input type="text" id="phCap" placeholder="the lake, summer, Dad teaching Mei to steer"></label>
+      <label>Year (rough is fine)<input type="text" id="phYear" placeholder="1986"></label>
+    </div>
+    <div class="row">
+      <span class="btn primary filebtn">ADD PHOTOS<input type="file" id="phFiles" accept="image/*" multiple></span>
+      <span class="status" id="phStatus"></span>
+    </div>
+  </section>
+
+  <section id="voices">
+    <h2><span class="num">04</span>Voice messages</h2>
+    <p class="hint">Say something you'd want them to hear: a hello, a memory, a line for the letter. They will hear your real voice. The guide only reads the words, so check the transcript.</p>
+    <div class="list" id="voiceList"></div>
+    <label>Who is speaking<input type="text" id="vFrom" list="familyNames" placeholder="Mei"></label>
+    <datalist id="familyNames"></datalist>
+    <div class="row">
+      <div class="recorder"><span class="recdot" id="recDot"></span><button class="btn" id="recBtn">RECORD</button></div>
+      <span class="btn filebtn">OR UPLOAD AUDIO<input type="file" id="vFile" accept="audio/*"></span>
+    </div>
+    <div class="preview" id="vPreview"></div>
+    <label>Transcript<textarea id="vText" placeholder="Fills in as you talk where the browser supports it. Otherwise type what you said."></textarea></label>
+    <div class="row"><button class="btn primary" id="saveVoice" disabled>SAVE MESSAGE</button><span class="status" id="vStatus"></span></div>
+  </section>
+
+  <section id="notes">
+    <h2><span class="num">05</span>Stories and notes</h2>
+    <p class="hint">Anything else: family stories, routines, nicknames, who sat where at dinner.</p>
+    <div class="list" id="noteList"></div>
+    <label>From<input type="text" id="nFrom" list="familyNames" placeholder="Daniel"></label>
+    <label>Note<textarea id="nText" placeholder="Every Sunday Mom made dumplings and Mei sat next to her."></textarea></label>
+    <div class="row"><button class="btn primary" id="addNote">ADD NOTE</button></div>
+  </section>
+
+  <section class="agent" id="agent">
+    <h2><span class="num">06</span>Build the game</h2>
+    <p class="hint">The guide reads everything above and writes the kitchen, radio, porch, attic and the letter. Build again whenever you add something.</p>
+    <div class="row"><button class="btn primary big" id="build">BUILD THE GAME</button><a class="btn" href="/" id="playLink" hidden>PLAY IT</a></div>
+    <div class="status" id="buildStatus"></div>
+    <div id="result"></div>
+  </section>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let mat = { profile: {}, people: [], photos: [], voices: [], notes: [] };
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  async function api(method, url, body) {
+    const res = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    return data;
+  }
+  function status(id, text, err) { $(id).textContent = text; $(id).classList.toggle('err', !!err); }
+
+  // Shrinks photos before upload so requests stay small and the guide gets a sensible size.
+  function shrinkImage(file, max = 1280) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => reject(new Error("Couldn't read " + file.name + '. Try a JPEG or PNG.'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  const readDataUrl = blob => new Promise((resolve, reject) => {
+    const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob);
+  });
+
+  function render() {
+    const p = mat.profile || {};
+    document.querySelectorAll('[data-p]').forEach(el => { if (document.activeElement !== el) el.value = p[el.dataset.p] || ''; });
+
+    const photoUrl = id => mat.photos.find(x => x.id === id)?.url;
+    $('peopleList').innerHTML = mat.people.map(f => `<div class="item">
+      ${photoUrl(f.photoId) ? `<img src="${esc(photoUrl(f.photoId))}" alt="">` : ''}
+      <span class="t">${esc(f.name)}</span><span class="s">${esc(f.relation)}${f.note ? ' · ' + esc(f.note) : ''}</span>
+      <button class="link" data-del="${f.id}">remove</button></div>`).join('') || '<p class="empty">No one added yet.</p>';
+    $('familyNames').innerHTML = mat.people.map(f => `<option value="${esc(f.name)}">`).join('');
+
+    const portraits = new Set(mat.people.map(f => f.photoId));
+    const loose = mat.photos.filter(ph => !portraits.has(ph.id));
+    $('photoList').innerHTML = loose.map(ph => `<div class="item">
+      <img src="${esc(ph.url)}" alt="${esc(ph.caption)}">
+      <span class="s">${esc(ph.caption || 'no caption')}${ph.year ? ' · ' + esc(ph.year) : ''}</span>
+      <button class="link" data-del="${ph.id}">remove</button></div>`).join('') || '<p class="empty">No photos yet.</p>';
+
+    $('voiceList').innerHTML = mat.voices.map(v => `<div class="item"><div>
+      <span class="t">${esc(v.from || 'Someone')}</span>
+      <audio controls preload="none" src="${esc(v.url)}"></audio>
+      <span class="s">${esc(v.transcript || 'no transcript')}</span></div>
+      <button class="link" data-del="${v.id}">remove</button></div>`).join('') || '<p class="empty">No voice messages yet.</p>';
+
+    $('noteList').innerHTML = mat.notes.map(n => `<div class="item"><span>${n.from ? '<b>' + esc(n.from) + ':</b> ' : ''}${esc(n.text)}</span>
+      <button class="link" data-del="${n.id}">remove</button></div>`).join('') || '<p class="empty">No notes yet.</p>';
+  }
+  document.addEventListener('click', async e => {
+    const id = e.target.dataset?.del;
+    if (!id) return;
+    mat = await api('DELETE', '/api/materials/' + id); render();
+  });
+
+  /* 01 profile */
+  $('saveProfile').onclick = async () => {
+    const profile = {};
+    document.querySelectorAll('[data-p]').forEach(el => profile[el.dataset.p] = el.value.trim());
+    try { mat = await api('PUT', '/api/profile', profile); status('profileStatus', 'saved'); }
+    catch (err) { status('profileStatus', err.message, true); }
+  };
+
+  /* 02 family */
+  $('fPhoto').onchange = () => $('fPhotoName').textContent = $('fPhoto').files[0]?.name || '';
+  $('addPerson').onclick = async () => {
+    const name = $('fName').value.trim();
+    if (!name) return status('fPhotoName', 'add a name first', true);
+    try {
+      const file = $('fPhoto').files[0];
+      mat = await api('POST', '/api/people', { name, relation: $('fRel').value.trim(), note: $('fNote').value.trim(), photo: file ? await shrinkImage(file, 800) : null });
+      ['fName', 'fRel', 'fNote', 'fPhoto'].forEach(id => $(id).value = '');
+      status('fPhotoName', ''); render();
+    } catch (err) { status('fPhotoName', err.message, true); }
+  };
+
+  /* 03 photos */
+  $('phFiles').onchange = async () => {
+    const files = [...$('phFiles').files];
+    for (const [i, file] of files.entries()) {
+      status('phStatus', `adding ${i + 1} of ${files.length}`);
+      try { mat = await api('POST', '/api/photos', { photo: await shrinkImage(file), caption: $('phCap').value.trim(), year: $('phYear').value.trim() }); render(); }
+      catch (err) { return status('phStatus', err.message, true); }
+    }
+    $('phFiles').value = ''; $('phCap').value = ''; $('phYear').value = '';
+    status('phStatus', files.length > 1 ? files.length + ' photos added' : 'photo added');
+  };
+
+  /* 04 voices */
+  let recorder = null, recognizer = null, clip = null;
+  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function setClip(blob) {
+    clip = blob;
+    $('vPreview').innerHTML = blob ? `<audio controls src="${URL.createObjectURL(blob)}"></audio>` : '';
+    $('saveVoice').disabled = !blob;
+  }
+  $('recBtn').onclick = async () => {
+    if (recorder) { recorder.stop(); recognizer?.stop(); return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch { return status('vStatus', 'The browser could not use the microphone. You can upload a recording instead.', true); }
+    const chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      setClip(new Blob(chunks, { type: recorder.mimeType.split(';')[0] || 'audio/webm' }));
+      recorder = null; $('recBtn').textContent = 'RECORD AGAIN'; $('recDot').classList.remove('on');
+    };
+    recorder.start();
+    $('recBtn').textContent = 'STOP'; $('recDot').classList.add('on'); status('vStatus', '');
+    if (Speech) {
+      recognizer = new Speech();
+      recognizer.continuous = true; recognizer.interimResults = true;
+      const before = $('vText').value ? $('vText').value.trim() + ' ' : '';
+      recognizer.onresult = e => { $('vText').value = before + [...e.results].map(r => r[0].transcript).join(' ').trim(); };
+      recognizer.onend = () => recognizer = null;
+      try { recognizer.start(); } catch { recognizer = null; }
+    }
+  };
+  $('vFile').onchange = () => { const f = $('vFile').files[0]; if (f) setClip(f); };
+  $('saveVoice').onclick = async () => {
+    if (!clip) return;
+    try {
+      status('vStatus', 'saving');
+      mat = await api('POST', '/api/voices', { audio: await readDataUrl(clip), from: $('vFrom').value.trim(), transcript: $('vText').value.trim() });
+      setClip(null); $('vFile').value = ''; $('vText').value = ''; $('recBtn').textContent = 'RECORD';
+      status('vStatus', 'saved'); render();
+    } catch (err) { status('vStatus', err.message, true); }
+  };
+
+  /* 05 notes */
+  $('addNote').onclick = async () => {
+    const text = $('nText').value.trim();
+    if (!text) return;
+    mat = await api('POST', '/api/notes', { text, from: $('nFrom').value.trim() });
+    $('nText').value = ''; render();
+  };
+
+  /* 06 build */
+  function showGame(g) {
+    const thumbs = urls => urls.filter(Boolean).map(u => `<img src="${esc(u)}" alt="">`).join('');
+    const piece = i => g.letter[i] ? `<div class="line">"${esc(g.letter[i].line)}"</div><div class="meta">${esc(g.letter[i].by)}${g.letter[i].voice ? ' · with their voice' : ''}</div>` : '';
+    const seated = g.kitchen.seats.map(n => g.people.find(p => p.name === n)).filter(Boolean);
+    $('result').innerHTML = `
+      <p class="summary">${esc(g.summary)}</p>
+      <div class="rooms">
+        <div class="room"><h3>KITCHEN</h3><div class="thumbs">${thumbs(g.people.slice(0, 3).map(p => p.photo))}</div>
+          <div class="meta">Chairs for ${seated.map(p => esc(p.name)).join(' and ') || 'nobody yet'}. ${seated[0] ? `"${esc(seated[0].hello)}"` : ''}</div>${piece(0)}</div>
+        <div class="room"><h3>RADIO ROOM</h3><div class="meta">${esc(g.radio.song.title)}${g.radio.song.artist ? ', ' + esc(g.radio.song.artist) : ''}${g.radio.song.year ? ' (' + esc(g.radio.song.year) + ')' : ''}</div>${piece(1)}</div>
+        <div class="room"><h3>PORCH</h3><div class="thumbs">${thumbs([g.porch.photo])}</div><div class="meta">"${esc(g.porch.prompt)}"</div>${piece(2)}</div>
+        <div class="room"><h3>ATTIC</h3><div class="thumbs">${thumbs(g.attic.photos)}</div><div class="meta">${g.attic.photos.length} of 3 photos chosen, earliest first</div>${piece(3)}</div>
+      </div>
+      ${g.questions?.length ? `<h3 style="font-family:var(--display);font-size:20px;margin-top:6px">The guide would like to know</h3>
+      <div class="qs">${g.questions.map((q, i) => `<label>${esc(q)}<input type="text" data-q="${i}"></label>`).join('')}</div>
+      <label>Your name (optional)<input type="text" id="ansFrom" list="familyNames"></label>
+      <div class="row"><button class="btn primary" id="answer">ANSWER AND REBUILD</button></div>` : ''}`;
+    $('playLink').hidden = false;
+    const ans = $('answer');
+    if (ans) ans.onclick = async () => {
+      const from = $('ansFrom').value.trim();
+      const answered = [...document.querySelectorAll('[data-q]')].filter(el => el.value.trim());
+      if (!answered.length) return;
+      for (const el of answered) mat = await api('POST', '/api/notes', { text: `Q: ${g.questions[el.dataset.q]} A: ${el.value.trim()}`, from });
+      render(); build();
+    };
+  }
+  async function build() {
+    const btn = $('build');
+    btn.disabled = true; status('buildStatus', 'The guide is reading your photos and stories. This can take a minute.');
+    try {
+      const g = await api('POST', '/api/build');
+      status('buildStatus', 'Built ' + new Date(g.builtAt).toLocaleTimeString() + '.');
+      showGame(g);
+    } catch (err) { status('buildStatus', err.message, true); }
+    finally { btn.disabled = false; }
+  }
+  $('build').onclick = build;
+
+  (async () => {
+    try { mat = await api('GET', '/api/materials'); render(); }
+    catch { status('buildStatus', 'Start the server with "npm start" and open this page from it.', true); }
+    try { const g = await api('GET', '/api/game'); status('buildStatus', 'Last built ' + new Date(g.builtAt).toLocaleString() + '.'); showGame(g); } catch {}
+  })();
+</script>
+</body>
+</html>
