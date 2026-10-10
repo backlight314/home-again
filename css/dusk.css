@@ -174,3 +174,88 @@
   70% { transform: translate(-10px, -34px); opacity: .5; }
 }
 @media (prefers-reduced-motion: reduce) { .intro .fly { animation: none; opacity: .8; } }
+
+/* ---------- the albums shelf and the album page ---------- */
+.album-pg .desk {
+  background:
+    radial-gradient(ellipse at 50% 112%, rgba(240, 187, 136, .42), transparent 55%),
+    radial-gradient(ellipse at 50% 28%, #5d4d8c 0%, #3b3873 46%, var(--dusk-1) 100%);
+}
+.album-pg .desk::after { opacity: .1; }
+
+.shelf-pg .shelfcap {
+  top: 5cqw;
+  font-family: var(--hand);
+  font-size: clamp(40px, 5.4cqw, 76px);
+  line-height: 1;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(10, 8, 36, .6), 0 0 30px rgba(255, 255, 255, .22);
+}
+.shelf-pg .shelfcap .sub {
+  margin-top: 1.2cqw;
+  font-family: var(--hand);
+  font-size: clamp(24px, 2.4cqw, 32px);
+  letter-spacing: .06em;
+  color: rgba(255, 255, 255, .92);
+  opacity: 1;
+}
+.book .plate, .bookfly .plate {
+  font-family: var(--hand);
+  font-size: clamp(26px, 2.8cqw, 38px);
+  border-radius: .3cqw;
+}
+.book .prog, .bookfly .prog {
+  font-family: var(--hand);
+  font-size: clamp(22px, 2.2cqw, 30px);
+  letter-spacing: .03em;
+}
+.book { box-shadow: .4cqw .9cqw 1.8cqw rgba(8, 6, 28, .6), inset 0 0 0 .25cqw rgba(0, 0, 0, .12); }
+.book:hover, .book:focus-visible { box-shadow: .4cqw 1.2cqw 2.4cqw rgba(8, 6, 28, .6), 0 0 38px rgba(255, 226, 160, .4); }
+
+.album-pg .closebtn, .album-pg .quietbtn {
+  font-family: var(--hand);
+  font-size: clamp(24px, 2.4cqw, 32px);
+  letter-spacing: .03em;
+  color: #fff;
+  border-color: rgba(255, 255, 255, .75);
+  text-shadow: 0 1px 8px rgba(10, 8, 36, .85);
+}
+.album-pg .sheetpg::before {
+  font-family: var(--hand);
+  font-size: clamp(28px, 3cqw, 42px);
+  letter-spacing: .08em;
+  color: var(--ink);
+  top: 1.2cqw;
+}
+.slip-tag { font-family: var(--hand); font-size: clamp(26px, 2.8cqw, 36px); }
+.slip-tag small { font-family: var(--hand); font-size: clamp(22px, 2.1cqw, 28px); letter-spacing: .02em; }
+.toast { font-family: var(--hand); font-size: clamp(26px, 2.8cqw, 36px); border-radius: 999px; padding: 1cqw 3cqw; }
+
+/* buttons on the album page, memory card and rest card share the cover's pill look */
+#s-album .pressbtn, #reveal .pressbtn, #rest .pressbtn {
+  min-height: 64px;
+  font-family: var(--hand);
+  font-size: clamp(26px, 2.8cqw, 36px);
+  letter-spacing: .06em;
+  padding: .3em 1.5em .35em;
+  border-radius: 999px;
+  border: 0;
+  background: #fff1d4;
+  color: #2b2350;
+  box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 36px rgba(255, 200, 120, .3);
+}
+#reveal .pressbtn.red, #rest .pressbtn.red { background: #ffd9a0; }
+
+.ovl { background: rgba(18, 16, 48, .78); }
+.memcard .line { font-family: var(--hand); font-style: normal; font-size: clamp(30px, 3.4cqw, 46px); color: #fff; text-shadow: 0 2px 14px rgba(10, 8, 36, .6); }
+.memcard .by, .hearbtn { font-family: var(--hand); font-size: clamp(24px, 2.4cqw, 32px); color: #fff; }
+.memcard .by { opacity: .9; }
+.memcard .print .pname { font-family: var(--hand); font-style: normal; font-size: clamp(22px, 2.2cqw, 30px); }
+.restcard { background: rgba(255, 244, 222, .96); border-radius: 1.4cqw; }
+.restcard h3 { font-family: var(--hand); font-weight: 400; font-size: clamp(36px, 4.4cqw, 58px); }
+.restcard p { font-family: var(--hand); font-size: clamp(24px, 2.4cqw, 32px); }
+
+/* keep the album page's button off the paper */
+#s-album > .pressbtn { font-size: clamp(24px, 2.3cqw, 30px); padding: .2em 1em .25em; letter-spacing: .04em; right: 2cqw; bottom: 2.4cqw; }
+.memcard .print .pname { color: #2b2350; }
