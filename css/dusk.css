@@ -423,3 +423,15 @@
 }
 .calltile .av { width: 4.6cqw; min-width: 44px; border-radius: 50%; overflow: hidden; }
 .ending .quietbtn { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.4cqw, 32px); letter-spacing: .03em; color: #fff; border-bottom: 2px solid rgba(255, 255, 255, .75); text-shadow: 0 1px 8px rgba(10, 8, 36, .85); }
+
+/* ---------- radio needle: pivot on the dial centre (140,44 in the radio's own coordinates) ---------- */
+.needle { transform-origin: 140px 44px; transform-box: view-box; transition: transform .55s ease-in-out; }
+
+/* ---------- read-aloud buttons: red with a stop square while playing ---------- */
+.stopico { display: inline-block; width: .7em; height: .7em; margin-right: .5em; background: currentColor; border-radius: 2px; vertical-align: baseline; }
+.hearbtn.reading { color: #ff9f8c; border-bottom-color: #ff9f8c; }
+.pressbtn.reading {
+  background: #e8705a !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 .25cqw rgba(255, 160, 140, .55), 0 8px 24px rgba(10, 6, 30, .5), 0 0 30px rgba(232, 112, 90, .45) !important;
+}
