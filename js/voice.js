@@ -4,7 +4,8 @@
   let rec = null;
   let speaking = false;
   let queueToken = 0;
-  const roster = { narrator: null, person: null, letter: null, warm: null };
+  let clipAudio = null;
+  const roster = { narrator: null, mei: null, daniel: null, rose: null, warm: null };
 
   function allVoices() {
     return synth ? synth.getVoices() || [] : [];
@@ -14,15 +15,17 @@
     const n = (v.name || '') + ' ' + (v.lang || '');
     let s = 0;
     if (!/^en/i.test(v.lang || 'en')) s -= 8;
-    if (/compact|eloquence|whisper|zarvox|trinoids|boing|bells|cellos|organ|bad news|good news|pipe|princess|albert|bahh|bubbles|junior|kathy|bells/i.test(n)) s -= 80;
-    if (/premium|enhanced|neural|natural|superstar|siri|online \(natural\)|multilingual/i.test(n)) s += 28;
-    if (/samantha|ava|allison|susan|zoe|karen|moira|tessa|fiona|serena|victoria|kate|martha|jenny|aria|sara|sonia|emma|google uk english female|microsoft zira|microsoft jenny/i.test(n)) s += 18;
-    if (/daniel|tom|alex|fred|gordon|rishi|aaron|guy|davis|matthew|google uk english male|microsoft david|nicky/i.test(n)) s += 10;
-    if (kind === 'narrator' && /samantha|karen|moira|ava|serena|jenny|sara/i.test(n)) s += 8;
-    if (kind === 'person' && /daniel|alex|gordon|tom|guy|matthew/i.test(n)) s += 8;
-    if (kind === 'letter' && /moira|fiona|tessa|victoria|kate/i.test(n)) s += 8;
-    if (kind === 'warm' && /samantha|ava|karen/i.test(n)) s += 6;
-    if (v.localService) s += 4;
+    if (/compact|eloquence|whisper|zarvox|trinoids|boing|bells|cellos|organ|bad news|good news|pipe|princess|albert|bahh|bubbles|junior|kathy|fred|jester|grandma|grandpa|eddy|flo|rocko|superstar/i.test(n)) s -= 80;
+    if (/premium|enhanced|neural|natural|online \(natural\)|multilingual|siri/i.test(n)) s += 32;
+    if (/ava|allison|zoe|nicky|susan|samantha|karen|moira|tessa|serena|victoria|jenny|aria|sara|sonia|emma|michelle|google uk english female|microsoft/i.test(n)) s += 16;
+    if (/daniel|tom|alex|gordon|rishi|aaron|guy|davis|matthew|andrew|christopher|google uk english male/i.test(n)) s += 10;
+    if (kind === 'narrator' && /jenny|samantha|karen|ava|sara|aria/i.test(n)) s += 8;
+    if (kind === 'mei' && /ava|allison|zoe|nicky|samantha/i.test(n)) s += 10;
+    if (kind === 'daniel' && /andrew|daniel|alex|guy|matthew|tom/i.test(n)) s += 10;
+    if (kind === 'rose' && /emma|moira|karen|sonia|susan/i.test(n)) s += 10;
+    if (kind === 'warm' && /aria|samantha|ava/i.test(n)) s += 8;
+    if (v.localService) s += 6;
+    if (/google us english$/i.test(n)) s -= 6;
     return s;
   }
 
@@ -38,13 +41,10 @@
   function warm() {
     if (!synth) return;
     const used = new Set();
-    roster.narrator = best('narrator', used);
-    if (roster.narrator) used.add(roster.narrator.name);
-    roster.person = best('person', used);
-    if (roster.person) used.add(roster.person.name);
-    roster.letter = best('letter', used);
-    if (roster.letter) used.add(roster.letter.name);
-    roster.warm = best('warm', used) || roster.narrator;
+    ['narrator', 'mei', 'daniel', 'rose', 'warm'].forEach((kind) => {
+      roster[kind] = best(kind, used);
+      if (roster[kind]) used.add(roster[kind].name);
+    });
   }
 
   if (synth) {
@@ -52,47 +52,122 @@
     warm();
   }
 
+  function stopClip() {
+    if (clipAudio) {
+      try {
+        clipAudio.pause();
+        clipAudio.src = '';
+      } catch (_) {}
+      clipAudio = null;
+    }
+  }
+
   function stop() {
     queueToken += 1;
     speaking = false;
+    stopClip();
+    stopRadio();
     if (synth) synth.cancel();
     if (rec) {
-      try { rec.stop(); } catch (_) {}
+      try {
+        rec.stop();
+      } catch (_) {}
       rec = null;
     }
   }
 
   function soften(text) {
     return String(text || '')
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
       .replace(/["<>]/g, '')
       .replace(/\s+/g, ' ')
-      .replace(/([.!?])\s*/g, '$1 ')
-      .replace(/,\s*/g, ', ')
       .trim();
   }
 
-  function phrases(text) {
+  function canonWho(name) {
+    const n = String(name || '')
+      .toLowerCase()
+      .replace(/^aunt\s+/, '')
+      .trim();
+    if (!n) return '';
+    if (/mei/.test(n)) return 'mei';
+    if (/daniel/.test(n)) return 'daniel';
+    if (/rose/.test(n)) return 'rose';
+    if (/warm|mom/.test(n)) return 'warm';
+    if (/narrat|family/.test(n)) return 'narrator';
+    return n;
+  }
+
+  function splitSpoken(text, role, speaker) {
+    const raw = String(text || '').trim();
+    const tagged = raw.match(/^([^:]{1,28}):\s*[“"']?([\s\S]+?)[”"']?\s*$/);
+    if (tagged) {
+      return { who: canonWho(tagged[1]) || 'narrator', text: tagged[2].replace(/^["“]|["”]$/g, '').trim() };
+    }
+    if (speaker) return { who: canonWho(speaker) || roleWho(role), text: raw };
+    return { who: roleWho(role), text: raw };
+  }
+
+  function roleWho(role) {
+    if (role === 'person') return 'daniel';
+    if (role === 'letter') return 'mei';
+    if (role === 'warm') return 'warm';
+    return 'narrator';
+  }
+
+  function clipKey(who, text) {
+    return (
+      who +
+      '|' +
+      soften(text)
+        .replace(/[—–]/g, '—')
+        .toLowerCase()
+    );
+  }
+
+  function findClip(who, text) {
+    const bank = global.HomeAgainVoiceBank || {};
     const t = soften(text);
-    if (!t) return [];
-    return t
-      .split(/(?<=[,:;])\s+|(?<=[.!?])\s+/)
-      .map((p) => p.trim())
-      .filter(Boolean);
+    const tries = [t, t.replace(/[—–]/g, '-'), t.replace(/[—–]/g, ','), t.replace(/\.$/, ''), t + '.'];
+    for (let i = 0; i < tries.length; i++) {
+      const k = clipKey(who, tries[i]);
+      if (bank[k]) return bank[k];
+    }
+    return null;
   }
 
-  function roleVoice(role) {
+  function roleVoice(who) {
     warm();
-    if (role === 'person') return roster.person || roster.narrator;
-    if (role === 'letter') return roster.letter || roster.warm || roster.narrator;
-    if (role === 'warm') return roster.warm || roster.narrator;
-    return roster.narrator;
+    return roster[who] || roster.narrator;
   }
 
-  function roleTone(role) {
-    if (role === 'person') return { rate: 0.86, pitch: 0.96 };
-    if (role === 'letter') return { rate: 0.8, pitch: 0.94 };
-    if (role === 'warm') return { rate: 0.83, pitch: 1.02 };
-    return { rate: 0.84, pitch: 1.0 };
+  function roleTone(who) {
+    if (who === 'mei') return { rate: 0.92, pitch: 1.04 };
+    if (who === 'daniel') return { rate: 0.9, pitch: 0.96 };
+    if (who === 'rose') return { rate: 0.88, pitch: 0.94 };
+    if (who === 'warm') return { rate: 0.9, pitch: 1.02 };
+    return { rate: 0.9, pitch: 1.0 };
+  }
+
+  function playClip(src, token) {
+    return new Promise((resolve) => {
+      stopClip();
+      const a = new Audio(src);
+      clipAudio = a;
+      const done = () => {
+        if (clipAudio === a) clipAudio = null;
+        resolve();
+      };
+      a.onended = done;
+      a.onerror = done;
+      a.play().then(() => {
+        if (token !== queueToken) {
+          stopClip();
+          resolve();
+        }
+      }).catch(done);
+    });
   }
 
   function speakChunk(text, voice, tone) {
@@ -115,25 +190,39 @@
   }
 
   function speak(text, opts) {
-    if (!text || !synth) return Promise.resolve();
+    if (!text) return Promise.resolve();
     const role = (opts && opts.role) || 'narrator';
+    const spoken = splitSpoken(text, role, opts && opts.speaker);
     const token = ++queueToken;
-    const bits = phrases(text);
-    const voice = roleVoice(role);
-    const tone = roleTone(role);
     speaking = true;
+    const clip = findClip(spoken.who, spoken.text);
 
     return (async () => {
-      for (let i = 0; i < bits.length; i++) {
+      if (clip) {
         if (token !== queueToken) return;
-        await speakChunk(bits[i], voice, tone);
-        if (token !== queueToken) return;
-        if (i < bits.length - 1) {
-          await new Promise((r) => setTimeout(r, /[.!?]$/.test(bits[i]) ? 260 : 140));
-        }
+        await playClip(clip, token);
+        if (token === queueToken) speaking = false;
+        return;
       }
+      if (!synth) {
+        speaking = false;
+        return;
+      }
+      const voice = roleVoice(spoken.who);
+      const tone = roleTone(spoken.who);
+      if (token !== queueToken) return;
+      await speakChunk(soften(spoken.text), voice, tone);
       if (token === queueToken) speaking = false;
     })();
+  }
+
+  function preload() {
+    const bank = global.HomeAgainVoiceBank || {};
+    Object.keys(bank).forEach((k) => {
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = bank[k];
+    });
   }
 
   function listen(onFinal, onFail) {
@@ -142,7 +231,9 @@
       return () => {};
     }
     if (rec) {
-      try { rec.stop(); } catch (_) {}
+      try {
+        rec.stop();
+      } catch (_) {}
     }
     rec = new Rec();
     rec.continuous = true;
@@ -155,10 +246,18 @@
       last = bits.trim();
       if (onFinal) onFinal(last, ev.results[ev.results.length - 1].isFinal);
     };
-    rec.onerror = () => { if (onFail) onFail(); };
-    try { rec.start(); } catch (_) { if (onFail) onFail(); }
+    rec.onerror = () => {
+      if (onFail) onFail();
+    };
+    try {
+      rec.start();
+    } catch (_) {
+      if (onFail) onFail();
+    }
     return () => {
-      try { rec && rec.stop(); } catch (_) {}
+      try {
+        rec && rec.stop();
+      } catch (_) {}
       rec = null;
       return last;
     };
@@ -166,43 +265,69 @@
 
   let audioCtx = null;
   let radioNodes = [];
+  let radioTimer = 0;
+  let radioEl = null;
 
-  function radio(clear) {
+  function stopRadio() {
+    if (radioTimer) {
+      clearInterval(radioTimer);
+      radioTimer = 0;
+    }
+    if (radioEl) {
+      try {
+        radioEl.pause();
+        radioEl.src = '';
+      } catch (_) {}
+      radioEl = null;
+    }
+    radioNodes.forEach((n) => {
+      try {
+        n.stop();
+      } catch (_) {}
+      try {
+        n.disconnect();
+      } catch (_) {}
+    });
+    radioNodes = [];
+  }
+
+  function noiseBuf(ctx) {
+    const len = Math.floor(ctx.sampleRate * 0.8);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  function radio(clip) {
     try {
+      stopRadio();
+      if (clip) {
+        radioEl = new Audio(clip);
+        radioEl.loop = true;
+        radioEl.volume = 0.82;
+        radioEl.play().catch(() => {});
+        return;
+      }
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      radioNodes.forEach((n) => { try { n.stop(); } catch (_) {} });
-      radioNodes = [];
       const ctx = audioCtx;
       if (ctx.state === 'suspended') ctx.resume();
-      const dur = clear ? 3.4 : 0.8;
       const master = ctx.createGain();
-      master.gain.setValueAtTime(clear ? 0.045 : 0.025, ctx.currentTime);
-      master.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      master.gain.value = 0.035;
       master.connect(ctx.destination);
-      if (clear) {
-        [196, 247, 294].forEach((f, i) => {
-          const osc = ctx.createOscillator();
-          const g = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = f;
-          g.gain.value = 0.35 - i * 0.08;
-          osc.connect(g);
-          g.connect(master);
-          osc.start();
-          osc.stop(ctx.currentTime + dur);
-          radioNodes.push(osc);
-        });
-      } else {
-        const osc = ctx.createOscillator();
-        osc.type = 'sawtooth';
-        osc.frequency.value = 70;
-        osc.connect(master);
-        osc.start();
-        osc.stop(ctx.currentTime + dur);
-        radioNodes.push(osc);
-      }
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuf(ctx);
+      src.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.value = 1200;
+      f.Q.value = 0.6;
+      src.connect(f);
+      f.connect(master);
+      src.start();
+      radioNodes.push(src);
     } catch (_) {}
   }
 
-  global.HomeAgainVoice = { speak, stop, listen, radio, warm };
+  global.HomeAgainVoice = { speak, stop, listen, radio, warm, preload };
 })(window);

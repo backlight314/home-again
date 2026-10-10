@@ -71,8 +71,8 @@
     if (window.HomeAgainVoice) HomeAgainVoice.stop();
   }
 
-  function speak(text, role) {
-    if (window.HomeAgainVoice) return HomeAgainVoice.speak(text, { role: role || 'narrator' });
+  function speak(text, role, speaker) {
+    if (window.HomeAgainVoice) return HomeAgainVoice.speak(text, { role: role || 'narrator', speaker });
     return Promise.resolve();
   }
 
@@ -334,7 +334,7 @@
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=dusk3');
+      const { createHub } = await import('./hub3d.js?v=merge1');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -359,7 +359,7 @@
   async function ensureIntroHub() {
     if (introHub || hubFailed || new URLSearchParams(location.search).has('flat')) return;
     try {
-      const { createHub } = await import('./hub3d.js?v=dusk3');
+      const { createHub } = await import('./hub3d.js?v=merge1');
       introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
       ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
       introHub.setActive($('s-intro').classList.contains('on'));
@@ -469,14 +469,15 @@
       familyAudio = new Audio(url);
       familyAudio.onended = () => $('mWave').classList.remove('on');
       familyAudio.play().catch(() => {
-        speak(line, 'letter').then(() => $('mWave').classList.remove('on'));
+        speak(line, 'letter', m && m.by).then(() => $('mWave').classList.remove('on'));
       });
       return;
     }
-    speak(line, 'letter').then(() => $('mWave').classList.remove('on'));
+    speak(line, 'letter', m && m.by).then(() => $('mWave').classList.remove('on'));
   }
 
   function openMemory(id) {
+    hush();
     const m = memory(id);
     viewing = id;
     $('mUse').setAttribute('href', '#' + (m.scene || 'sc-table'));
@@ -489,7 +490,7 @@
     pr.classList.remove('developed');
     $('reveal').classList.add('on');
     later(() => pr.classList.add('developed'), 300);
-    speak(m.line, 'letter');
+    speak(m.line, 'letter', m.by);
   }
 
   function setSeat(el, state, who) {
@@ -570,9 +571,11 @@
   }
 
   function bands() {
-    return (pack.rooms.radio && pack.rooms.radio.bands) || [
-      { t: 'static', clear: false },
-      { t: 'a song', clear: true }
+    return [
+      { t: 'Happy Times', clip: 'audio/radio/happy-times.mp3', clear: false },
+      { t: 'One More Dance', clip: 'audio/radio/one-more-dance.mp3', clear: true },
+      { t: 'Midnight Funk', clip: 'audio/radio/midnight-funk.mp3', clear: false },
+      { t: 'Heartbeat', clip: 'audio/radio/heartbeat.mp3', clear: false }
     ];
   }
 
@@ -584,9 +587,11 @@
     $('keepSong').classList.toggle('hide', !b.clear);
     const prompt = (pack.rooms.radio && pack.rooms.radio.prompt) || 'Turn the dial until a song comes in';
     $('rCap').innerHTML =
-      (b.clear ? 'Where did you hear this one?' : prompt) + '<span class="sub">TUESDAY · IN THE CAR</span>';
-    if (window.HomeAgainVoice) HomeAgainVoice.radio(b.clear);
-    if (b.clear) speak(b.t);
+      (b.clear ? 'This one was on in the car' : prompt) + '<span class="sub">TUESDAY · IN THE CAR</span>';
+    if (window.HomeAgainVoice) {
+      HomeAgainVoice.stop();
+      HomeAgainVoice.radio(b.clip);
+    }
   }
 
   function tune(step) {
@@ -805,7 +810,7 @@
           document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
           const el = $('ln' + i);
           if (el) el.classList.add('say');
-          speak(p.line, 'letter');
+          speak(p.line, 'letter', p.by);
         }, i * 4200)
       );
       later(() => document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say')), letter.length * 4200);
@@ -876,7 +881,10 @@
       ? `This week, with ${who}. Four memories in the album.`
       : 'Four memories in this week’s album.';
 
-    if (window.HomeAgainVoice) HomeAgainVoice.warm();
+    if (window.HomeAgainVoice) {
+      HomeAgainVoice.warm();
+      HomeAgainVoice.preload();
+    }
     wireOnce();
     show('intro');
   }

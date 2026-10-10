@@ -56,7 +56,7 @@
           id: 'm2',
           title: 'In the car',
           placeYear: 'Tuesday',
-          text: 'Tuesday in the car Daniel had that song on again. You hummed the chorus.'
+          text: 'Tuesday in the car Daniel had One More Dance on again. You hummed along.'
         },
         {
           id: 'm3',
@@ -72,8 +72,10 @@
         }
       ],
       songs: [
-        { id: 's1', title: 'the song from Tuesday' },
-        { id: 's2', title: 'the radio in the kitchen' }
+        { id: 's1', title: 'One More Dance' },
+        { id: 's2', title: 'Happy Times' },
+        { id: 's3', title: 'Midnight Funk' },
+        { id: 's4', title: 'Heartbeat' }
       ],
       letter: [
         { room: 'Sunday kitchen', line: 'Last Sunday you asked for a second cup. Mei is still laughing about the soup.', by: 'Mei' },
@@ -107,10 +109,10 @@
         radio: {
           prompt: 'Find the song from the car on Tuesday',
           bands: [
-            { t: 'news', clear: false },
-            { t: 'the song from Tuesday', clear: true },
-            { t: 'traffic', clear: false },
-            { t: 'the weather', clear: false }
+            { t: 'Happy Times', clip: 'audio/radio/happy-times.mp3', clear: false },
+            { t: 'One More Dance', clip: 'audio/radio/one-more-dance.mp3', clear: true },
+            { t: 'Midnight Funk', clip: 'audio/radio/midnight-funk.mp3', clear: false },
+            { t: 'Heartbeat', clip: 'audio/radio/heartbeat.mp3', clear: false }
           ]
         },
         porch: {
@@ -388,10 +390,10 @@
         radio: {
           prompt: 'Find the song from the car on Tuesday',
           bands: [
-            { t: 'news', clear: false },
-            { t: songs[0].title, clear: true },
-            { t: 'traffic', clear: false },
-            { t: 'the weather', clear: false }
+            { t: 'Happy Times', clip: 'audio/radio/happy-times.mp3', clear: false },
+            { t: 'One More Dance', clip: 'audio/radio/one-more-dance.mp3', clear: true },
+            { t: 'Midnight Funk', clip: 'audio/radio/midnight-funk.mp3', clear: false },
+            { t: 'Heartbeat', clip: 'audio/radio/heartbeat.mp3', clear: false }
           ]
         },
         porch: {
