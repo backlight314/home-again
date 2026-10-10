@@ -1,0 +1,69 @@
+/* The album page: a paper sheet on a warm desk, chapter slips pinned around it.
+   Also the memory reveal and the flight of a photo into its slot. */
+:root {
+  --desk-1: #6d5262;
+  --desk-2: #4b3846;
+  --desk-3: #33242d;
+  --slip: #f3ead6;
+  --pin: #b8432f;
+}
+
+.album-pg .desk { position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 52% 38%, var(--desk-1) 0%, var(--desk-2) 62%, var(--desk-3) 100%); }
+.album-pg .desk::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .18;
+  background: repeating-linear-gradient(92deg, rgba(0,0,0,.35) 0 .15cqw, transparent .15cqw 7cqw); }
+.album-pg .sheetpg { position: absolute; left: 22cqw; top: 5cqw; width: 56cqw; height: 55cqw; background: var(--paper);
+  transform: rotate(-.5deg); box-shadow: 0 1.4cqw 3.4cqw rgba(15,8,12,.55); }
+.album-pg .sheetpg::before { content: "OUR FAMILY ALBUM"; position: absolute; left: 0; right: 0; top: 1.6cqw; text-align: center;
+  font-family: var(--type); font-size: var(--fs-label-min); letter-spacing: .22em; color: var(--ink-soft); }
+
+/* photo slots: faint corners when empty */
+.slot { position: absolute; width: 34%; aspect-ratio: 3 / 2.4; border: .2cqw dashed rgba(60,45,30,.22); }
+.slot.filled { border-color: transparent; }
+.slot .corner { width: 2.4cqw; height: 2.4cqw; background: rgba(60,45,30,.5); }
+.slot.filled { aspect-ratio: auto; }
+.slot.filled .corner { display: none; }
+.slot .print { width: 100%; opacity: 0; transition: opacity var(--motion); }
+.slot.filled .print { opacity: 1; cursor: pointer; }
+.slot.s1 { left: 8%; top: 9%; transform: rotate(-2deg); }
+.slot.s2 { left: 58%; top: 8%; transform: rotate(1.6deg); }
+.slot.s3 { left: 6%; top: 39%; transform: rotate(1.2deg); }
+.slot.s4 { left: 54%; top: 38%; transform: rotate(-1.6deg); }
+.slot.s5 { left: 31%; top: 68%; transform: rotate(.8deg); }
+
+/* paper slips with pins */
+.slip-tag { position: absolute; width: 17.5cqw; min-height: 8cqw; padding: 2.4cqw 1.4cqw 1.4cqw; background: var(--slip); color: var(--ink);
+  font-family: var(--display); font-size: clamp(24px, 2.7cqw, 34px); line-height: 1.1; text-align: center;
+  box-shadow: .3cqw .7cqw 1.2cqw rgba(15,8,12,.45); display: grid; place-items: center; transform: rotate(var(--r)); }
+.slip-tag::before { content: ""; position: absolute; top: .8cqw; left: 50%; width: 1.7cqw; height: 1.7cqw; margin-left: -.85cqw; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e07a64, var(--pin) 60%, #7a2a1c); box-shadow: .15cqw .3cqw .4cqw rgba(0,0,0,.45); }
+.slip-tag small { display: block; font-family: var(--type); font-size: var(--fs-label-min); color: var(--ink-soft); margin-top: .6cqw; letter-spacing: .02em; }
+.slip-tag.open { animation: nudge 3.2s ease-in-out infinite; }
+.slip-tag.done::after { content: ""; position: absolute; right: .9cqw; bottom: .9cqw; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: var(--sage); }
+@keyframes nudge { 0%, 100% { transform: rotate(var(--r)) translateY(0); } 50% { transform: rotate(var(--r)) translateY(-.5cqw); } }
+.slip-tag.t1 { --r: -3deg; left: 3cqw; top: 9cqw; }
+.slip-tag.t2 { --r: 2deg; left: 3cqw; top: 26cqw; }
+.slip-tag.t3 { --r: -1.5deg; left: 3cqw; top: 43cqw; }
+.slip-tag.t4 { --r: 2.5deg; left: 79.5cqw; top: 14cqw; }
+.slip-tag.t5 { --r: -2deg; left: 79.5cqw; top: 33cqw; }
+.album-pg .closebtn { right: 3cqw; bottom: 3cqw; color: var(--slip); border-color: var(--slip); }
+.toast { position: absolute; left: 50%; bottom: 9cqw; transform: translateX(-50%); z-index: 8; background: var(--slip); color: var(--ink);
+  padding: 1.4cqw 3cqw; font-family: var(--display); font-size: clamp(24px, 2.8cqw, 34px); box-shadow: 0 .7cqw 1.6cqw rgba(15,8,12,.5);
+  opacity: 0; pointer-events: none; transition: opacity var(--motion); text-align: center; max-width: 70%; }
+.toast.on { opacity: 1; }
+
+/* memory reveal */
+.memcard { width: 82%; display: grid; grid-template-columns: 46% 1fr; gap: 3.6cqw; align-items: center; }
+.memcard .side { display: grid; gap: 1.8cqw; justify-items: start; }
+.memcard .print { width: 100%; transform: rotate(-1.4deg); }
+.memcard .sepia { filter: sepia(1) saturate(.6) brightness(.95); transition: filter 1.8s ease; }
+.memcard .print.developed .sepia { filter: none; }
+.memcard .line { font-family: var(--display); font-style: italic; font-size: clamp(28px, 3.2cqw, 40px); color: var(--print); text-align: left; line-height: 1.2; }
+.memcard .by { font-family: var(--type); font-size: var(--fs-label-min); color: var(--print); }
+.memrow { display: flex; gap: 2.4cqw; align-items: center; flex-wrap: wrap; }
+.hearbtn { display: flex; align-items: center; gap: 1.2cqw; font-family: var(--type); font-size: clamp(24px, 2.4cqw, 34px); color: var(--print); border-bottom: .25cqw solid var(--print); padding-bottom: .3cqw; }
+.flyer { position: absolute; z-index: 8; pointer-events: none;
+  transition: left 1.5s ease-in-out, top 1.5s ease-in-out, width 1.5s ease-in-out, transform 1.5s ease-in-out; }
+.flyer .print { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) { .slip-tag.open { animation: none; } .flyer { transition: none; } .memcard .sepia { transition: none; } }

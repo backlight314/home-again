@@ -1,66 +1,97 @@
 const $ = id => document.getElementById(id);
-const found = [false, false, false, false];
-const keys = ['kitchen', 'radio', 'porch', 'attic'];
-const wins = ['w-kitchen', 'w-radio', 'w-porch', 'w-attic'];
+const placed = {};            // chapter id -> true once its memory is in the album
+let pendingPlace = null;      // chapter id waiting to be placed with the animation
+let viewing = null;           // chapter id whose memory is open in the overlay
+let rereading = false;
 const face = n => '<svg viewBox="0 0 100 80" style="' + people[n] + '"><use href="#person"/></svg>';
-let timers = [], pending = -1, rereading = false;
+let timers = [];
 const later = (fn, ms) => timers.push(setTimeout(fn, ms));
 const clearAll = () => { timers.forEach(clearTimeout); timers = []; };
+const chapter = id => chapters.find(c => c.id === id);
+// Album photos carry no caption on the page; the caption and voice are in the memory overlay (tap the photo).
+const memPrint = c => '<svg viewBox="0 0 120 80"><use href="#' + c.memory.scene + '"/></svg>';
 
-function paintProgress() {
-  found.forEach((f, i) => $('pc' + i).classList.toggle('got', f));
-  document.querySelectorAll('.housewrap svg').forEach(svg => {
-    wins.forEach((w, i) => { const el = svg.querySelector('.' + w); if (el) el.classList.toggle('lit', found[i]); });
+/* album page */
+function buildAlbum() {
+  const sheet = $('sheetpg'); sheet.innerHTML = '';
+  chapters.forEach((c, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot s' + (i + 1) + (placed[c.id] ? ' filled' : '');
+    slot.id = 'slot-' + c.id;
+    slot.innerHTML = '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>'
+      + (c.memory ? '<button class="print" aria-label="' + c.memory.caption + '">' + (placed[c.id] ? memPrint(c) : '') + '</button>' : '');
+    const pr = slot.querySelector('.print');
+    if (pr) pr.onclick = () => { if (placed[c.id]) { rereading = true; openMemory(c.id); } };
+    sheet.appendChild(slot);
   });
-}
-function buildRooms() {
-  const box = $('rooms'); box.innerHTML = '';
-  letter.forEach((p, i) => {
+  const tags = $('tags'); tags.innerHTML = '';
+  chapters.forEach((c, i) => {
     const b = document.createElement('button');
-    b.className = 'roomrow' + (found[i] ? ' found' : '');
-    b.innerHTML = '<span class="n">' + p.room + '</span><span class="dots"></span><span class="s">' + (found[i] ? 'piece found' : 'piece waiting') + '</span>';
-    b.onclick = () => { if (found[i]) { rereading = true; openSlip(i); } else show(keys[i]); };
-    box.appendChild(b);
+    b.className = 'slip-tag t' + (i + 1) + (c.playable && !placed[c.id] ? ' open' : '') + (placed[c.id] ? ' done' : '');
+    b.innerHTML = '<span>' + c.title + (c.playable && !placed[c.id] ? '<small>' + S.open + '</small>' : '') + '</span>';
+    b.onclick = () => { if (c.playable) show(c.id === 'family' ? 'kitchen' : c.id); else toast(S.comingSoon); };
+    tags.appendChild(b);
   });
-  const n = found.filter(Boolean).length;
-  $('hubCaption').innerHTML = S.hubCaption[n === 0 ? 0 : n < 4 ? 1 : 2] + '<span class="sub">' + n + ' OF 4 PIECES FOUND</span>';
 }
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3600);
+}
+function placeMemory(id) {
+  const c = chapter(id), slot = $('slot-' + id), scr = $('screen').getBoundingClientRect();
+  const r = slot.getBoundingClientRect();
+  const fly = document.createElement('div');
+  fly.className = 'flyer';
+  fly.innerHTML = '<div class="print">' + memPrint(c) + '</div>';
+  fly.style.cssText = 'left:' + (scr.width * .3) + 'px;top:' + (scr.height * .22) + 'px;width:' + (scr.width * .4) + 'px;transform:rotate(-1.4deg)';
+  $('screen').appendChild(fly);
+  later(() => {
+    fly.style.left = (r.left - scr.left) + 'px'; fly.style.top = (r.top - scr.top) + 'px'; fly.style.width = r.width + 'px';
+    fly.style.transform = 'rotate(-1.6deg)';
+  }, 450);
+  later(() => {
+    placed[id] = true; buildAlbum(); fly.remove();
+    toast('Another memory is home.');
+  }, 2100);
+}
+
 function show(name) {
   clearAll();
+  document.querySelectorAll('#screen .flyer').forEach(f => f.remove());
   document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
-  $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
+  $('chrome').classList.toggle('on', name !== 'intro');
   document.querySelectorAll('#controls button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === name));
-  paintProgress();
-  if (name === 'hub') buildRooms();
+  if (name === 'album') { buildAlbum(); if (pendingPlace) { const id = pendingPlace; pendingPlace = null; placeMemory(id); } }
   if (name === 'kitchen') initKitchen();
-  if (name === 'radio') initRadio();
   if (name === 'porch') initPorch();
-  if (name === 'attic') initAttic();
-  if (name === 'ending') initEnding();
 }
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => show(b.dataset.go));
 
-function openSlip(i) {
-  pending = i;
-  $('rKick').textContent = rereading ? 'FROM THE ' + letter[i].room.toUpperCase() : ordinals[i];
-  $('rLine').textContent = letter[i].line;
-  $('rBy').textContent = 'recorded by ' + letter[i].by;
-  $('rWave').classList.remove('on');
-  $('rDone').textContent = rereading ? 'BACK TO THE HOUSE' : 'PUT IT IN THE LETTER';
+/* memory overlay */
+function openMemory(id) {
+  const c = chapter(id); viewing = id;
+  $('mUse').setAttribute('href', '#' + c.memory.scene);
+  $('mCap').textContent = c.memory.caption;
+  $('mLine').textContent = '“' + c.memory.line + '”';
+  $('mBy').textContent = 'recorded by ' + c.memory.by;
+  $('mWave').classList.remove('on');
+  $('mDone').textContent = rereading ? S.closeMemory : S.putIn;
+  const pr = $('mPrint'); pr.classList.remove('developed');
   $('reveal').classList.add('on');
+  later(() => pr.classList.add('developed'), 300);
 }
-$('rPlay').onclick = () => { $('rWave').classList.add('on'); later(() => $('rWave').classList.remove('on'), 2600); };
-$('rDone').onclick = () => {
+$('mPlay').onclick = () => { $('mWave').classList.add('on'); later(() => $('mWave').classList.remove('on'), 2600); };
+$('mDone').onclick = () => {
   $('reveal').classList.remove('on');
-  if (rereading) { rereading = false; show('hub'); return; }
-  found[pending] = true; paintProgress();
-  if (found.every(Boolean)) show('ending'); else show('hub');
+  if (!rereading) pendingPlace = viewing;
+  rereading = false;
+  show('album');
 };
 $('restBtn').onclick = () => $('rest').classList.add('on');
 $('restKeep').onclick = () => $('rest').classList.remove('on');
-$('restHome').onclick = () => { $('rest').classList.remove('on'); show('hub'); };
+$('restHome').onclick = () => { $('rest').classList.remove('on'); show('album'); };
 
-/* kitchen */
+/* kitchen: the Sunday table, reunion first */
 let round = 0;
 const ring = '<span class="ring"><svg viewBox="0 0 100 100"><use href="#pencilring"/></svg></span>';
 function setSeat(el, state, who) {
@@ -72,7 +103,7 @@ function setSeat(el, state, who) {
 function initKitchen() {
   round = 0;
   setSeat($('seatL'), 'empty'); setSeat($('seatC'), 'target'); setSeat($('seatR'), 'empty');
-  $('kSaid').hidden = true;
+  $('kSaid').hidden = true; $('kNext').classList.add('hide');
   $('kCap').innerHTML = 'Who sits in the circled chair?<span class="sub">KITCHEN, SUNDAY</span>';
   drawFaces(['Daniel', 'Mei', 'Aunt Rose']);
 }
@@ -96,34 +127,15 @@ function pick(n, btn, list) {
   round++;
   if (round < plan.length) {
     setSeat($(plan[round].seat), 'target');
-    $('kCap').innerHTML = 'And the next chair?<span class="sub">KITCHEN, SUNDAY</span>';
+    $('kCap').innerHTML = S.seatNext + '<span class="sub">KITCHEN, SUNDAY</span>';
   } else {
-    $('kCap').innerHTML = 'Everyone is home. Something is under the table.<span class="sub">KITCHEN, SUNDAY</span>';
-    later(() => { rereading = false; openSlip(0); }, 2100);
+    $('kCap').innerHTML = S.seatDone + '<span class="sub">KITCHEN, SUNDAY</span>';
+    later(() => $('kNext').classList.remove('hide'), 1200);
   }
 }
+$('kNext').onclick = () => show('porch');
 
-/* radio */
-let bi = 0, deg = 0;
-function paintBand() {
-  const b = bands[bi];
-  $('station').textContent = b.t;
-  $('station').classList.toggle('clear', b.clear);
-  $('keepSong').classList.toggle('hide', !b.clear);
-  $('rCap').innerHTML = (b.clear ? 'Where did you hear this one?' : 'Turn the dial until a song comes in') + '<span class="sub">RADIO ROOM</span>';
-}
-function tune(step) {
-  bi = (bi + step + bands.length) % bands.length; deg += step * 48;
-  const n = document.getElementById('needle');
-  if (n) n.style.transform = 'rotate(' + deg + 'deg)';
-  paintBand();
-}
-function initRadio() { bi = 0; deg = 0; const n = document.getElementById('needle'); if (n) n.style.transform = 'none'; paintBand(); }
-$('tuneL').onclick = () => tune(-1);
-$('tuneR').onclick = () => tune(1);
-$('keepSong').onclick = () => { rereading = false; openSlip(1); };
-
-/* porch */
+/* porch: tell the story of one photo */
 let talking = false;
 function initPorch() {
   talking = false;
@@ -150,65 +162,18 @@ $('mic').onclick = () => {
   };
   step();
 };
-$('porchTake').onclick = () => { rereading = false; openSlip(2); };
+// Finishing the porch finishes the Family chapter and earns its memory.
+$('porchTake').onclick = () => { rereading = false; openMemory('family'); };
 
-/* attic */
-let set = [];
-function drawAttic() {
-  const sh = $('shelf');
-  sh.querySelectorAll('.mount').forEach(m => m.remove());
-  const lefts = ['0%', '39%', '78%'];
-  for (let i = 0; i < 3; i++) {
-    const m = document.createElement('div');
-    m.className = 'mount ' + (set[i] ? 'set' : (i === set.length ? 'next' : 'open'));
-    m.style.left = lefts[i];
-    m.innerHTML = '<span class="num">' + (i + 1) + '</span>' + (set[i] ? '<svg viewBox="0 0 120 80"><use href="#' + set[i] + '"/></svg>' : '');
-    sh.appendChild(m);
-  }
-  const box = $('box'); box.innerHTML = '';
-  pics.forEach(p => {
-    const b = document.createElement('button');
-    b.className = 'pick' + (set.includes(p) ? ' gone' : '');
-    b.innerHTML = '<svg viewBox="0 0 120 80"><use href="#' + p + '"/></svg>';
-    b.setAttribute('aria-label', 'photo');
-    b.onclick = () => { if (set.length < 3 && !set.includes(p)) { set.push(p); drawAttic(); } };
-    box.appendChild(b);
-  });
-  if (set.length === 3) {
-    $('aCap').innerHTML = 'That looks right<span class="sub">ATTIC, THE PHOTO BOX</span>';
-    later(() => $('atticTake').classList.remove('hide'), 700);
-  } else {
-    $('aCap').innerHTML = 'Which one came first?<span class="sub">ATTIC, THE PHOTO BOX</span>';
-    $('atticTake').classList.add('hide');
-  }
-}
-function initAttic() { set = []; drawAttic(); }
-$('atticTake').onclick = () => { rereading = false; openSlip(3); };
-
-/* ending */
-function initEnding() {
-  $('sheet').innerHTML = letter.map((p, i) => '<div class="ln" id="ln' + i + '">' + p.line + '<span>' + p.by + '</span></div>').join('');
-}
-$('hearLetter').onclick = () => {
-  clearAll();
-  document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
-  letter.forEach((_, i) => later(() => {
-    document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say'));
-    const el = $('ln' + i); if (el) el.classList.add('say');
-  }, i * 2200));
-  later(() => document.querySelectorAll('.sheet .ln').forEach(l => l.classList.remove('say')), letter.length * 2200);
-};
-$('sayHello').onclick = () => { $('sayHello').textContent = 'CALLING MEI'; };
-
-/* review strip */
-[['intro','Opening'],['hub','House'],['kitchen','Kitchen'],['radio','Radio room'],['porch','Porch'],['attic','Attic'],['ending','Ending']]
+/* review strip (design review only) */
+[['intro','Cover'],['album','Album'],['kitchen','Kitchen'],['porch','Porch']]
   .forEach(([k, label]) => {
     const b = document.createElement('button'); b.textContent = label; b.dataset.jump = k;
     b.onclick = () => { $('reveal').classList.remove('on'); $('rest').classList.remove('on'); rereading = false; show(k); };
     $('controls').appendChild(b);
   });
 const rb = document.createElement('button'); rb.textContent = 'Start over';
-rb.onclick = () => { found.fill(false); $('reveal').classList.remove('on'); show('intro'); };
+rb.onclick = () => { Object.keys(placed).forEach(k => delete placed[k]); $('reveal').classList.remove('on'); show('intro'); };
 $('controls').appendChild(rb);
 
 show('intro');

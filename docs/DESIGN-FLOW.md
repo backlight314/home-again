@@ -64,3 +64,11 @@ Welcome, Life map, Family chapter (Sunday table reunion, Porch story), photo pag
 | Attic | Childhood chapter (cover only for the demo) |
 | Ending (the letter) | Album complete |
 | Slip overlay | Photo page |
+
+## 6. Update: album page replaces the house hub (built)
+
+- Cover, COME IN, then the **album page**: a paper sheet on a warm desk with five empty photo slots (one per chapter, faint corners and dashed outline) and five paper slips pinned around it with the chapter names. Family is the only open slip and nudges gently; the others answer with "This page is waiting for photos from your family."
+- Family chapter: Sunday table (kitchen), then Porch story, then **KEEP THIS MEMORY**.
+- The memory card develops from sepia to colour, plays the family voice line, and **PUT IT IN THE ALBUM** flies the photo into the Family slot while the player watches. The slip gets a sage dot. Tapping a placed photo reopens its memory.
+- The radio, attic, letter strips and letter ending are gone from the flow.
+- Visual reference: *As Long As You're Here* (top-down desk, scattered photos, handwritten labels), kept 2D and tap-only.

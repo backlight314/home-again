@@ -34,3 +34,12 @@
   }
 }
 :root[data-theme="dark"] { --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --chip: #2a251f; --chip-edge: #534a3c; }
+
+/* the desk the album sits on (warm dusk) */
+:root {
+  --desk-1: #6d5262;
+  --desk-2: #4b3846;
+  --desk-3: #33242d;
+  --slip: #f3ead6;
+  --pin: #b8432f;
+}

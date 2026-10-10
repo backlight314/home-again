@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/album.css">
 </head>
 <body>
 
@@ -76,11 +77,19 @@
     <circle cx="140" cy="44" r="4" fill="#3c3326"/>
     <rect x="122" y="76" width="36" height="12" rx="3" fill="#d8c8a6" stroke="#3c3326" stroke-width="2"/>
   </symbol>
+  <symbol id="sc-table" viewBox="0 0 120 80">
+    <rect width="120" height="80" fill="#d9c9a8"/><rect y="52" width="120" height="28" fill="#b48f66"/>
+    <ellipse cx="60" cy="56" rx="44" ry="13" fill="#efe3c8" stroke="#6b5a44" stroke-width="1.4"/>
+    <g><circle cx="34" cy="34" r="8" fill="#d9b394"/><path d="M22 52c1-9 6-13 12-13s11 4 12 13z" fill="#4f6279"/></g>
+    <g><circle cx="60" cy="30" r="8" fill="#d9b394"/><path d="M48 50c1-9 6-13 12-13s11 4 12 13z" fill="#6f6480"/></g>
+    <g><circle cx="86" cy="34" r="8" fill="#e0bb9b"/><path d="M74 52c1-9 6-13 12-13s11 4 12 13z" fill="#6b8078"/></g>
+    <circle cx="60" cy="54" r="5" fill="#c98f52"/>
+  </symbol>
 </defs></svg>
 
 <header>
   <h1>Home Again</h1>
-  <p>One evening in a family album. The bird brings a letter torn in four, each room holds a piece, and the family reads it at the end. Names, photos, voices and songs are placeholders.</p>
+  <p>A family album you can step into. Open the cover, pick a page, and each visit adds a memory to the album. Names, photos, voices and songs are placeholders.</p>
 </header>
 
 <div class="stage">
@@ -88,31 +97,27 @@
 
     <div class="chrome" id="chrome">
       <button class="tab" id="restBtn">REST</button>
-      <div class="strips" aria-label="Letter pieces found">
-        <span class="strip" id="pc0"></span><span class="strip" id="pc1"></span><span class="strip" id="pc2"></span><span class="strip" id="pc3"></span>
-      </div>
     </div>
 
-    <!-- opening -->
-    <section class="scr intro on" id="s-intro" aria-label="Opening">
+    <!-- cover -->
+    <section class="scr intro on" id="s-intro" aria-label="Cover">
       <div class="page"></div>
       <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
       <div class="title">Home<em>Again</em></div>
-      <div class="sig">The house has been quiet.<br>The bird has something for you.</div>
+      <div class="sig">Your family left you something.<br>Come and look.</div>
       <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
       <div class="bird" style="left:41%;top:9%;width:13%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <div class="torn">a letter, torn in four</div>
-      <button class="pressbtn go" data-go="hub" style="position:absolute;left:7.4cqw;bottom:7cqw">COME IN</button>
+      <button class="pressbtn go" data-go="album" style="position:absolute;left:7.4cqw;bottom:4cqw">COME IN</button>
     </section>
 
-    <!-- hub -->
-    <section class="scr hub" id="s-hub" aria-label="The house">
-      <div class="page"></div>
-      <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
-      <div class="caption" id="hubCaption">Which room tonight?</div>
-      <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
-      <div class="bird" style="left:52%;top:5%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <div class="list" id="rooms"></div>
+    <!-- the album page -->
+    <section class="scr album-pg" id="s-album" aria-label="The album">
+      <div class="desk"></div>
+      <div class="sheetpg" id="sheetpg"></div>
+      <div id="tags"></div>
+      <div class="bird" style="left:11%;bottom:3%;width:8%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <button class="quietbtn closebtn" data-go="intro">close the album</button>
+      <div class="toast" id="toast" role="status"></div>
     </section>
 
     <!-- kitchen -->
@@ -128,22 +133,8 @@
       <div class="bird" style="left:3%;top:46%;width:10%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
       <div class="said" id="kSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="kSaidText"></span></div>
       <div class="krow" id="kRow"></div>
-      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
-    </section>
-
-    <!-- radio -->
-    <section class="scr radio-pg" id="s-radio" aria-label="Radio room">
-      <div class="page"></div>
-      <div class="caption" id="rCap">Turn the dial until a song comes in<span class="sub">RADIO ROOM</span></div>
-      <div class="setwrap"><svg viewBox="0 0 180 110"><use href="#radioset"/></svg></div>
-      <div class="station" id="station">static</div>
-      <div class="dialrow">
-        <button class="pressbtn" id="tuneL">&#9664; TUNE</button>
-        <button class="pressbtn" id="tuneR">TUNE &#9654;</button>
-        <button class="pressbtn red hide" id="keepSong">KEEP THIS ONE</button>
-      </div>
-      <div class="bird" style="left:4%;top:48%;width:10%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
+      <button class="pressbtn red hide" id="kNext" style="position:absolute;right:3cqw;top:9cqw">ON TO THE PORCH</button>
+      <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
 
     <!-- porch -->
@@ -157,47 +148,22 @@
       <div class="heard" id="pHeard">tap the microphone and talk</div>
       <div class="stamped hide" id="pStamp">SAVED TO STORIES</div>
       <button class="mic" id="mic" aria-label="Tap and talk"><span class="m"></span><span class="mlbl">tap and talk</span></button>
-      <button class="pressbtn red hide" id="porchTake" style="position:absolute;right:3cqw;top:9cqw">TAKE THE PIECE</button>
-      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
+      <button class="pressbtn red hide" id="porchTake" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
+      <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
 
-    <!-- attic -->
-    <section class="scr attic" id="s-attic" aria-label="Attic">
-      <div class="page"></div>
-      <div class="caption" id="aCap">Which one came first?<span class="sub">ATTIC, THE PHOTO BOX</span></div>
-      <div class="shelfline" id="shelf"><div class="rule"></div><div class="ends"><span>EARLIER</span><span>LATER</span></div></div>
-      <div class="boxlbl">the photo box</div>
-      <div class="boxrow" id="box"></div>
-      <div class="bird" style="right:5%;top:46%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="pressbtn red hide" id="atticTake" style="position:absolute;right:3cqw;bottom:6cqw">TAKE THE PIECE</button>
-      <button class="quietbtn" data-go="hub" style="right:3cqw;bottom:3cqw">skip this one</button>
-    </section>
-
-    <!-- ending -->
-    <section class="scr ending" id="s-ending" aria-label="The letter">
-      <div class="page"></div>
-      <div class="caption">The letter is whole<span class="sub">ALL FOUR WINDOWS LIT</span></div>
-      <div class="housewrap" style="position:absolute;right:4cqw;top:4cqw;width:17%"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
-      <div class="sheet" id="sheet"></div>
-      <div class="bird" style="left:5%;bottom:22%;width:9%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <div class="endrow">
-        <button class="pressbtn" id="hearLetter">HEAR THE LETTER</button>
-        <div class="calltile"><span class="av"><svg viewBox="0 0 100 80" style="--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240"><use href="#person"/></svg></span>Mei is here now<button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button></div>
-      </div>
-    </section>
-
-    <!-- piece slip -->
-    <div class="ovl" id="reveal" role="dialog" aria-label="A piece of the letter">
-      <div class="slip">
-        <div class="slipcard">
-          <div class="kicker" id="rKick">PIECE ONE OF FOUR</div>
-          <p id="rLine"></p>
-          <div class="foot">
-            <button class="hearbtn" id="rPlay"><span class="wave" id="rWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
-            <span class="who" id="rBy"></span>
+    <!-- memory reveal -->
+    <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">
+      <div class="memcard">
+        <div class="print" id="mPrint"><div class="sepia"><svg viewBox="0 0 120 80"><use id="mUse" href="#sc-table"/></svg></div><div class="pname" id="mCap"></div></div>
+        <div class="side">
+          <p class="line" id="mLine"></p>
+          <div class="memrow">
+            <button class="hearbtn" id="mPlay"><span class="wave" id="mWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
+            <span class="by" id="mBy"></span>
           </div>
+          <button class="pressbtn" id="mDone">PUT IT IN THE ALBUM</button>
         </div>
-        <button class="pressbtn" id="rDone">PUT IT IN THE LETTER</button>
       </div>
     </div>
 
@@ -205,15 +171,15 @@
     <div class="ovl" id="rest" role="dialog" aria-label="Rest">
       <div class="restcard">
         <h3>Take your time</h3>
-        <p>the house will wait for you</p>
-        <div class="row"><button class="pressbtn" id="restKeep">KEEP PLAYING</button><button class="pressbtn red" id="restHome">BACK TO THE HOUSE</button></div>
+        <p>the album will wait for you</p>
+        <div class="row"><button class="pressbtn" id="restKeep">KEEP PLAYING</button><button class="pressbtn red" id="restHome">BACK TO THE ALBUM</button></div>
       </div>
     </div>
 
   </div></div>
 
   <div class="controls" id="controls"><span class="lbl">JUMP TO</span></div>
-  <p class="note">The jump buttons are for reviewing the design only. In the game the player moves through rooms from the house page, and a finished room can be tapped again to reread its piece.</p>
+  <p class="note">The jump buttons are for reviewing the design only. In the game the player moves through the album page.</p>
 </div>
 
 <script src="js/data.js"></script>
