@@ -5,6 +5,7 @@ import { chat, loadChat, resetChat } from './guide.js';
 import { buildGame } from './build.js';
 import { addPhoto, updatePhoto, addBack, addPortrait, addVoice, updateVoice, scanPhoto, nameFace, confirmFaces, setFaceRecognition } from './album.js';
 import { ROOT, MEDIA, TYPES, FILES, readJSON, loadMaterials, withMaterials, removeMaterial, progress } from './store.js';
+import { upgradeMatching } from './faces.js';
 
 const PORT = Number(process.env.PORT) || 8787;
 const MAX_BODY = 40 * 1024 * 1024;
@@ -149,3 +150,6 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => {
   console.log(`Home Again on http://localhost:${PORT}  (family: /family)`);
 });
+
+// re-check existing face guesses whenever the matching rules change
+withMaterials(mat => { if (upgradeMatching(mat)) console.log('Face guesses re-checked with the current matching rules.'); });
