@@ -7,11 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=play">
-<link rel="stylesheet" href="css/theme.css?v=play">
-<link rel="stylesheet" href="css/family.css?v=play">
-<link rel="stylesheet" href="css/play.css?v=play">
-<link rel="stylesheet" href="css/album.css?v=play">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }</script>
+<link rel="stylesheet" href="css/tokens.css?v=house">
+<link rel="stylesheet" href="css/theme.css?v=house">
+<link rel="stylesheet" href="css/family.css?v=house">
+<link rel="stylesheet" href="css/play.css?v=house">
+<link rel="stylesheet" href="css/album.css?v=house">
 </head>
 <body data-mode="home">
 
@@ -250,27 +251,10 @@
         <button class="quietbtn closebtn" data-go="hub" type="button">back to this week</button>
       </section>
 
-      <section class="scr hub" id="s-hub" aria-label="This week">
-        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <pattern id="hwp" width="52" height="60" patternUnits="userSpaceOnUse">
-              <rect width="52" height="60" fill="#6b3f28"/>
-              <path d="M26 10c6 8 6 14 0 20-6-6-6-12 0-20z" fill="#5a3422" opacity=".7"/>
-            </pattern>
-          </defs>
-          <rect width="1600" height="900" fill="url(#hwp)"/>
-          <rect y="540" width="1600" height="360" fill="#3d2418"/>
-          <path d="M0 540h1600" stroke="#8a5340" stroke-width="20"/>
-          <rect x="80" y="80" width="420" height="300" fill="#7aa3b8"/>
-          <rect x="80" y="80" width="420" height="300" fill="none" stroke="#2b241f" stroke-width="14"/>
-          <path d="M80 230h420M290 80v300" stroke="#2b241f" stroke-width="7"/>
-          <path d="M100 330c50-40 110-10 160-30 70-24 110 16 170-10 40-18 70 6 50 50H100z" fill="#4e7a48"/>
-          <rect x="70" y="380" width="440" height="24" fill="#b08960"/>
-          <rect x="1280" y="70" width="64" height="420" fill="#4a3228"/>
-          <path d="M1255 70h114l-24 64h-66z" fill="#e2c48a"/>
-          <ellipse cx="1312" cy="280" rx="70" ry="100" fill="#ffd27a" opacity=".22"/>
-        </svg>
-        <div class="caption" id="hubCaption">What happened this week?</div>
+      <section class="scr hub house" id="s-hub" aria-label="This week">
+        <div class="hub3d" id="hub3d"></div>
+        <button class="roombtn" id="kitchenBtn" type="button" aria-label="Go into Sunday kitchen"></button>
+        <div class="caption hcap" id="hubCaption">What happened this week?<span class="sub">TAP A ROOM TO GO IN</span></div>
         <div class="list" id="rooms"></div>
         <button class="quietbtn" data-go="album" type="button" style="left:4%;bottom:4%">the album</button>
         <button class="quietbtn closebtn" data-go="shelf" type="button">close the book</button>
@@ -472,11 +456,11 @@
   </div>
 </section>
 
-<script src="js/strings.js?v=play"></script>
-<script src="js/pack.js?v=play"></script>
-<script src="js/voice.js?v=play"></script>
-<script src="js/family.js?v=play"></script>
-<script src="js/play.js?v=play"></script>
-<script src="js/app.js?v=play"></script>
+<script src="js/strings.js?v=house"></script>
+<script src="js/pack.js?v=house"></script>
+<script src="js/voice.js?v=house"></script>
+<script src="js/family.js?v=house"></script>
+<script src="js/play.js?v=house"></script>
+<script src="js/app.js?v=house"></script>
 </body>
 </html>

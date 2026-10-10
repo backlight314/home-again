@@ -28,6 +28,11 @@
   let started = false;
   let familyAudio = null;
   let porchStop = null;
+  let hub = null;
+  let hubFailed = false;
+  let hubInside = false;
+  let hubMoving = false;
+  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic' };
 
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const clearAll = () => {
@@ -173,7 +178,9 @@
       fly.classList.add('zoomed');
     }, 30);
     setTimeout(() => {
+      hubInside = false;
       show('hub', true);
+      hub?.reset();
       fly.classList.add('opening');
     }, 1000);
     setTimeout(() => fly.remove(), 2100);
@@ -266,13 +273,39 @@
       const book = chapter(currentBook);
       toast(complete(book) ? S.bookFull : S.placed);
       if (complete(book)) later(() => show('ending'), 1600);
-      else later(() => show('hub'), 900);
+      else later(() => leaveHouse(), 900);
     }, 2100);
   }
 
+  function paintHouseWindows() {
+    if (!hub) return;
+    keys.forEach((k, i) => hub.setLit(k, found[i]));
+  }
+
+  function hubCaption() {
+    const n = found.filter(Boolean).length;
+    const el = $('hubCaption');
+    if (!el) return;
+    el.innerHTML =
+      (n === 0
+        ? 'What happened this week?'
+        : n < 4
+          ? 'What else do you remember from this week?'
+          : 'The week is coming together') +
+      '<span class="sub">' +
+      (hub ? 'TAP A ROOM TO GO IN · ' : '') +
+      n +
+      ' OF 4 WINDOWS LIT</span>';
+  }
+
   function buildRooms() {
+    hubCaption();
+    paintHouseWindows();
     const box = $('rooms');
-    if (!box) return;
+    if (!box || (hub && $('s-hub').classList.contains('is3d'))) {
+      box && (box.innerHTML = '');
+      return;
+    }
     box.innerHTML = '';
     letter.forEach((p, i) => {
       const b = document.createElement('button');
@@ -291,16 +324,73 @@
       };
       box.appendChild(b);
     });
-    const n = found.filter(Boolean).length;
-    $('hubCaption').innerHTML =
-      (n === 0
-        ? 'What happened this week?'
-        : n < 4
-          ? 'What else do you remember from this week?'
-          : 'The week is coming together') +
-      '<span class="sub">' +
-      n +
-      ' OF 4 MEMORIES</span>';
+  }
+
+  async function ensureHub() {
+    if (hub || hubFailed) return hub;
+    if (new URLSearchParams(location.search).has('flat')) {
+      hubFailed = true;
+      return null;
+    }
+    try {
+      const { createHub } = await import('./hub3d.js?v=house');
+      hub = createHub({
+        mount: $('hub3d'),
+        kitchenBtn: $('kitchenBtn'),
+        onRoom: (name) => enterHouseRoom(name)
+      });
+      $('s-hub').classList.add('is3d');
+      $('hub3d').onpointermove = (e) => {
+        const r = $('hub3d').getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        hub.pointer(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * -2);
+      };
+      paintHouseWindows();
+    } catch (err) {
+      console.warn('3D house unavailable', err);
+      hubFailed = true;
+    }
+    return hub;
+  }
+
+  async function enterHouseRoom(name) {
+    if (hubMoving) return;
+    if (name === 'hall') {
+      toast(S.comingSoon);
+      return;
+    }
+    const activity = houseRooms[name];
+    if (!activity) return;
+    const idx = keys.indexOf(activity);
+    if (found[idx]) {
+      rereading = true;
+      openMemory(activity);
+      return;
+    }
+    hubMoving = true;
+    try {
+      if (hub) {
+        hubInside = true;
+        await hub.glideIn(name);
+      }
+      show(activity);
+    } finally {
+      hubMoving = false;
+    }
+  }
+
+  async function leaveHouse() {
+    show('hub');
+    if (hub && hubInside) {
+      hubMoving = true;
+      hub.setActive(true);
+      try {
+        await hub.glideOut();
+      } finally {
+        hubInside = false;
+        hubMoving = false;
+      }
+    }
   }
 
   function show(name, keepFly) {
@@ -310,6 +400,7 @@
     document.querySelectorAll('#screen .flyer').forEach((f) => f.remove());
     document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === 's-' + name));
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
+    hub?.setActive(name === 'hub');
     document.querySelectorAll('#controls button').forEach((b) =>
       b.setAttribute('aria-current', b.dataset.jump === name ? 'true' : 'false')
     );
@@ -318,6 +409,10 @@
       speak('Which album today? This week is open.');
     }
     if (name === 'hub') {
+      ensureHub().then(() => {
+        buildRooms();
+        paintHouseWindows();
+      });
       buildRooms();
       const n = found.filter(Boolean).length;
       speak(n === 0 ? 'What happened this week?' : n < 4 ? 'What else do you remember from this week?' : 'The week is coming together');
@@ -644,7 +739,10 @@
     started = true;
 
     document.querySelectorAll('#view-play [data-go]').forEach((b) => {
-      b.onclick = () => show(b.dataset.go);
+      b.onclick = () => {
+        if (b.dataset.go === 'hub') leaveHouse();
+        else show(b.dataset.go);
+      };
     });
 
     $('mPlay').onclick = () => playFamilyVoice();
@@ -652,7 +750,7 @@
       $('reveal').classList.remove('on');
       if (rereading) {
         rereading = false;
-        show('hub');
+        leaveHouse();
         return;
       }
       pendingPlace = viewing;
@@ -663,7 +761,7 @@
     $('restKeep').onclick = () => $('rest').classList.remove('on');
     $('restHome').onclick = () => {
       $('rest').classList.remove('on');
-      show('hub');
+      leaveHouse();
     };
     $('kNext').onclick = () => keepMemory('kitchen');
     $('tuneL').onclick = () => tune(-1);
@@ -740,6 +838,8 @@
     rereading = false;
     pendingPlace = null;
     viewing = null;
+    hubInside = false;
+    hub?.reset();
     clearAll();
     $('reveal').classList.remove('on');
     $('rest').classList.remove('on');
