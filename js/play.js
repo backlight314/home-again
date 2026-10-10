@@ -15,6 +15,7 @@
   let memories = [];
   let chapters = [];
   let found = [false, false, false, false];
+  let placingId = null; // memory whose photo is still flying into its slot
   let currentBook = 'week';
   let pendingPlace = null;
   let viewing = null;
@@ -195,7 +196,7 @@
     sheet.dataset.title = book.title.toUpperCase();
     book.memories.forEach((m, i) => {
       const [l, t, rot] = spots[i] || spots[0];
-      const filled = m.activity && found[keys.indexOf(m.activity)];
+      const filled = m.activity && found[keys.indexOf(m.activity)] && m.id !== placingId;
       const slot = document.createElement('div');
       slot.className = 'slot' + (filled ? ' filled' : '');
       slot.id = 'slot-' + m.id;
@@ -224,7 +225,7 @@
     book.memories.forEach((m, i) => {
       const b = document.createElement('button');
       const playable = !!m.activity;
-      const isDone = playable && found[keys.indexOf(m.activity)];
+      const isDone = playable && found[keys.indexOf(m.activity)] && m.id !== placingId;
       b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (playable && !isDone ? ' open' : '') + (isDone ? ' done' : '');
       b.innerHTML =
         '<span>' + m.title + (playable && !isDone ? '<small>' + S.open + '</small>' : '') + '</span>';
@@ -267,7 +268,7 @@
       fly.style.transform = 'rotate(-1.6deg)';
     }, 450);
     later(() => {
-      found[keys.indexOf(id)] = true;
+      placingId = null;
       buildAlbum();
       fly.remove();
       const book = chapter(currentBook);
@@ -413,6 +414,7 @@
   }
 
   function show(name, keepFly) {
+    placingId = null;
     hush();
     clearAll();
     if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach((f) => f.remove());
@@ -438,6 +440,7 @@
       speak(n === 0 ? 'What happened this week?' : n < 4 ? 'What else do you remember from this week?' : 'The week is coming together');
     }
     if (name === 'album') {
+      placingId = pendingPlace;
       buildAlbum();
       if (pendingPlace) {
         const id = pendingPlace;
@@ -752,6 +755,8 @@
 
   function keepMemory(activity) {
     rereading = false;
+    found[keys.indexOf(activity)] = true; // counted now, so leaving mid-animation loses nothing
+    paintHouseWindows();
     openMemory(activity);
   }
 
