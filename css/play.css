@@ -354,7 +354,59 @@
 
 .housewrap { display: block; }
 
-/* hub doors */
+/* hub: Carolyn dollhouse */
+.hub3d {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: none;
+  background: #ddd2b8;
+}
+.hub.is3d .hub3d { display: block; }
+.hub.is3d .list { display: none; }
+.hub.is3d .scene { display: none !important; }
+.hub3d canvas { width: 100%; height: 100%; display: block; }
+.hub3d .roomlbl {
+  position: absolute;
+  font-family: var(--type);
+  font-size: clamp(14px, 1.7cqw, 22px);
+  letter-spacing: 0.08em;
+  color: rgba(44, 36, 26, 0.62);
+  pointer-events: none;
+  transform: translate(-50%, -120%);
+  z-index: 3;
+  transition: opacity 0.4s, color 0.3s;
+}
+.hub3d .roomlbl.here { color: var(--stamp-text, #732619); font-weight: 700; }
+.hub3d .roomlbl.hot { color: var(--ink); }
+.hub3d.away .roomlbl,
+.hub3d.away .roombtn { opacity: 0; pointer-events: none; }
+.roombtn {
+  position: absolute;
+  z-index: 2;
+  background: transparent;
+}
+.roombtn:hover,
+.roombtn:focus-visible { background: rgba(216, 165, 58, 0.12); }
+.hub.is3d .caption {
+  left: 4cqw;
+  right: auto;
+  max-width: 42cqw;
+  text-align: left;
+  color: var(--ink);
+  text-shadow: none;
+  z-index: 6;
+}
+.hub.is3d .caption .sub { color: var(--ink-soft); }
+.hub.is3d .closebtn,
+.hub.is3d .quietbtn { color: var(--ink); border-color: var(--ink); z-index: 7; }
+.hub.is3d .closebtn {
+  left: auto;
+  right: 4%;
+  bottom: 4%;
+  top: auto;
+}
+
 .hub .caption {
   left: 5%;
   right: 5%;
