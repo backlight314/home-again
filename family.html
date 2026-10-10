@@ -138,7 +138,24 @@
   .filter { font-family: var(--type); font-size: 13px; padding: 4px 10px; border: 1px solid var(--card-edge); background: var(--field); }
   .filter[aria-pressed="true"] { border-color: var(--page-text); font-weight: 700; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
-  .card { display: grid; gap: 6px; text-align: left; background: var(--field); padding: 6px 6px 8px; box-shadow: 0 2px 6px rgba(40,30,15,.18); position: relative; }
+  .card { display: grid; gap: 6px; align-content: start; background: var(--field); padding: 6px 6px 8px; box-shadow: 0 2px 6px rgba(40,30,15,.18); position: relative; }
+  .card .open { display: grid; gap: 6px; text-align: left; }
+  .card .ask { display: flex; gap: 6px; }
+  .card .ask .tool { height: 32px; flex: 1; padding: 0 6px; font-size: 12px; }
+  .card .facecrop { position: absolute; top: 10px; right: 10px; width: 46px; height: 46px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); background: var(--card-edge); }
+  /* people */
+  .peoplerow { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .pchip { display: grid; justify-items: center; gap: 3px; min-width: 78px; max-width: 96px; padding: 6px 4px; border: 1px solid transparent; font-size: 13px; line-height: 1.2; }
+  .pchip[aria-pressed="true"] { border-color: var(--page-text); background: var(--field); }
+  .pchip .face { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: var(--card-edge); color: var(--card); font-family: var(--display); font-size: 24px; overflow: hidden; }
+  .pchip .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .pchip .n { font-family: var(--type); font-size: 11px; color: var(--page-soft); }
+  .personhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
+  .personhead h3 { font-family: var(--display); font-size: 26px; font-weight: 600; }
+  .personhead .meta { color: var(--page-soft); font-size: 15px; }
+  h4.group { font-family: var(--type); font-size: 13px; letter-spacing: .08em; color: var(--page-soft); font-weight: 700; }
+  h4.group span { font-weight: 400; letter-spacing: 0; }
+  .persongroups { display: grid; gap: 14px; }
   .card img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--card-edge); }
   .card .cap { font-size: 13px; line-height: 1.35; color: var(--page-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .card .cap.none { color: var(--page-soft); font-style: italic; }
@@ -251,12 +268,18 @@
       </div>
       <p class="hint" id="albumHint">Drag in as many photos as you like, or use Add photos. Faces the album has learned are named automatically; check the guesses marked in yellow. Add when and the story if you know; the guide will ask about the rest. Old prints often have a date or names written on the back, so open a photo to add the back too.</p>
       <div class="status" id="albumStatus" role="status"></div>
-      <div class="filters" role="group" aria-label="Show">
+      <div id="peopleBlock" hidden>
+        <h4 class="group">PEOPLE</h4>
+        <div class="peoplerow" id="peopleRow" role="group" aria-label="Show photos of"></div>
+      </div>
+      <div class="personhead" id="personHead" hidden></div>
+      <div class="filters" id="filters" role="group" aria-label="Show">
         <button class="filter" data-filter="all" aria-pressed="true">All</button>
         <button class="filter" data-filter="needs" aria-pressed="false">Needs details</button>
         <button class="filter" data-filter="faces" aria-pressed="false">Faces</button>
       </div>
       <div class="grid" id="grid"></div>
+      <div class="persongroups" id="personPhotos" hidden></div>
 
       <h3 class="section">Voice messages
         <button class="tool" id="albumMic">
@@ -296,6 +319,7 @@
           <button class="tool" id="fPortrait">Save as their portrait too</button>
           <button class="tool" id="fNotFace">Not a face</button>
         </div>
+        <button class="linkish" id="fAll" hidden></button>
       </div>
       <div class="actions">
         <button class="tool primary" id="dSave">Save</button>
@@ -618,18 +642,98 @@
     document.querySelectorAll('.filter').forEach(x => x.setAttribute('aria-pressed', x === b));
     drawAlbum();
   });
-  function drawAlbum() {
-    const faces = portraitIds();
-    const list = mat.photos.filter(ph => filter === 'needs' ? needsDetails(ph) && !faces.has(ph.id) : filter === 'faces' ? faces.has(ph.id) : true).slice().reverse();
-    $('grid').innerHTML = list.map(ph => {
-      const face = mat.people.find(f => f.photoId === ph.id);
-      const cap = [ph.who, ph.caption, ph.year].filter(Boolean).join(' · ');
-      return `<button class="card" data-photo="${ph.id}">
+  // a small round crop of one face, painted once the photo has loaded
+  const imgCache = {};
+  const cropCanvas = (url, box, cls) => `<canvas class="${cls}" width="96" height="96" data-src="${esc(url)}" data-box='${JSON.stringify(box)}'></canvas>`;
+  function paintCrops(root) {
+    root.querySelectorAll('canvas[data-src]').forEach(c => {
+      const box = JSON.parse(c.dataset.box), img = imgCache[c.dataset.src] ??= Object.assign(new Image(), { src: c.dataset.src });
+      const draw = () => {
+        const pad = box.w * 0.3, g = c.getContext('2d');
+        g.drawImage(img, box.x - pad, box.y - pad, box.w + 2 * pad, box.h + 2 * pad, 0, 0, c.width, c.height);
+      };
+      img.complete && img.naturalWidth ? draw() : img.addEventListener('load', draw, { once: true });
+    });
+  }
+
+  // Every photo a person is in: settled (confirmed, typed by the family, or their portrait),
+  // the album's filled-in guesses, and its "Bob?" questions.
+  function photosOf(person) {
+    const safe = person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const named = new RegExp(`(^|[^\\p{L}])${safe}($|[^\\p{L}])`, 'iu');
+    const groups = { sure: [], probably: [], maybe: [] };
+    for (const ph of mat.photos.slice().reverse()) {
+      const mine = (ph.faces || []).filter(f => f.personId === person.id);
+      const find = st => mine.find(f => f.status === st);
+      if (ph.id === person.photoId || find('confirmed') || (ph.whoSource !== 'faces' && named.test(ph.who || ''))) groups.sure.push({ ph });
+      else if (find('auto')) groups.probably.push({ ph, face: find('auto') });
+      else if (find('suggested')) groups.maybe.push({ ph, face: find('suggested') });
+    }
+    return groups;
+  }
+
+  function cardHtml(ph, ask) {
+    const face = mat.people.find(f => f.photoId === ph.id);
+    const cap = [ph.who, ph.caption, ph.year].filter(Boolean).join(' · ');
+    const badge = ask ? '' : face ? `<span class="badge face">${esc(face.name)}</span>` : guessed(ph) ? '<span class="badge check">check names</span>' : needsDetails(ph) ? '<span class="badge">tell us more</span>' : '';
+    return `<div class="card">
+      <button class="open" data-photo="${ph.id}">
         <img src="${esc(ph.url)}" alt="${esc(cap || 'photo')}" loading="lazy">
-        ${face ? `<span class="badge face">${esc(face.name)}</span>` : guessed(ph) ? '<span class="badge check">check names</span>' : needsDetails(ph) ? '<span class="badge">tell us more</span>' : ''}
+        ${badge}
         <span class="cap${cap ? '' : ' none'}">${esc(cap || 'No details yet')}</span>
+      </button>
+      ${ask ? cropCanvas(ph.url, ask.face.box, 'facecrop') + `<div class="ask">
+        <button class="tool primary" data-yes="${ph.id}" data-face="${ask.face.id}">Yes, ${esc(ask.name)}</button>
+        <button class="tool" data-no="${ph.id}" data-face="${ask.face.id}">No</button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  let personView = null;
+  function showPerson(id) { personView = id; drawAlbum(); $('album').scrollTop = 0; }
+
+  function drawPeople() {
+    const people = mat.people.map(p => ({ p, g: photosOf(p) })).filter(({ p, g }) => g.sure.length + g.probably.length + g.maybe.length || p.photoId);
+    $('peopleBlock').hidden = !people.length;
+    $('peopleRow').innerHTML = people.map(({ p, g }) => {
+      const portrait = mat.photos.find(ph => ph.id === p.photoId);
+      const sample = !portrait && mat.photos.flatMap(ph => (ph.faces || []).filter(f => f.personId === p.id && f.status === 'confirmed').map(f => ({ ph, f })))[0];
+      const face = portrait ? `<img class="face" src="${esc(portrait.url)}" alt="">`
+        : sample ? cropCanvas(sample.ph.url, sample.f.box, 'face')
+        : `<span class="face">${esc(p.name[0]?.toUpperCase() || '?')}</span>`;
+      const n = g.sure.length + g.probably.length;
+      return `<button class="pchip" data-person="${p.id}" aria-pressed="${personView === p.id}">
+        ${face}<span class="name">${esc(p.name)}</span>
+        <span class="n">${n} photo${n === 1 ? '' : 's'}${g.maybe.length ? ` · ${g.maybe.length}?` : ''}</span>
       </button>`;
-    }).join('') || `<p class="empty">${filter === 'all' ? 'No photos yet.' : 'Nothing here.'}</p>`;
+    }).join('');
+    paintCrops($('peopleRow'));
+  }
+
+  function drawAlbum() {
+    drawPeople();
+    const person = personView && mat.people.find(p => p.id === personView);
+    if (personView && !person) personView = null;
+    $('filters').hidden = !!person; $('personHead').hidden = !person;
+    $('grid').hidden = !!person; $('personPhotos').hidden = !person;
+    if (person) {
+      const g = photosOf(person), total = g.sure.length + g.probably.length;
+      $('personHead').innerHTML = `<button class="linkish" id="backAll">&larr; All photos</button>
+        <h3>${esc(person.name)}</h3><span class="meta">${[person.relation, total + ' photo' + (total === 1 ? '' : 's')].filter(Boolean).join(' · ')}</span>`;
+      $('backAll').onclick = () => showPerson(null);
+      const section = (title, note, items, ask) => items.length ? `<h4 class="group">${title} <span>${note}</span></h4>
+        <div class="grid">${items.map(it => cardHtml(it.ph, ask && { face: it.face, name: person.name })).join('')}</div>` : '';
+      $('personPhotos').innerHTML = (section('PHOTOS OF ' + esc(person.name.toUpperCase()), '', g.sure, false)
+        + section('PROBABLY ' + esc(person.name.toUpperCase()), '· the album filled these in; check them', g.probably, true)
+        + section('COULD THIS BE ' + esc(person.name.toUpperCase()) + '?', '· the album isn\'t sure', g.maybe, true))
+        || `<p class="empty">No photos of ${esc(person.name)} yet. Open a photo and click their face to name it.</p>`;
+      paintCrops($('personPhotos'));
+    } else {
+      const faces = portraitIds();
+      const list = mat.photos.filter(ph => filter === 'needs' ? needsDetails(ph) && !faces.has(ph.id) : filter === 'faces' ? faces.has(ph.id) : true).slice().reverse();
+      $('grid').innerHTML = list.map(ph => cardHtml(ph)).join('') || `<p class="empty">${filter === 'all' ? 'No photos yet.' : 'Nothing here.'}</p>`;
+    }
+    paintCrops($('grid'));
     $('voices').innerHTML = mat.voices.slice().reverse().map(v => `<div class="voice" data-voice="${v.id}">
       <div class="meta">
         <audio controls preload="none" src="${esc(v.url)}"></audio>
@@ -639,7 +743,23 @@
       <button class="tool danger" data-remove="${v.id}" aria-label="Remove voice message">Remove</button>
     </div>`).join('') || '<p class="empty">No voice messages yet.</p>';
   }
-  $('grid').onclick = e => { const c = e.target.closest('.card'); if (c) openDetail(c.dataset.photo); };
+  $('peopleRow').onclick = e => { const c = e.target.closest('[data-person]'); if (c) showPerson(personView === c.dataset.person ? null : c.dataset.person); };
+  const onPhotoClick = async e => {
+    const yes = e.target.closest('[data-yes]'), no = e.target.closest('[data-no]');
+    if (yes || no) {
+      const btn = yes || no, person = mat.people.find(p => p.id === personView);
+      btn.disabled = true;
+      try {
+        await api('POST', `/api/photos/${btn.dataset.yes || btn.dataset.no}/faces/${btn.dataset.face}`, yes ? { person: person.name } : { reject: true });
+        useState(await api('GET', '/api/album'));
+      } catch (err) { status('albumStatus', err.message, true); btn.disabled = false; }
+      return;
+    }
+    const c = e.target.closest('[data-photo]');
+    if (c) openDetail(c.dataset.photo);
+  };
+  $('grid').onclick = onPhotoClick;
+  $('personPhotos').onclick = onPhotoClick;
   $('voices').addEventListener('change', async e => {
     const field = e.target.dataset.field, id = e.target.closest('.voice')?.dataset.voice;
     if (!field || !id) return;
@@ -746,6 +866,8 @@
     $('fYes').hidden = !guess; $('fYes').textContent = 'Yes, it\'s ' + (name || '');
     $('fNo').textContent = 'Not ' + (name || '');
     $('fName').value = guess ? '' : name || '';
+    $('fAll').hidden = !name || guess;
+    $('fAll').textContent = name ? 'All photos of ' + name + ' →' : '';
     $('fName').placeholder = guess ? 'Or someone else' : 'Bob';
     $('fRelWrap').hidden = true; $('fRel').value = '';
     // small preview of just this face
@@ -769,6 +891,7 @@
     } catch (err) { status('dStatus', err.message, true); }
   }
   $('fSave').onclick = () => faceAction({ person: $('fName').value, relation: $('fRel').value });
+  $('fAll').onclick = () => { const id = current.faces.find(x => x.id === activeFace)?.personId; $('detail').close(); showPerson(id); };
   $('fYes').onclick = () => faceAction({ person: personName(current.faces.find(x => x.id === activeFace)?.personId) });
   $('fNo').onclick = () => faceAction({ reject: true });
   $('fNotFace').onclick = () => faceAction({ notFace: true });
