@@ -22,9 +22,9 @@
   --sage: #4e8a62;
   --print: #fff6ea;
   --crayon: #ffd27a;
-  --display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
-  --type: "Source Sans 3", "Segoe UI", sans-serif;
-  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+  --display: "Petrona", "Iowan Old Style", Georgia, serif;
+  --type: "Courier Prime", "Courier New", monospace;
+  --sans: "Source Sans 3", system-ui, sans-serif;
   --page-bg: #1b140f;
   --page-text: var(--navy);
   --page-soft: var(--navy-soft);

@@ -1,29 +1,34 @@
 #view-play {
   position: relative;
-  background: #1b140f;
+  background: var(--page-bg);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 12px;
+  min-height: 100dvh;
 }
 
 .play-header { display: none; }
 
-.stage, .album, .screen {
+.stage {
   width: 100%;
-  min-height: 100dvh;
+  height: calc(100dvh - 22px - env(safe-area-inset-top, 0px));
+  max-width: none;
+  margin: 0;
 }
 
 .album {
   container-type: size;
-  background: none;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
+  background: var(--board);
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 14px 30px rgba(20, 14, 8, 0.4);
+  height: 100%;
 }
 
 .screen {
   position: relative;
   aspect-ratio: auto;
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
-  background: #f3e2c7;
+  background: var(--paper);
   border-radius: 0;
 }
 
@@ -225,7 +230,18 @@
   color: #2f6f9a;
 }
 
+.intro .scene { display: none !important; }
 .intro .bird { display: none; }
+.intro .page { z-index: 0; }
+.intro .title, .intro .sig, .intro .torn, .intro .go, .intro .housewrap, .intro .punch { z-index: 2; }
+
+.kitchen .caption,
+.attic .caption {
+  color: #2e2823;
+  text-shadow: 0 1px 0 rgba(255, 246, 234, 0.7);
+}
+.kitchen .caption .sub,
+.attic .caption .sub { color: #6a3f28; }
 
 .kitchen .caption,
 .attic .caption {
@@ -237,16 +253,17 @@
 
 .pressbtn {
   font-family: var(--type);
-  font-weight: 600;
-  font-size: clamp(15px, 2.2cqw, 18px);
+  font-weight: 700;
+  font-size: clamp(20px, 2.6cqw, 32px);
   letter-spacing: 0.04em;
-  padding: 12px 20px;
-  background: rgba(244, 236, 224, 0.94);
-  color: #2e2823;
-  border: 1px solid rgba(46, 40, 35, 0.35);
+  padding: 1.2cqw 2.6cqw;
+  background: var(--print);
+  color: var(--ink);
+  border: 0.3cqw solid var(--ink);
+  box-shadow: 0.6cqw 0.6cqw 0 rgba(35, 52, 79, 0.28);
 }
-.pressbtn:active { transform: translateY(1px); }
-.pressbtn.red { background: #5a6f7c; color: #f4ece0; border-color: transparent; }
+.pressbtn:active { transform: translate(0.2cqw, 0.2cqw); }
+.pressbtn.red { border-color: var(--stamp-text); color: var(--stamp-text); background: var(--print); }
 
 .quietbtn {
   position: absolute;
@@ -278,37 +295,47 @@
 .bird { position: absolute; z-index: 5; pointer-events: none; width: 90px; }
 .bird svg { width: 100%; height: auto; display: block; }
 
-/* intro */
+/* intro — Chris album cover */
 .intro .title {
   position: absolute;
-  left: 6%;
-  bottom: 22%;
+  left: 7cqw;
+  top: 12cqw;
   font-family: var(--display);
-  font-weight: 500;
-  font-size: clamp(64px, 14cqw, 150px);
-  line-height: 0.8;
-  color: #fff6ea;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-weight: 600;
+  font-size: 11cqw;
+  line-height: 0.92;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  text-shadow: none;
   z-index: 5;
 }
-.intro .title em { font-style: italic; display: block; color: #ffd27a; }
+.intro .title em { font-style: italic; display: block; color: var(--ink); font-weight: 400; }
 .intro .sig {
   position: absolute;
-  left: 6.4%;
-  bottom: 14%;
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff6ea;
+  left: 7.4cqw;
+  top: 38cqw;
+  font-size: clamp(20px, 2.6cqw, 32px);
+  font-weight: 400;
+  color: var(--ink-soft);
   z-index: 5;
-  max-width: 28ch;
-  text-shadow: 2px 2px 0 #2b241f;
+  max-width: 48%;
+  text-shadow: none;
+  font-family: var(--type);
 }
 .intro .go {
   position: absolute;
-  left: 6.4%;
-  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  left: 7.4cqw;
+  bottom: 7cqw;
   z-index: 6;
 }
+.intro .housewrap {
+  position: absolute;
+  right: 5cqw;
+  top: 9cqw;
+  width: 36%;
+  z-index: 2;
+}
+.intro .housewrap svg { width: 100%; height: auto; display: block; }
 .intro .torn {
   position: absolute;
   right: 8%;
@@ -325,7 +352,7 @@
   z-index: 5;
 }
 
-.housewrap { display: none; }
+.housewrap { display: block; }
 
 /* hub doors */
 .hub .caption {
@@ -338,6 +365,7 @@
   text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 .hub .caption .sub { color: #ffd27a; }
+.hub .closebtn { color: #fff6ea; border-color: #fff6ea; }
 .hub .list {
   position: absolute;
   left: 5%;

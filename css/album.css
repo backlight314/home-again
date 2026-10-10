@@ -1,0 +1,96 @@
+/* The album page: a paper sheet on a warm desk, chapter slips pinned around it.
+   Also the memory reveal and the flight of a photo into its slot. */
+:root {
+  --desk-1: #6d5262;
+  --desk-2: #4b3846;
+  --desk-3: #33242d;
+  --slip: #f3ead6;
+  --pin: #b8432f;
+}
+
+.album-pg .desk { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 52% 38%, var(--desk-1) 0%, var(--desk-2) 62%, var(--desk-3) 100%); }
+.album-pg .desk::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .18;
+  background: repeating-linear-gradient(92deg, rgba(0,0,0,.35) 0 .15cqw, transparent .15cqw 7cqw); }
+.album-pg .sheetpg { position: absolute; left: 22cqw; top: 5cqw; width: 56cqw; height: 55cqw; background: var(--paper);
+  transform: rotate(-.5deg); box-shadow: 0 1.4cqw 3.4cqw rgba(15,8,12,.55); }
+.album-pg .sheetpg::before { content: attr(data-title); position: absolute; left: 0; right: 0; top: 1.6cqw; text-align: center;
+  font-family: var(--type); font-size: var(--fs-label-min); letter-spacing: .22em; color: var(--ink-soft); }
+
+/* photo slots: faint corners when empty */
+.slot { position: absolute; width: 34%; aspect-ratio: 3 / 2.4; border: .2cqw dashed rgba(60,45,30,.22); }
+.slot.filled { border-color: transparent; }
+.slot .corner { width: 2.4cqw; height: 2.4cqw; background: rgba(60,45,30,.5); }
+.slot.filled { aspect-ratio: auto; }
+.slot.filled .corner { display: none; }
+.slot .print { width: 100%; height: 100%; opacity: 0; transition: opacity var(--motion); cursor: pointer; }
+.slot.filled .print { opacity: 1; }
+
+#tags {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* paper slips with pins */
+.slip-tag {
+  pointer-events: auto;
+  z-index: 6; position: absolute; width: 17.5cqw; min-height: 8cqw; padding: 2.4cqw 1.4cqw 1.4cqw; background: var(--slip); color: var(--ink);
+  font-family: var(--display); font-size: clamp(24px, 2.7cqw, 34px); line-height: 1.1; text-align: center;
+  box-shadow: .3cqw .7cqw 1.2cqw rgba(15,8,12,.45); display: grid; place-items: center; transform: rotate(var(--r)); }
+.slip-tag::before { content: ""; position: absolute; top: .8cqw; left: 50%; width: 1.7cqw; height: 1.7cqw; margin-left: -.85cqw; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e07a64, var(--pin) 60%, #7a2a1c); box-shadow: .15cqw .3cqw .4cqw rgba(0,0,0,.45); }
+.slip-tag small { display: block; font-family: var(--type); font-size: var(--fs-label-min); color: var(--ink-soft); margin-top: .6cqw; letter-spacing: .02em; }
+.slip-tag.open { animation: nudge 3.2s ease-in-out infinite; }
+.slip-tag.done::after { content: ""; position: absolute; right: .9cqw; bottom: .9cqw; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: var(--sage); }
+@keyframes nudge { 0%, 100% { transform: rotate(var(--r)) translateY(0); } 50% { transform: rotate(var(--r)) translateY(-.5cqw); } }
+.slip-tag.t1 { --r: -3deg; left: 1.5%; top: 12%; }
+.slip-tag.t2 { --r: 2deg; left: 1.5%; top: 38%; }
+.slip-tag.t3 { --r: -1.5deg; left: 1.5%; top: 64%; }
+.slip-tag.t4 { --r: 2.5deg; right: 1.5%; left: auto; top: 16%; }
+.slip-tag.t5 { --r: -2deg; right: 1.5%; left: auto; top: 42%; }
+.album-pg .closebtn { right: 3cqw; bottom: 3cqw; color: var(--slip); border-color: var(--slip); }
+.toast { position: absolute; left: 50%; bottom: 9cqw; transform: translateX(-50%); z-index: 8; background: var(--slip); color: var(--ink);
+  padding: 1.4cqw 3cqw; font-family: var(--display); font-size: clamp(24px, 2.8cqw, 34px); box-shadow: 0 .7cqw 1.6cqw rgba(15,8,12,.5);
+  opacity: 0; pointer-events: none; transition: opacity var(--motion); text-align: center; max-width: 70%; }
+.toast.on { opacity: 1; }
+
+/* memory reveal */
+.memcard { width: 82%; display: grid; grid-template-columns: 46% 1fr; gap: 3.6cqw; align-items: center; }
+.memcard .side { display: grid; gap: 1.8cqw; justify-items: start; }
+.memcard .print { width: 100%; transform: rotate(-1.4deg); }
+.memcard .sepia { filter: sepia(1) saturate(.6) brightness(.95); transition: filter 1.8s ease; }
+.memcard .print.developed .sepia { filter: none; }
+.memcard .line { font-family: var(--display); font-style: italic; font-size: clamp(28px, 3.2cqw, 40px); color: var(--print); text-align: left; line-height: 1.2; }
+.memcard .by { font-family: var(--type); font-size: var(--fs-label-min); color: var(--print); }
+.memrow { display: flex; gap: 2.4cqw; align-items: center; flex-wrap: wrap; }
+.hearbtn { display: flex; align-items: center; gap: 1.2cqw; font-family: var(--type); font-size: clamp(24px, 2.4cqw, 34px); color: var(--print); border-bottom: .25cqw solid var(--print); padding-bottom: .3cqw; }
+.flyer { position: absolute; z-index: 8; pointer-events: none;
+  transition: left 1.5s ease-in-out, top 1.5s ease-in-out, width 1.5s ease-in-out, transform 1.5s ease-in-out; }
+.flyer .print { width: 100%; }
+
+/* the shelf: five albums lying on the desk */
+.shelf-pg .shelfcap { left: 0; right: 0; top: 6cqw; max-width: none; text-align: center; color: var(--slip); }
+.shelf-pg .shelfcap .sub { color: var(--slip); opacity: .9; }
+.books { position: absolute; left: 5cqw; right: 5cqw; top: 22cqw; display: flex; justify-content: space-between; align-items: flex-start; }
+.book, .bookfly { --bk: #9c3b2e; width: 16cqw; height: 22cqw; display: grid; align-content: center; justify-items: center; gap: 1.2cqw; padding: 1.2cqw 1cqw 1.2cqw 2.6cqw;
+  background: linear-gradient(90deg, rgba(0,0,0,.28) 0 5%, rgba(255,255,255,.12) 5% 7%, transparent 7%), var(--bk);
+  border-radius: .5cqw 1cqw 1cqw .5cqw; box-shadow: .4cqw .9cqw 1.8cqw rgba(12,6,10,.55), inset 0 0 0 .25cqw rgba(0,0,0,.12); color: var(--slip);
+  transition: transform var(--motion), box-shadow var(--motion); }
+.book.b1 { transform: rotate(-2.5deg); } .book.b2 { transform: rotate(1.5deg) translateY(1.4cqw); } .book.b3 { transform: rotate(-1deg); }
+.book.b4 { transform: rotate(2deg) translateY(1cqw); } .book.b5 { transform: rotate(-2deg); }
+.book:hover { transform: translateY(-.8cqw) rotate(0deg); }
+.book .plate, .bookfly .plate { background: var(--slip); color: var(--ink); width: 100%; padding: 1.2cqw .6cqw; text-align: center;
+  font-family: var(--display); font-size: clamp(24px, 2.6cqw, 32px); line-height: 1.1; box-shadow: inset 0 0 0 .2cqw rgba(60,45,30,.3); }
+.book .prog, .bookfly .prog { font-family: var(--type); font-size: var(--fs-label-min); color: var(--slip); text-align: center; line-height: 1.2; }
+.book.full::after { content: ""; position: absolute; top: -.6cqw; right: 2cqw; width: 2.6cqw; height: 6cqw; background: var(--crayon);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+.book { position: relative; }
+.bookfly { position: absolute; z-index: 8; pointer-events: none; transform-origin: left center; backface-visibility: hidden; border-radius: 0;
+  padding: 8cqw 6cqw 8cqw 8cqw; gap: 3cqw;
+  transition: left .9s ease-in-out, top .9s ease-in-out, width .9s ease-in-out, height .9s ease-in-out, transform .9s ease-in-out, opacity .5s ease; }
+.bookfly.zoomed .plate { font-size: clamp(32px, 6cqw, 72px); padding: 3cqw 2cqw; }
+.bookfly.opening { transform: perspective(1800px) rotateY(-168deg); opacity: .0; transition: transform 1s ease-in-out, opacity 1s ease-in; }
+
+@media (prefers-reduced-motion: reduce) { .slip-tag.open { animation: none; } .flyer { transition: none; } .bookfly { transition: none; } .memcard .sepia { transition: none; } }

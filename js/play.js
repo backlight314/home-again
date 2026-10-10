@@ -1,14 +1,24 @@
 (function (global) {
   const $ = (id) => document.getElementById(id);
   const keys = ['kitchen', 'radio', 'porch', 'attic'];
-  const wins = ['w-kitchen', 'w-radio', 'w-porch', 'w-attic'];
-  const ordinals = ['PIECE ONE OF FOUR', 'PIECE TWO OF FOUR', 'PIECE THREE OF FOUR', 'PIECE FOUR OF FOUR'];
+  const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden'];
+  const layout = {
+    1: [[33, 32, 0.8]],
+    2: [[8, 30, -2], [58, 30, 1.6]],
+    3: [[8, 10, -2], [58, 8, 1.6], [33, 52, 0.8]],
+    4: [[8, 9, -2], [58, 8, 1.6], [6, 50, 1.2], [56, 50, -1.6]]
+  };
+  const slipSpots = ['t1', 't4', 't2', 't5'];
 
   let pack = null;
   let letter = [];
+  let memories = [];
+  let chapters = [];
   let found = [false, false, false, false];
+  let currentBook = 'week';
+  let pendingPlace = null;
+  let viewing = null;
   let timers = [];
-  let pending = -1;
   let rereading = false;
   let round = 0;
   let bi = 0;
@@ -23,6 +33,24 @@
   const clearAll = () => {
     timers.forEach(clearTimeout);
     timers = [];
+  };
+  const S = global.S || {
+    comingSoon: 'This page is waiting for photos from your family.',
+    open: 'tap to visit',
+    putIn: 'PUT IT IN THE ALBUM',
+    closeMemory: 'BACK TO THE ALBUM',
+    placed: 'Another memory is home.',
+    bookFull: 'This album is full of memories.',
+    bookComplete: 'complete',
+    bookProgress: (n, m) => n + ' of ' + m + ' memories'
+  };
+  const chapter = (id) => chapters.find((c) => c.id === id);
+  const memory = (id) => chapters.flatMap((c) => c.memories).find((m) => m.id === id);
+  const done = (c) => c.memories.filter((m) => m.activity && found[keys.indexOf(m.activity)]).length;
+  const complete = (c) => c.memories.filter((m) => m.activity).length > 0 && done(c) === c.memories.filter((m) => m.activity).length;
+  const memPrint = (m) => {
+    if (m.photoDataUrl) return '<img src="' + m.photoDataUrl + '" alt="">';
+    return '<svg viewBox="0 0 120 80"><use href="#' + (m.scene || 'sc-table') + '"></use></svg>';
   };
 
   function hush() {
@@ -53,25 +81,198 @@
     }
     const palette =
       (p && p.palette) ||
-      '--bg:#c5d9ec;--skin:#d9b394;--cloth:#4f6f8f;--hair:#3b3240';
+      '--bg:#cdc3d2;--skin:#d9b394;--cloth:#6f6480;--hair:#3b3240';
     return `<svg viewBox="0 0 100 80" style="${palette}"><use href="#person"></use></svg>`;
   }
 
-  function paintProgress() {
-    found.forEach((f, i) => {
-      const el = $('pc' + i);
-      if (el) el.classList.toggle('got', f);
+  function buildChapters() {
+    const who = (pack.profile && pack.profile.preferredName) || 'home';
+    memories = keys.map((activity, i) => {
+      const line = letter[i] || { room: activity, line: 'We love you.', by: 'Family' };
+      const mem = (pack.memories && pack.memories[i]) || {};
+      return {
+        id: activity,
+        title: line.room || mem.title || activity,
+        activity,
+        scene: mem.svgId || scenes[i],
+        photoDataUrl: mem.photoDataUrl || null,
+        caption: mem.title || line.room,
+        line: line.line,
+        by: line.by
+      };
     });
-    document.querySelectorAll('.housewrap svg').forEach((svg) => {
-      wins.forEach((w, i) => {
-        const el = svg.querySelector('.' + w);
-        if (el) el.classList.toggle('lit', found[i]);
-      });
+    chapters = [
+      { id: 'childhood', title: 'Childhood', color: '#b8893a', memories: [{ id: 'toybox', title: 'Toy box' }, { id: 'recipe', title: 'Recipe' }] },
+      { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
+      { id: 'work', title: 'Work', color: '#44607d', memories: [{ id: 'job', title: 'The job' }] },
+      { id: 'week', title: 'This week', color: '#9c3b2e', memories },
+      { id: 'today', title: 'Today', color: '#6d5262', memories: [{ id: 'call', title: 'Say hello' }] }
+    ];
+    currentBook = 'week';
+  }
+
+  function toast(msg) {
+    const el = $('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('on');
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => el.classList.remove('on'), 3600);
+  }
+
+  function buildShelf() {
+    const box = $('books');
+    box.innerHTML = '';
+    chapters.forEach((c, i) => {
+      const b = document.createElement('button');
+      const playable = c.memories.some((m) => m.activity);
+      const n = playable ? done(c) : 0;
+      const m = c.memories.length;
+      b.className = 'book b' + (i + 1) + (playable && complete(c) ? ' full' : '');
+      b.style.setProperty('--bk', c.color);
+      b.innerHTML =
+        '<span class="plate">' +
+        c.title +
+        '</span><span class="prog">' +
+        (playable && complete(c) ? S.bookComplete : playable ? S.bookProgress(n, m) : 'coming soon') +
+        '</span>';
+      b.setAttribute('aria-label', c.title);
+      b.onclick = () => {
+        if (playable) openBook(c.id, b);
+        else toast(S.comingSoon);
+      };
+      box.appendChild(b);
     });
+  }
+
+  function openBook(id, el) {
+    currentBook = id;
+    const scr = $('screen').getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const fly = document.createElement('div');
+    fly.className = 'bookfly';
+    fly.style.setProperty('--bk', chapter(id).color);
+    fly.innerHTML = el.innerHTML;
+    fly.style.cssText +=
+      ';left:' +
+      (r.left - scr.left) +
+      'px;top:' +
+      (r.top - scr.top) +
+      'px;width:' +
+      r.width +
+      'px;height:' +
+      r.height +
+      'px';
+    el.style.visibility = 'hidden';
+    $('screen').appendChild(fly);
+    setTimeout(() => {
+      fly.style.left = '0px';
+      fly.style.top = '0px';
+      fly.style.width = scr.width + 'px';
+      fly.style.height = scr.height + 'px';
+      fly.classList.add('zoomed');
+    }, 30);
+    setTimeout(() => {
+      show('hub', true);
+      fly.classList.add('opening');
+    }, 1000);
+    setTimeout(() => fly.remove(), 2100);
+  }
+
+  function buildAlbum() {
+    const book = chapter(currentBook);
+    const sheet = $('sheetpg');
+    const n = book.memories.length;
+    const spots = layout[n] || layout[4];
+    sheet.innerHTML = '';
+    sheet.dataset.title = book.title.toUpperCase();
+    book.memories.forEach((m, i) => {
+      const [l, t, rot] = spots[i] || spots[0];
+      const filled = m.activity && found[keys.indexOf(m.activity)];
+      const slot = document.createElement('div');
+      slot.className = 'slot' + (filled ? ' filled' : '');
+      slot.id = 'slot-' + m.id;
+      slot.style.cssText = 'left:' + l + '%;top:' + t + '%;transform:rotate(' + rot + 'deg)';
+      slot.innerHTML =
+        '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>' +
+        (m.scene || m.photoDataUrl
+          ? '<button class="print" aria-label="' +
+            (m.caption || m.title) +
+            '">' +
+            (filled ? memPrint(m) : '') +
+            '</button>'
+          : '');
+      const pr = slot.querySelector('.print');
+      if (pr)
+        pr.onclick = () => {
+          if (filled) {
+            rereading = true;
+            openMemory(m.id);
+          } else if (m.activity) show(m.activity);
+        };
+      sheet.appendChild(slot);
+    });
+    const tags = $('tags');
+    tags.innerHTML = '';
+    book.memories.forEach((m, i) => {
+      const b = document.createElement('button');
+      const playable = !!m.activity;
+      const isDone = playable && found[keys.indexOf(m.activity)];
+      b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (playable && !isDone ? ' open' : '') + (isDone ? ' done' : '');
+      b.innerHTML =
+        '<span>' + m.title + (playable && !isDone ? '<small>' + S.open + '</small>' : '') + '</span>';
+      b.onclick = () => {
+        if (isDone) {
+          rereading = true;
+          openMemory(m.id);
+        } else if (playable) show(m.activity);
+        else toast(S.comingSoon);
+      };
+      tags.appendChild(b);
+    });
+  }
+
+  function placeMemory(id) {
+    const m = memory(id);
+    const slot = $('slot-' + id);
+    const scr = $('screen').getBoundingClientRect();
+    if (!m || !slot) {
+      found[keys.indexOf(id)] = true;
+      return;
+    }
+    const r = slot.getBoundingClientRect();
+    const fly = document.createElement('div');
+    fly.className = 'flyer';
+    fly.innerHTML = '<div class="print">' + memPrint(m) + '</div>';
+    fly.style.cssText =
+      'left:' +
+      scr.width * 0.3 +
+      'px;top:' +
+      scr.height * 0.22 +
+      'px;width:' +
+      scr.width * 0.4 +
+      'px;transform:rotate(-1.4deg)';
+    $('screen').appendChild(fly);
+    later(() => {
+      fly.style.left = r.left - scr.left + 'px';
+      fly.style.top = r.top - scr.top + 'px';
+      fly.style.width = r.width + 'px';
+      fly.style.transform = 'rotate(-1.6deg)';
+    }, 450);
+    later(() => {
+      found[keys.indexOf(id)] = true;
+      buildAlbum();
+      fly.remove();
+      const book = chapter(currentBook);
+      toast(complete(book) ? S.bookFull : S.placed);
+      if (complete(book)) later(() => show('ending'), 1600);
+      else later(() => show('hub'), 900);
+    }, 2100);
   }
 
   function buildRooms() {
     const box = $('rooms');
+    if (!box) return;
     box.innerHTML = '';
     letter.forEach((p, i) => {
       const b = document.createElement('button');
@@ -80,12 +281,12 @@
         '<span class="n">' +
         p.room +
         '</span><span class="s">' +
-        (found[i] ? 'piece found' : 'piece waiting') +
+        (found[i] ? 'in the album' : 'tap to go there') +
         '</span>';
       b.onclick = () => {
         if (found[i]) {
           rereading = true;
-          openSlip(i);
+          openMemory(keys[i]);
         } else show(keys[i]);
       };
       box.appendChild(b);
@@ -99,23 +300,37 @@
           : 'The week is coming together') +
       '<span class="sub">' +
       n +
-      ' OF 4 PIECES FOUND</span>';
+      ' OF 4 MEMORIES</span>';
   }
 
-  function show(name) {
+  function show(name, keepFly) {
     hush();
     clearAll();
+    if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach((f) => f.remove());
+    document.querySelectorAll('#screen .flyer').forEach((f) => f.remove());
     document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === 's-' + name));
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
     document.querySelectorAll('#controls button').forEach((b) =>
       b.setAttribute('aria-current', b.dataset.jump === name ? 'true' : 'false')
     );
-    paintProgress();
+    if (name === 'shelf') {
+      buildShelf();
+      speak('Which album today? This week is open.');
+    }
     if (name === 'hub') {
       buildRooms();
-      paintMemories();
       const n = found.filter(Boolean).length;
       speak(n === 0 ? 'What happened this week?' : n < 4 ? 'What else do you remember from this week?' : 'The week is coming together');
+    }
+    if (name === 'album') {
+      buildAlbum();
+      if (pendingPlace) {
+        const id = pendingPlace;
+        pendingPlace = null;
+        placeMemory(id);
+      } else {
+        speak('These are this week’s pages.');
+      }
     }
     if (name === 'intro') speak('This week is still here. Come in when you are ready.', 'warm');
     if (name === 'kitchen') initKitchen();
@@ -125,50 +340,39 @@
     if (name === 'ending') initEnding();
   }
 
-  function paintMemories() {
-    const rail = $('memoryRail');
-    if (!rail || !pack) return;
-    const mems = (pack.memories || []).slice(0, 3);
-    const fallback = ['sc-garden', 'sc-lake', 'sc-snow'];
-    rail.innerHTML = mems
-      .map((m, i) => {
-        const pic = m.photoDataUrl
-          ? '<img src="' + m.photoDataUrl + '" alt="">'
-          : '<svg viewBox="0 0 120 80"><use href="#' + fallback[i] + '"></use></svg>';
-        const title = (m.title || 'a memory').slice(0, 28);
-        return '<div class="polaroid">' + pic + '<span>' + title + '</span></div>';
-      })
-      .join('');
-  }
-
   function playFamilyVoice() {
-    $('rWave').classList.add('on');
+    $('mWave').classList.add('on');
     hush();
     const url = pack.voice && pack.voice.audioDataUrl;
-    const line = letter[pending] && letter[pending].line;
+    const m = memory(viewing);
+    const line = m && m.line;
     if (url) {
       familyAudio = new Audio(url);
-      familyAudio.onended = () => $('rWave').classList.remove('on');
+      familyAudio.onended = () => $('mWave').classList.remove('on');
       familyAudio.play().catch(() => {
-        speak(line, 'letter').then(() => $('rWave').classList.remove('on'));
+        speak(line, 'letter').then(() => $('mWave').classList.remove('on'));
       });
       return;
     }
-    speak(line, 'letter').then(() => $('rWave').classList.remove('on'));
+    speak(line, 'letter').then(() => $('mWave').classList.remove('on'));
   }
 
-  function openSlip(i) {
-    pending = i;
-    $('rKick').textContent = rereading ? 'FROM THE ' + letter[i].room.toUpperCase() : ordinals[i];
-    $('rLine').textContent = letter[i].line;
-    $('rBy').textContent = 'recorded by ' + letter[i].by;
-    $('rWave').classList.remove('on');
-    $('rDone').textContent = rereading ? 'BACK TO THE HOUSE' : 'PUT IT IN THE LETTER';
+  function openMemory(id) {
+    const m = memory(id);
+    viewing = id;
+    $('mUse').setAttribute('href', '#' + (m.scene || 'sc-table'));
+    $('mCap').textContent = m.caption || m.title;
+    $('mLine').textContent = '“' + m.line + '”';
+    $('mBy').textContent = 'recorded by ' + m.by;
+    $('mWave').classList.remove('on');
+    $('mDone').textContent = rereading ? S.closeMemory : S.putIn;
+    const pr = $('mPrint');
+    pr.classList.remove('developed');
     $('reveal').classList.add('on');
-    speak(letter[i].line, 'letter');
+    later(() => pr.classList.add('developed'), 300);
+    speak(m.line, 'letter');
   }
 
-  /* kitchen */
   function setSeat(el, state, who) {
     el.className = 'seat' + (state === 'target' ? ' target' : state === 'filled' ? ' filled' : '');
     if (state === 'filled') el.innerHTML = face(who);
@@ -199,6 +403,7 @@
     setSeat($('seatC'), 'target');
     setSeat($('seatR'), 'empty');
     $('kSaid').hidden = true;
+    $('kNext').classList.add('hide');
     const prompt = (pack.rooms.kitchen && pack.rooms.kitchen.prompt) || 'Who sat with you at lunch last Sunday?';
     $('kCap').innerHTML = prompt + '<span class="sub">SUNDAY · KITCHEN</span>';
     drawFaces(kitchenFaces());
@@ -240,15 +445,11 @@
       setSeat($(plan[round].seat), 'target');
       $('kCap').innerHTML = 'And the next chair?<span class="sub">SUNDAY · KITCHEN</span>';
     } else {
-      $('kCap').innerHTML = 'Everyone is home. Something is under the table.<span class="sub">SUNDAY · KITCHEN</span>';
-      later(() => {
-        rereading = false;
-        openSlip(0);
-      }, 2100);
+      $('kCap').innerHTML = 'Everyone is home.<span class="sub">SUNDAY · KITCHEN</span>';
+      later(() => $('kNext').classList.remove('hide'), 1200);
     }
   }
 
-  /* radio */
   function bands() {
     return (pack.rooms.radio && pack.rooms.radio.bands) || [
       { t: 'static', clear: false },
@@ -287,7 +488,6 @@
     speak((pack.rooms.radio && pack.rooms.radio.prompt) || 'Turn the dial until a song comes in');
   }
 
-  /* porch */
   function initPorch() {
     talking = false;
     $('mic').classList.remove('live');
@@ -303,8 +503,8 @@
     if (porch.photoDataUrl) {
       print.innerHTML = `<img src="${porch.photoDataUrl}" alt=""><div class="pname">${porch.prompt || 'a memory'}</div>`;
     } else {
-      const svgId = porch.svgId || 'sc-lake';
-      print.innerHTML = `<svg viewBox="0 0 120 80"><use href="#${svgId}"></use></svg><div class="pname">a memory</div>`;
+      const svgId = porch.svgId || 'sc-snow';
+      print.innerHTML = `<svg viewBox="0 0 120 80"><use href="#${svgId}"></use></svg><div class="pname">yesterday</div>`;
     }
   }
 
@@ -356,7 +556,6 @@
     }, 12000);
   }
 
-  /* attic */
   function atticPhotos() {
     return (pack.rooms.attic && pack.rooms.attic.photos) || [];
   }
@@ -432,7 +631,12 @@
       $('sayHello').textContent = 'CALLING ' + callName.toUpperCase();
       speak('Hello, ' + callName + '. We are here with you.', 'warm');
     };
-    speak('The letter is whole.');
+    speak('This week is whole.');
+  }
+
+  function keepMemory(activity) {
+    rereading = false;
+    openMemory(activity);
   }
 
   function wireOnce() {
@@ -443,18 +647,17 @@
       b.onclick = () => show(b.dataset.go);
     });
 
-    $('rPlay').onclick = () => playFamilyVoice();
-    $('rDone').onclick = () => {
+    $('mPlay').onclick = () => playFamilyVoice();
+    $('mDone').onclick = () => {
       $('reveal').classList.remove('on');
       if (rereading) {
         rereading = false;
         show('hub');
         return;
       }
-      found[pending] = true;
-      paintProgress();
-      if (found.every(Boolean)) show('ending');
-      else show('hub');
+      pendingPlace = viewing;
+      currentBook = 'week';
+      show('album');
     };
     $('restBtn').onclick = () => $('rest').classList.add('on');
     $('restKeep').onclick = () => $('rest').classList.remove('on');
@@ -462,21 +665,13 @@
       $('rest').classList.remove('on');
       show('hub');
     };
+    $('kNext').onclick = () => keepMemory('kitchen');
     $('tuneL').onclick = () => tune(-1);
     $('tuneR').onclick = () => tune(1);
-    $('keepSong').onclick = () => {
-      rereading = false;
-      openSlip(1);
-    };
+    $('keepSong').onclick = () => keepMemory('radio');
     $('mic').onclick = porchTalk;
-    $('porchTake').onclick = () => {
-      rereading = false;
-      openSlip(2);
-    };
-    $('atticTake').onclick = () => {
-      rereading = false;
-      openSlip(3);
-    };
+    $('porchTake').onclick = () => keepMemory('porch');
+    $('atticTake').onclick = () => keepMemory('attic');
     $('hearLetter').onclick = () => {
       clearAll();
       hush();
@@ -500,12 +695,14 @@
       note.classList.add('debug');
     }
     [
-      ['intro', 'Opening'],
-      ['hub', 'House'],
+      ['intro', 'Cover'],
+      ['shelf', 'Albums'],
+      ['hub', 'This week'],
+      ['album', 'Album page'],
       ['kitchen', 'Kitchen'],
-      ['radio', 'Radio room'],
-      ['porch', 'Porch'],
-      ['attic', 'Attic'],
+      ['radio', 'Car'],
+      ['porch', 'Garden'],
+      ['attic', 'Photos'],
       ['ending', 'Ending']
     ].forEach(([k, label]) => {
       const b = document.createElement('button');
@@ -541,17 +738,18 @@
     }
     found = [false, false, false, false];
     rereading = false;
-    pending = -1;
+    pendingPlace = null;
+    viewing = null;
     clearAll();
     $('reveal').classList.remove('on');
     $('rest').classList.remove('on');
+    buildChapters();
 
     const who = pack.profile && pack.profile.preferredName;
     $('playSub').textContent = who
-      ? `This week, with ${who}. Four rooms. Four small days.`
-      : 'Four rooms, four pieces of a letter.';
+      ? `This week, with ${who}. Four memories in the album.`
+      : 'Four memories in this week’s album.';
 
-    paintMemories();
     if (window.HomeAgainVoice) HomeAgainVoice.warm();
     wireOnce();
     show('intro');

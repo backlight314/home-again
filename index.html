@@ -6,10 +6,12 @@
 <title>Home Again</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/theme.css?v=week">
-<link rel="stylesheet" href="css/family.css?v=week">
-<link rel="stylesheet" href="css/play.css?v=week">
+<link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css?v=play">
+<link rel="stylesheet" href="css/theme.css?v=play">
+<link rel="stylesheet" href="css/family.css?v=play">
+<link rel="stylesheet" href="css/play.css?v=play">
+<link rel="stylesheet" href="css/album.css?v=play">
 </head>
 <body data-mode="home">
 
@@ -60,8 +62,16 @@
     <rect class="wn w-attic" x="52" y="24" width="16" height="14" fill="#8ebdd9" stroke="#2b241f" stroke-width="2.4"/>
     <rect x="52" y="70" width="16" height="22" fill="#4a2c1c" stroke="#2b241f" stroke-width="2.4"/>
   </symbol>
+  <symbol id="sc-table" viewBox="0 0 120 80">
+    <rect width="120" height="80" fill="#d9c9a8"/><rect y="52" width="120" height="28" fill="#b48f66"/>
+    <ellipse cx="60" cy="56" rx="44" ry="13" fill="#efe3c8" stroke="#6b5a44" stroke-width="1.4"/>
+    <g><circle cx="34" cy="34" r="8" fill="#d9b394"/><path d="M22 52c1-9 6-13 12-13s11 4 12 13z" fill="#4f6279"/></g>
+    <g><circle cx="60" cy="30" r="8" fill="#d9b394"/><path d="M48 50c1-9 6-13 12-13s11 4 12 13z" fill="#6f6480"/></g>
+    <g><circle cx="86" cy="34" r="8" fill="#e0bb9b"/><path d="M74 52c1-9 6-13 12-13s11 4 12 13z" fill="#6b8078"/></g>
+    <circle cx="60" cy="54" r="5" fill="#c98f52"/>
+  </symbol>
   <symbol id="pencilring" viewBox="0 0 100 100">
-    <ellipse cx="50" cy="50" rx="44" ry="42" fill="none" stroke="#2f6f9a" stroke-width="5" transform="rotate(-6 50 50)"/>
+    <ellipse cx="50" cy="50" rx="44" ry="42" fill="none" stroke="#9c3b2e" stroke-width="3" transform="rotate(-6 50 50)"/>
   </symbol>
   <symbol id="table" viewBox="0 0 200 72">
     <ellipse cx="100" cy="36" rx="96" ry="32" fill="#c4a06a" stroke="#2b241f" stroke-width="3"/>
@@ -212,50 +222,35 @@
     <div class="album"><div class="screen" id="screen">
 
       <div class="chrome" id="chrome">
-        <button class="tab" id="restBtn" type="button">Rest</button>
-        <div class="strips" aria-label="Letter pieces found">
-          <span class="strip" id="pc0"></span><span class="strip" id="pc1"></span><span class="strip" id="pc2"></span><span class="strip" id="pc3"></span>
-        </div>
+        <button class="tab" id="restBtn" type="button">REST</button>
       </div>
 
-      <section class="scr intro on" id="s-intro" aria-label="Opening">
-        <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
-        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="dusksky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#3d5470"/><stop offset=".55" stop-color="#7a8ea3"/><stop offset="1" stop-color="#c9a07a"/>
-            </linearGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#dusksky)"/>
-          <circle cx="1280" cy="140" r="70" fill="#f3b07a"/>
-          <path d="M0 520c220-80 480-40 760-90 280-50 520 20 840 40v430H0z" fill="#3f6b46"/>
-          <path d="M0 640h1600v260H0z" fill="#4a2c1c"/>
-          <path d="M0 628h1600" stroke="#6a8f5c" stroke-width="16"/>
-          <rect x="470" y="360" width="660" height="400" fill="#c9784a"/>
-          <polygon points="440,360 800,120 1160,360" fill="#7a4e32"/>
-          <rect x="560" y="430" width="130" height="100" fill="#8ebdd9"/>
-          <rect x="910" y="430" width="130" height="100" fill="#8ebdd9"/>
-          <path d="M560 480h130M625 430v100M910 480h130M975 430v100" stroke="#3a322c" stroke-width="5"/>
-          <rect x="740" y="520" width="120" height="240" fill="#3a2418"/>
-          <circle cx="840" cy="640" r="8" fill="#e2c48a"/>
-          <rect x="770" y="175" width="60" height="70" fill="#c4a06a"/>
-          <path d="M180 900c30-220 110-300 210-320 20 90 40 210 50 320z" fill="#2f5536"/>
-          <rect x="200" y="620" width="90" height="70" fill="#f4ece0" opacity=".85"/>
-          <rect x="310" y="640" width="70" height="50" fill="#c45c4a" opacity=".9"/>
-          <ellipse cx="1380" cy="700" rx="14" ry="90" fill="#2f5536"/>
-          <ellipse cx="1380" cy="620" rx="40" ry="28" fill="#4e7a48"/>
-          <rect x="1240" y="720" width="70" height="40" fill="#e8dcc8"/>
-          <circle cx="1400" cy="760" r="22" fill="#2b241f"/>
-        </svg>
+      <section class="scr intro on" id="s-intro" aria-label="Cover">
+        <div class="page"></div>
+        <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
         <div class="title">Home<em>Again</em></div>
         <div class="sig">This week is still in the house.<br>Sunday. Tuesday. Yesterday.</div>
+        <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
         <div class="torn">four days, still warm</div>
-        <button class="pressbtn go" data-go="hub" type="button">COME IN</button>
-        <div class="bird" style="left:12%;top:12%;opacity:.7;width:56px"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+        <button class="pressbtn go" data-go="shelf" type="button">COME IN</button>
       </section>
 
-      <section class="scr hub" id="s-hub" aria-label="The house">
-        <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
+      <section class="scr album-pg shelf-pg" id="s-shelf" aria-label="The albums">
+        <div class="desk"></div>
+        <div class="caption shelfcap">Which album today?<span class="sub">THIS WEEK IS OPEN</span></div>
+        <div class="books" id="books"></div>
+        <button class="quietbtn closebtn" data-go="intro" type="button">close the albums</button>
+      </section>
+
+      <section class="scr album-pg" id="s-album" aria-label="The album page">
+        <div class="desk"></div>
+        <div class="sheetpg" id="sheetpg"></div>
+        <div id="tags"></div>
+        <div class="toast" id="toast" role="status"></div>
+        <button class="quietbtn closebtn" data-go="hub" type="button">back to this week</button>
+      </section>
+
+      <section class="scr hub" id="s-hub" aria-label="This week">
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
             <pattern id="hwp" width="52" height="60" patternUnits="userSpaceOnUse">
@@ -271,21 +266,14 @@
           <path d="M80 230h420M290 80v300" stroke="#2b241f" stroke-width="7"/>
           <path d="M100 330c50-40 110-10 160-30 70-24 110 16 170-10 40-18 70 6 50 50H100z" fill="#4e7a48"/>
           <rect x="70" y="380" width="440" height="24" fill="#b08960"/>
-          <rect x="1180" y="0" width="18" height="900" fill="#2b241f" opacity=".25"/>
           <rect x="1280" y="70" width="64" height="420" fill="#4a3228"/>
           <path d="M1255 70h114l-24 64h-66z" fill="#e2c48a"/>
           <ellipse cx="1312" cy="280" rx="70" ry="100" fill="#ffd27a" opacity=".22"/>
-          <rect x="1240" y="520" width="280" height="16" fill="#8a6244"/>
-          <rect x="1260" y="536" width="240" height="120" fill="#f0e2cc"/>
-          <g opacity=".9">
-            <rect x="1280" y="560" width="48" height="36" fill="#fff6ea" transform="rotate(-8 1304 578)"/>
-            <rect x="1340" y="568" width="48" height="36" fill="#e8c9a0" transform="rotate(4 1364 586)"/>
-            <rect x="1400" y="556" width="48" height="36" fill="#c5d6c0"/>
-          </g>
         </svg>
         <div class="caption" id="hubCaption">What happened this week?</div>
         <div class="list" id="rooms"></div>
-        <div class="memory-rail" id="memoryRail"></div>
+        <button class="quietbtn" data-go="album" type="button" style="left:4%;bottom:4%">the album</button>
+        <button class="quietbtn closebtn" data-go="shelf" type="button">close the book</button>
       </section>
 
       <section class="scr kitchen" id="s-kitchen" aria-label="Kitchen">
@@ -332,6 +320,7 @@
         </div>
         <div class="said" id="kSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="kSaidText"></span></div>
         <div class="krow" id="kRow"></div>
+        <button class="pressbtn red hide" id="kNext" type="button" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
@@ -365,7 +354,7 @@
         <div class="dialrow">
           <button class="pressbtn" id="tuneL" type="button">&#9664; TUNE</button>
           <button class="pressbtn" id="tuneR" type="button">TUNE &#9654;</button>
-          <button class="pressbtn red hide" id="keepSong" type="button">KEEP THIS ONE</button>
+          <button class="pressbtn red hide" id="keepSong" type="button">KEEP THIS MEMORY</button>
         </div>
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
@@ -403,7 +392,7 @@
         <div class="heard" id="pHeard">tap the microphone and talk</div>
         <div class="stamped hide" id="pStamp">SAVED TO STORIES</div>
         <button class="mic" id="mic" type="button" aria-label="Tap and talk"><span class="m"></span><span class="mlbl">tap and talk</span></button>
-        <button class="pressbtn red hide" id="porchTake" type="button" style="position:absolute;right:5%;top:12%">TAKE THE PIECE</button>
+        <button class="pressbtn red hide" id="porchTake" type="button" style="position:absolute;right:5%;top:12%">KEEP THIS MEMORY</button>
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
@@ -429,7 +418,7 @@
         <div class="shelfline" id="shelf"><div class="rule"></div><div class="ends"><span>EARLIER</span><span>LATER</span></div></div>
         <div class="boxlbl">the photo box</div>
         <div class="boxrow" id="box"></div>
-        <button class="pressbtn red hide" id="atticTake" type="button" style="position:absolute;right:5%;bottom:18%">TAKE THE PIECE</button>
+        <button class="pressbtn red hide" id="atticTake" type="button" style="position:absolute;right:5%;bottom:18%">KEEP THIS MEMORY</button>
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
@@ -452,27 +441,27 @@
         </div>
       </section>
 
-      <div class="ovl" id="reveal" role="dialog" aria-label="A piece of the letter">
-        <div class="slip">
-          <div class="slipcard">
-            <div class="kicker" id="rKick">PIECE ONE OF FOUR</div>
-            <p id="rLine"></p>
-            <div class="foot">
-              <button class="hearbtn" id="rPlay" type="button"><span class="wave" id="rWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
-              <span class="who" id="rBy"></span>
+      <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">
+        <div class="memcard">
+          <div class="print" id="mPrint"><div class="sepia"><svg viewBox="0 0 120 80"><use id="mUse" href="#sc-table"/></svg></div><div class="pname" id="mCap"></div></div>
+          <div class="side">
+            <p class="line" id="mLine"></p>
+            <div class="memrow">
+              <button class="hearbtn" id="mPlay" type="button"><span class="wave" id="mWave"><i></i><i></i><i></i><i></i><i></i></span>hear it</button>
+              <span class="by" id="mBy"></span>
             </div>
+            <button class="pressbtn" id="mDone" type="button">PUT IT IN THE ALBUM</button>
           </div>
-          <button class="pressbtn" id="rDone" type="button">PUT IT IN THE LETTER</button>
         </div>
       </div>
 
       <div class="ovl" id="rest" role="dialog" aria-label="Rest">
         <div class="restcard">
           <h3>Take your time</h3>
-          <p>the house will wait for you</p>
+          <p>the album will wait for you</p>
           <div class="row">
             <button class="pressbtn" id="restKeep" type="button">KEEP PLAYING</button>
-            <button class="pressbtn red" id="restHome" type="button">BACK TO THE HOUSE</button>
+            <button class="pressbtn red" id="restHome" type="button">BACK TO THE ALBUM</button>
           </div>
         </div>
       </div>
@@ -483,10 +472,11 @@
   </div>
 </section>
 
-<script src="js/pack.js?v=week"></script>
-<script src="js/voice.js?v=week"></script>
-<script src="js/family.js?v=week"></script>
-<script src="js/play.js?v=week"></script>
-<script src="js/app.js?v=week"></script>
+<script src="js/strings.js?v=play"></script>
+<script src="js/pack.js?v=play"></script>
+<script src="js/voice.js?v=play"></script>
+<script src="js/family.js?v=play"></script>
+<script src="js/play.js?v=play"></script>
+<script src="js/app.js?v=play"></script>
 </body>
 </html>

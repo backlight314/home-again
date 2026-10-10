@@ -2,7 +2,7 @@
   position: relative;
   min-height: 100dvh;
   overflow: auto;
-  background: #c9784a;
+  background: var(--desk-2, #4b3846);
 }
 
 .family-scene {
