@@ -24,14 +24,14 @@ const VIEWS = {
 const NAMES = { kitchen: 'Sunday kitchen', porch: 'garden', radio: 'Tuesday car', hall: 'today', attic: 'photographs' };
 
 const LABELS = [
-  { text: 'PHOTOS', room: 'attic', at: [-1.6, 5.75, 1] },
-  { text: 'TUESDAY', room: 'radio', at: [-3.6, 4.85, 1.6] },
-  { text: 'TODAY', room: 'hall', at: [.4, 4.85, 1.6] },
-  { text: 'SUNDAY', room: 'kitchen', at: [-3.6, 2.33, 1.6], here: true },
-  { text: 'GARDEN', room: 'porch', at: [.4, 2.33, 1.6] }
+  { text: 'Photos', room: 'attic', at: [0, 6.1, 1.6] },
+  { text: 'Tuesday', room: 'radio', at: [-2, 4.7, 1.6] },
+  { text: 'Today', room: 'hall', at: [2, 4.7, 1.6] },
+  { text: 'Sunday', room: 'kitchen', at: [-2, 2.15, 1.6], here: true },
+  { text: 'Garden', room: 'porch', at: [2, 2.15, 1.6] }
 ];
 
-export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
+export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shift = 0 }) {  // shift: slide the picture right by this fraction of the width
   const renderer = new THREE.WebGLRenderer({ antialias: true }); // throws without WebGL
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -39,12 +39,18 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
   mount.prepend(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#ddd2b8');
-  scene.fog = new THREE.Fog('#ddd2b8', 28, 70);
+  // dusk: a painted indigo-to-peach sky behind everything, so white labels read
+  const sky = document.createElement('canvas'); sky.width = 4; sky.height = 512;
+  const sg = sky.getContext('2d'), grad = sg.createLinearGradient(0, 0, 0, 512);
+  [[0, '#1b1f45'], [.16, '#3b3873'], [.3, '#7d5a8c'], [.41, '#cf8a80'], [.5, '#f0bb88'], [1, '#f0bb88']].forEach(([s, c]) => grad.addColorStop(s, c));
+  sg.fillStyle = grad; sg.fillRect(0, 0, 4, 512);
+  const skyTex = new THREE.CanvasTexture(sky); skyTex.colorSpace = THREE.SRGBColorSpace;
+  scene.background = skyTex;
+  scene.fog = new THREE.Fog('#8a6288', 30, 80);
   const camera = new THREE.PerspectiveCamera(34, 1.6, .1, 200);
 
-  scene.add(new THREE.HemisphereLight('#fff4e0', '#8c9a74', 1.6));
-  const sun = new THREE.DirectionalLight('#ffe9c4', 2.2);
+  scene.add(new THREE.HemisphereLight('#9a9ad0', '#34403f', 1.15));
+  const sun = new THREE.DirectionalLight('#cfd4ff', 1.25);
   sun.position.set(7, 12, 10);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -234,7 +240,7 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
   const plant = group(3.4, F0, .9);
   put(new THREE.CylinderGeometry(.2, .15, .35, 12), '#9c5a3c', 0, .175, 0, plant);
   put(new THREE.IcosahedronGeometry(.32, 0), '#697a5c', 0, .55, 0, plant);
-  put(new THREE.IcosahedronGeometry(.2, 0), '#7d8d6e', .12, .8, .05, plant);
+  put(new THREE.IcosahedronGeometry(.2, 0), '#4a6757', .12, .8, .05, plant);
   prop('porch', 'plant', plant, { update: (p, s) => { const k = wob(s, 14, 3.5) * .14; plant.scale.set(1 - k * .5, 1 + k, 1 - k * .5); } });
 
   const lantern = group(2.4, C0, .1);                                       // porch lantern
@@ -290,8 +296,8 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
   });
 
   const armchair = group(-3, F1, -.75);
-  span(-.4, .4, 0, .4, -.35, .35, '#7d8d6e', armchair);
-  span(-.4, .4, .4, 1.05, -.35, -.17, '#7d8d6e', armchair);
+  span(-.4, .4, 0, .4, -.35, .35, '#4a6757', armchair);
+  span(-.4, .4, .4, 1.05, -.35, -.17, '#4a6757', armchair);
   for (const x of [-.4, .25]) span(x, x + .15, .4, .62, -.35, .35, '#6b7a5c', armchair);
   span(-.25, .25, .4, .48, -.17, .33, '#8c9c7c', armchair);
   prop('radio', 'armchair', armchair, { update: (p, s) => { const k = wob(s, 10, 3) * .08; armchair.scale.set(1 + k * .5, 1 - k, 1 + k * .5); } });
@@ -400,19 +406,19 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
   } });
 
   /* ---------- garden ---------- */
-  put(new THREE.CircleGeometry(60, 48), '#8c9a74', 0, 0, 0).rotation.x = -Math.PI / 2;
-  put(new THREE.PlaneGeometry(1.2, 9), '#cdbf9f', 2, .01, 6.2).rotation.x = -Math.PI / 2;
-  for (const [x, z, s, c] of [[-14, -26, [22, 5, 8], '#b9b597'], [16, -30, [26, 6, 9], '#a3a382'], [0, -40, [30, 7, 8], '#b9b597']]) {
+  put(new THREE.CircleGeometry(60, 48), '#3c5045', 0, 0, 0).rotation.x = -Math.PI / 2;
+  put(new THREE.PlaneGeometry(1.2, 9), '#8a7c78', 2, .01, 6.2).rotation.x = -Math.PI / 2;
+  for (const [x, z, s, c] of [[-14, -26, [22, 5, 8], '#5d5a8a'], [16, -30, [26, 6, 9], '#4d4c7d'], [0, -40, [30, 7, 8], '#5d5a8a']]) {
     const hill = put(new THREE.SphereGeometry(1, 24, 12), c, x, 0, z);
     hill.scale.set(...s); hill.castShadow = false;
   }
-  put(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: '#e8cf8e', fog: false }), 16, 13, -30);
+  put(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: '#f6eed6', fog: false }), 16, 13, -30);
   for (const [x, z, s] of [[-7, -1.5, 1.2], [7.6, -2.6, 1.4], [-9.5, -6, 1.1]]) {
     put(new THREE.CylinderGeometry(.12 * s, .16 * s, 1.5 * s, 6), SHELL, x, .75 * s, z);
-    put(new THREE.IcosahedronGeometry(1.1 * s, 0), '#6f8160', x, 2 * s, z);
-    put(new THREE.IcosahedronGeometry(.75 * s, 0), '#7d8d6e', x + .3 * s, 2.8 * s, z + .2);
+    put(new THREE.IcosahedronGeometry(1.1 * s, 0), '#3e594c', x, 2 * s, z);
+    put(new THREE.IcosahedronGeometry(.75 * s, 0), '#4a6757', x + .3 * s, 2.8 * s, z + .2);
   }
-  for (const [x, z, r] of [[-5, 2.2, .5], [-5.6, 1.4, .4], [5.3, 2, .5], [5.9, 1.2, .4], [.8, 2.8, .3]]) put(new THREE.IcosahedronGeometry(r, 0), '#6f8160', x, r * .6, z);
+  for (const [x, z, r] of [[-5, 2.2, .5], [-5.6, 1.4, .4], [5.3, 2, .5], [5.9, 1.2, .4], [.8, 2.8, .3]]) put(new THREE.IcosahedronGeometry(r, 0), '#3e594c', x, r * .6, z);
 
   /* ---------- the paper bird ---------- */
   const bird = new THREE.Group(), tilt = new THREE.Group(), body = new THREE.Group();
@@ -551,7 +557,8 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+    if (shift) camera.setViewOffset(width, height, -shift * width, 0, width, height);
+    else camera.updateProjectionMatrix();
   }
   new ResizeObserver(resize).observe(mount);
   resize();
@@ -588,11 +595,11 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false }) {
     windows.kitchen.emissiveIntensity = (kitchenLit || lit.kitchen) ? 1.5 : .25 + .55 * pulse;
     windowGlow.intensity = (kitchenLit || lit.kitchen) ? 2.5 : 0;
     ['porch', 'radio', 'attic', 'hall'].forEach((name) => {
-      if (windows[name]) windows[name].emissiveIntensity = lit[name] ? 1.45 : hoverRoom === name ? 0.55 : 0.08;
+      if (windows[name]) windows[name].emissiveIntensity = lit[name] ? 1.6 : hoverRoom === name ? 1.2 : 0.7;
     });
     lamp.intensity = hoverRoom === 'kitchen' ? 6 : 3;
     for (const [name, l] of Object.entries(roomLights)) {
-      const goal = mode !== 'home' && room === name ? 1.6 : hoverRoom === name ? 3.5 : .3;
+      const goal = mode !== 'home' && room === name ? 1.6 : hoverRoom === name ? 3.6 : 1.5;
       l.intensity = calm ? goal : l.intensity + (goal - l.intensity) * Math.min(1, dt * 6);
     }
 

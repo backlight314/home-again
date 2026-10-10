@@ -6,13 +6,14 @@
 <title>Home Again</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat+Brush&family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }</script>
 <link rel="stylesheet" href="css/tokens.css?v=house">
 <link rel="stylesheet" href="css/theme.css?v=house">
 <link rel="stylesheet" href="css/family.css?v=house">
 <link rel="stylesheet" href="css/play.css?v=house">
 <link rel="stylesheet" href="css/album.css?v=house">
+<link rel="stylesheet" href="css/dusk.css?v=dusk">
 </head>
 <body data-mode="home">
 
@@ -228,12 +229,16 @@
 
       <section class="scr intro on" id="s-intro" aria-label="Cover">
         <div class="page"></div>
-        <span class="punch" style="top:16%"></span><span class="punch" style="top:46%"></span><span class="punch" style="top:76%"></span>
-        <div class="title">Home<em>Again</em></div>
-        <div class="sig">This week is still in the house.<br>Sunday. Tuesday. Yesterday.</div>
+        <div class="stars" aria-hidden="true"></div>
+        <div class="intro3d" id="intro3d" aria-hidden="true"></div>
         <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
+        <span class="fly" aria-hidden="true"></span><span class="fly" aria-hidden="true"></span><span class="fly" aria-hidden="true"></span><span class="fly" aria-hidden="true"></span>
+        <div class="introcopy">
+          <div class="title">Home<em>Again</em></div>
+          <p class="sig">This week is still in the house.<br>Sunday. Tuesday. Yesterday.</p>
+          <button class="pressbtn go" data-go="shelf" type="button">COME IN</button>
+        </div>
         <div class="torn">four days, still warm</div>
-        <button class="pressbtn go" data-go="shelf" type="button">COME IN</button>
       </section>
 
       <section class="scr album-pg shelf-pg" id="s-shelf" aria-label="The albums">
@@ -460,7 +465,7 @@
 <script src="js/pack.js?v=house"></script>
 <script src="js/voice.js?v=house"></script>
 <script src="js/family.js?v=house"></script>
-<script src="js/play.js?v=house"></script>
+<script src="js/play.js?v=dusk3"></script>
 <script src="js/app.js?v=house"></script>
 </body>
 </html>

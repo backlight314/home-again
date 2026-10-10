@@ -333,7 +333,7 @@
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=house');
+      const { createHub } = await import('./hub3d.js?v=dusk3');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -351,6 +351,25 @@
       hubFailed = true;
     }
     return hub;
+  }
+
+  // the same 3D house, lit up and still, behind the cover
+  let introHub = null;
+  async function ensureIntroHub() {
+    if (introHub || hubFailed || new URLSearchParams(location.search).has('flat')) return;
+    try {
+      const { createHub } = await import('./hub3d.js?v=dusk3');
+      introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
+      ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
+      introHub.setActive($('s-intro').classList.contains('on'));
+      $('s-intro').classList.add('is3d');
+      $('s-intro').onpointermove = (e) => {
+        const r = $('s-intro').getBoundingClientRect();
+        if (r.width && r.height) introHub.pointer(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * -2);
+      };
+    } catch (err) {
+      console.warn('3D cover unavailable', err);
+    }
   }
 
   async function enterHouseRoom(name) {
@@ -401,6 +420,7 @@
     document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === 's-' + name));
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
     hub?.setActive(name === 'hub');
+    introHub?.setActive(name === 'intro');
     document.querySelectorAll('#controls button').forEach((b) =>
       b.setAttribute('aria-current', b.dataset.jump === name ? 'true' : 'false')
     );
@@ -427,6 +447,7 @@
         speak('These are this week’s pages.');
       }
     }
+    if (name === 'intro') ensureIntroHub();
     if (name === 'intro') speak('This week is still here. Come in when you are ready.', 'warm');
     if (name === 'kitchen') initKitchen();
     if (name === 'radio') initRadio();
