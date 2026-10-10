@@ -26,17 +26,14 @@
   }
 
   function goFamily() {
-    showView('family');
-    HomeAgainFamily.mount(document.getElementById('view-family'), {
-      onSaved: (pack) => {
-        refreshHomeStatus();
-        showView('play');
-        HomeAgainPlay.start(pack);
-      }
-    });
+    location.href = '/family';
   }
 
-  function goPlay() {
+  async function goPlay() {
+    try {
+      const res = await fetch('/api/pack');
+      if (res.ok) HomeAgainPack.savePack(await res.json());
+    } catch (_) {}
     showView('play');
     HomeAgainPlay.start(HomeAgainPack.activePack());
   }
@@ -46,5 +43,6 @@
   document.getElementById('globalBack').onclick = goHome;
 
   refreshHomeStatus();
-  showView('home');
+  if (new URLSearchParams(location.search).has('play')) goPlay();
+  else showView('home');
 })();

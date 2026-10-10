@@ -17,7 +17,7 @@
 .family-shell {
   position: relative;
   z-index: 1;
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
   background: rgba(244, 236, 224, 0.96);
   border: 1px solid rgba(46, 40, 35, 0.2);
@@ -162,3 +162,37 @@
 
 .clock { font-weight: 800; margin-top: 4px; }
 #fPlayback { width: 100%; margin-bottom: 14px; }
+
+.flog {
+  display: grid;
+  gap: 12px;
+  max-height: 48vh;
+  overflow: auto;
+  margin-bottom: 12px;
+  padding: 4px 2px 12px;
+}
+.fmsg {
+  max-width: 92%;
+  padding: 12px 14px;
+  border: 2px solid rgba(46, 40, 35, 0.25);
+  background: #fff;
+}
+.fmsg.guide { background: #f3e2c7; }
+.fmsg.family { margin-left: auto; background: #fff6ea; }
+.fmsg.err { background: #f7d8d0; color: #6a2a22; }
+.fmsg p { margin: 0; }
+.fmsg img { display: block; max-width: 220px; margin-top: 8px; border: 2px solid #2b241f; }
+.fmsg audio { display: block; width: 100%; margin-top: 8px; }
+.fstatus { min-height: 1.2em; color: #6a5c4e; font-size: 15px; }
+.ftray { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 2px solid #2b241f;
+  padding: 4px 6px;
+}
+.chip img { width: 48px; height: 48px; object-fit: cover; }
+.chip audio { width: 140px; height: 32px; }
+.chip button { border: 0; background: none; font-size: 20px; cursor: pointer; }

@@ -1,28 +1,17 @@
 (function (global) {
-  const STEPS = ['who', 'talk', 'keep'];
-  const STEP_LABELS = { who: 'Name', talk: 'Talk', keep: 'Photos' };
-
-  let step = 0;
-  let draft = emptyDraft();
   let onSaved = null;
+  let pendingPhotos = [];
+  let pendingVoice = null;
   let recorder = null;
   let chunks = [];
-  let recStart = 0;
-  let recognition = null;
-  let recTimer = null;
-  let talkBaseline = '';
+  let busy = false;
+  let built = false;
 
-  function emptyDraft() {
-    return {
-      preferredName: '',
-      addressAs: '',
-      eras: ['thisWeek'],
-      people: [{ id: HomeAgainPack.uid('p'), name: '', relation: '', photoDataUrl: null }],
-      memories: [],
-      songs: [],
-      photos: [],
-      voice: { transcript: '', audioDataUrl: null, durationMs: 0 }
-    };
+  function escapeHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   function readFileAsDataUrl(file) {
@@ -34,318 +23,256 @@
     });
   }
 
-  function escapeAttr(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;');
+  async function api(method, url, body) {
+    const res = await fetch(url, {
+      method,
+      headers: body ? { 'content-type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'The guide could not answer.');
+    return data;
   }
 
-  function escapeHtml(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  function renderProgress(root) {
+  function drawProgress(root, prog) {
     const el = root.querySelector('#familyProgress');
-    el.innerHTML = STEPS.map((id, i) => {
-      const cls = i === step ? 'on' : i < step ? 'done' : '';
-      return `<span class="dot ${cls}">${STEP_LABELS[id]}</span>`;
-    }).join('');
-  }
-
-  function syncFromDom(root) {
-    const id = STEPS[step];
-    if (id === 'who') {
-      draft.preferredName = root.querySelector('#fName').value;
-      draft.addressAs = root.querySelector('#fAddress').value || root.querySelector('#fName').value;
-    }
-    if (id === 'talk') {
-      const ta = root.querySelector('#fTalk');
-      if (ta) draft.voice.transcript = ta.value;
-    }
-    if (id === 'keep') {
-      draft.people = [...root.querySelectorAll('.person-card')].map((card) => ({
-        id: card.dataset.id,
-        name: card.querySelector('.p-name').value,
-        relation: card.querySelector('.p-rel').value,
-        photoDataUrl: card.dataset.photo || null
-      }));
-    }
-  }
-
-  function thumbHtml(url) {
-    if (url) return `<img class="thumb" src="${url}" alt="">`;
-    return `<div class="thumb placeholder">Photo</div>`;
-  }
-
-  function stopRecognition() {
-    if (recognition) {
-      try { recognition.stop(); } catch (_) {}
-      recognition = null;
-    }
-  }
-
-  function startRecognition(root) {
-    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Rec) return;
-    stopRecognition();
-    recognition = new Rec();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = document.documentElement.lang || 'en-US';
-    recognition.onresult = (ev) => {
-      let final = '';
-      for (let i = 0; i < ev.results.length; i++) {
-        if (ev.results[i].isFinal) final += ev.results[i][0].transcript + ' ';
-      }
-      const ta = root.querySelector('#fTalk');
-      if (ta && final.trim()) {
-        ta.value = [talkBaseline, final.trim()].filter(Boolean).join(' ');
-        draft.voice.transcript = ta.value;
-      }
-    };
-    try { recognition.start(); } catch (_) {}
-  }
-
-  async function startRecording(root) {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      root.querySelector('#recHint').textContent = 'This browser cannot record audio. You can still type below.';
+    if (!prog || !prog.items) {
+      el.innerHTML = '<span class="dot on">Talk</span>';
       return;
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    chunks = [];
-    talkBaseline = (root.querySelector('#fTalk').value || '').trim();
-    recorder = new MediaRecorder(stream);
-    recStart = Date.now();
-    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-    recorder.onstop = async () => {
-      stream.getTracks().forEach((t) => t.stop());
-      const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-      draft.voice.durationMs = Date.now() - recStart;
-      draft.voice.audioDataUrl = await readFileAsDataUrl(blob);
-      const audio = root.querySelector('#fPlayback');
-      if (audio) {
-        audio.src = draft.voice.audioDataUrl;
-        audio.classList.remove('hide');
-      }
-      recorder = null;
-    };
-    recorder.start();
-    startRecognition(root);
-    root.querySelector('#recBtn').classList.add('live');
-    root.querySelector('#recBtn').textContent = 'Stop';
-    root.querySelector('#recHint').textContent = 'Listening… talk about this week. Who visited. What you ate. A song in the car.';
-    recTimer = setInterval(() => {
-      const s = Math.round((Date.now() - recStart) / 1000);
-      const hint = root.querySelector('#recClock');
-      if (hint) hint.textContent = s + 's';
-      if (s >= 60) stopRecording(root);
-    }, 250);
-  }
-
-  function stopRecording(root) {
-    if (recTimer) { clearInterval(recTimer); recTimer = null; }
-    stopRecognition();
-    if (recorder && recorder.state !== 'inactive') recorder.stop();
-    const btn = root.querySelector('#recBtn');
-    if (btn) {
-      btn.classList.remove('live');
-      btn.textContent = 'Record';
-    }
-    const hint = root.querySelector('#recHint');
-    if (hint) hint.textContent = 'You can record again, or edit the words below.';
-  }
-
-  function bindTalk(root) {
-    const btn = root.querySelector('#recBtn');
-    btn.onclick = async () => {
-      if (recorder) stopRecording(root);
-      else {
-        try { await startRecording(root); }
-        catch (_) {
-          root.querySelector('#recHint').textContent = 'Microphone permission is needed, or you can type instead.';
-        }
-      }
-    };
-    if (draft.voice.audioDataUrl) {
-      const audio = root.querySelector('#fPlayback');
-      audio.src = draft.voice.audioDataUrl;
-      audio.classList.remove('hide');
-    }
-  }
-
-  function renderStep(root) {
-    stopRecording(root);
-    const host = root.querySelector('#familyStep');
-    const id = STEPS[step];
-
-    if (id === 'who') {
-      host.innerHTML = `
-        <h2>Who is this for this week?</h2>
-        <p class="lead">Just a name the family still uses at the table.</p>
-        <div class="field">
-          <label for="fName">Their name</label>
-          <input id="fName" type="text" placeholder="e.g. Mom, Dad, Eleanor" value="${escapeAttr(draft.preferredName)}">
-        </div>
-        <div class="field">
-          <label for="fAddress">What should we call them in the rooms?</label>
-          <input id="fAddress" type="text" placeholder="Usually the same name" value="${escapeAttr(draft.addressAs)}">
-        </div>`;
-    }
-
-    if (id === 'talk') {
-      host.innerHTML = `
-        <h2>Tell us about them</h2>
-        <p class="lead">Talk about this week — Sunday lunch, a song in the car, tea yesterday. Recent days are enough.</p>
-        <div class="recorder">
-          <button type="button" class="rec-btn" id="recBtn">Record</button>
-          <div>
-            <p id="recHint">What happened last Sunday? Who visited? Keep it close and ordinary.</p>
-            <p class="clock" id="recClock"></p>
-          </div>
-        </div>
-        <audio id="fPlayback" class="hide" controls></audio>
-        <div class="field">
-          <label for="fTalk">Words (you can edit)</label>
-          <textarea id="fTalk" placeholder="Or type a few memories here.">${escapeHtml(draft.voice.transcript)}</textarea>
-        </div>`;
-      bindTalk(root);
-    }
-
-    if (id === 'keep') {
-      host.innerHTML = `
-        <h2>A few faces, if you have them</h2>
-        <p class="lead">Optional. Photos make the kitchen table feel like home. Then we save the pack.</p>
-        <div class="card-list" id="peopleList">
-          ${draft.people.map((p) => personCard(p)).join('')}
-        </div>
-        <button type="button" class="btn btn-secondary" id="addPerson">Add another person</button>
-        <div class="review-box" style="margin-top:20px">
-          <h3>${escapeHtml(draft.preferredName || 'Unnamed')}</h3>
-          <ul>
-            <li>${draft.voice.audioDataUrl ? 'A voice recording is ready.' : 'No recording yet — words still count.'}</li>
-            <li>${(draft.voice.transcript || '').trim() ? 'Memories were heard or typed.' : 'Add a little talk on the previous step if you can.'}</li>
-          </ul>
-        </div>`;
-      bindPeople(host);
-      host.querySelector('#addPerson').onclick = () => {
-        syncFromDom(root);
-        draft.people.push({
-          id: HomeAgainPack.uid('p'),
-          name: '',
-          relation: '',
-          photoDataUrl: null
-        });
-        renderStep(root);
-      };
-    }
-
-    const back = root.querySelector('#familyBack');
+    built = !!prog.built;
+    el.innerHTML = prog.items
+      .map((i) => `<span class="dot ${i.done ? 'done' : ''}">${escapeHtml(i.label)}</span>`)
+      .join('');
+    const play = root.querySelector('#familyPlay');
+    if (play) play.classList.toggle('hide', !built);
     const next = root.querySelector('#familyNext');
-    back.classList.toggle('hide', step === 0);
-    next.textContent = id === 'keep' ? 'Save pack' : 'Continue';
-    renderProgress(root);
+    if (next) next.textContent = prog.ready && !prog.built ? 'Build album' : 'Send';
   }
 
-  function personCard(p) {
-    return `
-      <div class="person-card" data-id="${p.id}" data-photo="${escapeAttr(p.photoDataUrl || '')}">
-        <div class="photo-row">
-          ${thumbHtml(p.photoDataUrl)}
-          <button type="button" class="btn btn-secondary file-btn">Add photo<input type="file" accept="image/*"></button>
-          <button type="button" class="btn btn-ghost remove-person">Remove</button>
-        </div>
-        <div class="field">
-          <label>Name</label>
-          <input class="p-name" type="text" value="${escapeAttr(p.name)}" placeholder="Mei, Daniel…">
-        </div>
-        <div class="field">
-          <label>Who they are to them</label>
-          <input class="p-rel" type="text" value="${escapeAttr(p.relation)}" placeholder="daughter, neighbor">
-        </div>
-      </div>`;
-  }
-
-  function bindPeople(host) {
-    host.querySelectorAll('.person-card').forEach((card) => {
-      const input = card.querySelector('input[type="file"]');
-      input.onchange = async () => {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const url = await readFileAsDataUrl(file);
-        card.dataset.photo = url;
-        card.querySelector('.thumb, .placeholder').outerHTML = thumbHtml(url);
-      };
-      card.querySelector('.remove-person').onclick = () => {
-        if (host.querySelectorAll('.person-card').length <= 1) return;
-        card.remove();
-      };
+  function addMessage(log, role, text, attachments) {
+    if (!text && !(attachments && attachments.length)) return;
+    const div = document.createElement('div');
+    div.className = 'fmsg ' + role;
+    let html = text ? `<p>${escapeHtml(text)}</p>` : '';
+    (attachments || []).forEach((a) => {
+      if (a.kind === 'photo' || a.url && /\.(jpg|jpeg|png|webp|gif)$/i.test(a.url)) {
+        html += `<img src="${escapeHtml(a.url)}" alt="">`;
+      } else if (a.kind === 'voice' || a.url) {
+        html += `<audio controls src="${escapeHtml(a.url)}"></audio>`;
+      }
     });
+    div.innerHTML = html;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
   }
 
-  function save() {
-    const pack = HomeAgainPack.generateFromFamily(draft);
+  function drawTray(root) {
+    const tray = root.querySelector('#fTray');
+    tray.innerHTML =
+      pendingPhotos
+        .map(
+          (p, i) =>
+            `<span class="chip"><img src="${p.dataUrl}" alt=""><button type="button" data-photo="${i}" aria-label="Remove">&times;</button></span>`
+        )
+        .join('') +
+      (pendingVoice
+        ? `<span class="chip"><audio controls src="${pendingVoice.url}"></audio><button type="button" data-voice aria-label="Remove">&times;</button></span>`
+        : '');
+  }
+
+  async function send(root, extra) {
+    if (busy) return;
+    const input = root.querySelector('#fTalk');
+    const text = (input.value || '').trim();
+    const start = extra && extra.start;
+    if (!start && !text && !pendingPhotos.length && !pendingVoice) return;
+    busy = true;
+    const log = root.querySelector('#fLog');
+    const body = {
+      text: (extra && extra.text) || text,
+      photos: pendingPhotos.map((p) => ({ dataUrl: p.dataUrl, hash: p.hash || '', faces: p.faces })),
+      voice: pendingVoice ? pendingVoice.dataUrl : null,
+      start: !!start
+    };
+    if (!start) {
+      addMessage(log, 'family', body.text, [
+        ...pendingPhotos.map((p) => ({ kind: 'photo', url: p.dataUrl })),
+        ...(pendingVoice ? [{ kind: 'voice', url: pendingVoice.url }] : [])
+      ]);
+    }
+    input.value = '';
+    pendingPhotos = [];
+    pendingVoice = null;
+    drawTray(root);
+    const status = root.querySelector('#fStatus');
+    status.textContent = 'The guide is listening…';
+    try {
+      const r = await api('POST', '/api/chat', body);
+      addMessage(log, 'guide', r.reply, r.attachments);
+      drawProgress(root, r.progress);
+      status.textContent = '';
+    } catch (err) {
+      addMessage(log, 'err', err.message);
+      status.textContent = '';
+    }
+    busy = false;
+  }
+
+  async function playBuilt() {
+    const pack = await api('GET', '/api/pack');
     HomeAgainPack.savePack(pack);
-    return pack;
+    if (onSaved) onSaved(pack);
   }
 
   function mount(root, opts) {
     onSaved = (opts && opts.onSaved) || null;
-    step = 0;
-    const existing = HomeAgainPack.loadPack();
-    if (existing) {
-      draft = {
-        preferredName: existing.profile.preferredName || '',
-        addressAs: existing.profile.addressAs || '',
-        eras: (existing.profile.eras || []).slice(),
-        people: (existing.people || []).map((p) => ({
-          id: p.id || HomeAgainPack.uid('p'),
-          name: p.name || '',
-          relation: p.relation || '',
-          photoDataUrl: p.photoDataUrl || null
-        })),
-        memories: existing.memories || [],
-        songs: existing.songs || [],
-        photos: [],
-        voice: {
-          transcript: (existing.voice && existing.voice.transcript) || '',
-          audioDataUrl: (existing.voice && existing.voice.audioDataUrl) || null,
-          durationMs: (existing.voice && existing.voice.durationMs) || 0
-        }
-      };
-      if (!draft.people.length) draft.people = emptyDraft().people;
-    } else {
-      draft = emptyDraft();
+    pendingPhotos = [];
+    pendingVoice = null;
+    built = false;
+    root.querySelector('#familyStep').innerHTML = `
+      <h2>Talk</h2>
+      <p class="lead">Tell the guide who this week is for. Add photos and a voice if you have them. It will make the album from what you share.</p>
+      <div class="flog" id="fLog" role="log" aria-live="polite"></div>
+      <p class="fstatus" id="fStatus"></p>
+      <div class="ftray" id="fTray"></div>
+      <div class="field">
+        <label for="fTalk">Message</label>
+        <textarea id="fTalk" placeholder="Who visited this week? What was for lunch?"></textarea>
+      </div>
+      <input id="fPhoto" type="file" accept="image/*" multiple hidden>
+    `;
+    const log = root.querySelector('#fLog');
+    root.querySelector('#familyBack').classList.add('hide');
+    root.querySelector('#familyNext').textContent = 'Send';
+    root.querySelector('#familyExport').textContent = 'Start over';
+    let play = root.querySelector('#familyPlay');
+    if (!play) {
+      play = document.createElement('button');
+      play.id = 'familyPlay';
+      play.type = 'button';
+      play.className = 'btn btn-primary hide';
+      play.textContent = 'Play this week';
+      root.querySelector('.family-nav').appendChild(play);
     }
+    play.onclick = () => playBuilt().catch((err) => addMessage(log, 'err', err.message));
 
-    root.querySelector('#familyBack').onclick = () => {
-      syncFromDom(root);
-      if (step > 0) {
-        step -= 1;
-        renderStep(root);
-      }
-    };
-
-    root.querySelector('#familyNext').onclick = () => {
-      syncFromDom(root);
-      if (STEPS[step] === 'keep') {
-        const pack = save();
-        if (onSaved) onSaved(pack);
+    root.querySelector('#familyNext').onclick = async () => {
+      if (root.querySelector('#familyNext').textContent === 'Build album') {
+        const status = root.querySelector('#fStatus');
+        status.textContent = 'Making this week’s album…';
+        try {
+          const r = await api('POST', '/api/build');
+          addMessage(log, 'guide', r.summary || 'The album is ready.');
+          const state = await api('GET', '/api/chat');
+          drawProgress(root, { ...state.progress, built: true });
+          status.textContent = '';
+        } catch (err) {
+          addMessage(log, 'err', err.message);
+          status.textContent = '';
+        }
         return;
       }
-      step += 1;
-      renderStep(root);
+      send(root);
+    };
+    root.querySelector('#fTalk').onkeydown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send(root);
+      }
     };
 
-    root.querySelector('#familyExport').onclick = () => {
-      syncFromDom(root);
-      HomeAgainPack.exportPack(HomeAgainPack.generateFromFamily(draft));
+    const photo = root.querySelector('#fPhoto');
+    root.querySelector('#familyPhoto') && (root.querySelector('#familyPhoto').onclick = () => photo.click());
+    if (!root.querySelector('#familyPhoto')) {
+      const b = document.createElement('button');
+      b.id = 'familyPhoto';
+      b.type = 'button';
+      b.className = 'btn btn-secondary';
+      b.textContent = 'Photo';
+      root.querySelector('.family-nav').insertBefore(b, root.querySelector('#familyNext'));
+      b.onclick = () => photo.click();
+    }
+    photo.onchange = async () => {
+      for (const file of photo.files || []) {
+        pendingPhotos.push({ dataUrl: await readFileAsDataUrl(file) });
+      }
+      photo.value = '';
+      drawTray(root);
+    };
+    root.querySelector('#fTray').onclick = (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      if (btn.dataset.photo !== undefined) pendingPhotos.splice(+btn.dataset.photo, 1);
+      if (btn.dataset.voice !== undefined) pendingVoice = null;
+      drawTray(root);
     };
 
-    renderStep(root);
+    if (!root.querySelector('#familyMic')) {
+      const b = document.createElement('button');
+      b.id = 'familyMic';
+      b.type = 'button';
+      b.className = 'btn btn-secondary';
+      b.textContent = 'Voice';
+      root.querySelector('.family-nav').insertBefore(b, root.querySelector('#familyNext'));
+    }
+    root.querySelector('#familyMic').onclick = async () => {
+      if (recorder) {
+        recorder.stop();
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (e) => {
+          if (e.data.size) chunks.push(e.data);
+        };
+        recorder.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+          const dataUrl = await readFileAsDataUrl(blob);
+          pendingVoice = { dataUrl, url: dataUrl };
+          recorder = null;
+          root.querySelector('#familyMic').textContent = 'Voice';
+          drawTray(root);
+        };
+        recorder.start();
+        root.querySelector('#familyMic').textContent = 'Stop';
+      } catch (_) {
+        addMessage(log, 'err', 'Microphone permission is needed, or you can type instead.');
+      }
+    };
+
+    root.querySelector('#familyExport').onclick = async () => {
+      if (!confirm('Start the talk over? Saved photos stay on this computer.')) return;
+      try {
+        await api('POST', '/api/chat/reset');
+        log.innerHTML = '';
+        built = false;
+        drawProgress(root, null);
+        await send(root, { start: true });
+      } catch (err) {
+        addMessage(log, 'err', err.message);
+      }
+    };
+
+    (async () => {
+      try {
+        const r = await api('GET', '/api/chat');
+        drawProgress(root, r.progress);
+        (r.transcript || []).forEach((m) => addMessage(log, m.role === 'family' ? 'family' : 'guide', m.text, m.attachments));
+        if (!(r.transcript || []).length) await send(root, { start: true });
+      } catch (err) {
+        addMessage(
+          log,
+          'err',
+          err.message.indexOf('fetch') >= 0
+            ? 'Start the app with npm start so the guide can talk. Open http://localhost:8787'
+            : err.message
+        );
+      }
+    })();
   }
 
   global.HomeAgainFamily = { mount };
