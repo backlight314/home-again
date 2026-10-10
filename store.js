@@ -1,20 +1,20 @@
-// Everything the family has shared lives in data/: materials.json, the built
-// game, the guide conversation, and uploaded files under data/media.
+// Where everything the family shares is kept. Documents (the album, the guide
+// conversation, the built game, the game pack) go to TigerData when DATABASE_URL
+// is set, otherwise to JSON files in data/. Photos and voices go to an S3-style
+// bucket when S3_BUCKET is set, otherwise to data/media. The rest of the code
+// only uses the functions below and doesn't know which is in use.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { describeFaces, syncWho } from './faces.js';
+import { createTigerStore } from './tiger.js';
+import { createLocalMedia, createBucketMedia } from './media.js';
 
 export const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const DATA = process.env.HOME_AGAIN_DATA || path.join(ROOT, 'data');
-export const MEDIA = path.join(DATA, 'media');
-export const FILES = {
-  materials: path.join(DATA, 'materials.json'),
-  game: path.join(DATA, 'game.json'),
-  pack: path.join(DATA, 'pack.json'),
-  chat: path.join(DATA, 'chat.json')
-};
+// one family per deployment for now; the id keeps their rows and files apart
+export const FAMILY_ID = process.env.FAMILY_ID || 'default';
 
 export const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
@@ -23,51 +23,82 @@ export const TYPES = {
 };
 const EXT_FOR = Object.fromEntries(Object.entries(TYPES).map(([ext, type]) => [type, ext]));
 
-export async function readJSON(file, fallback) {
+/* documents */
+async function readJSON(file, fallback) {
   try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch { return fallback; }
 }
-export async function writeJSON(file, value) {
+async function writeJSON(file, value) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, JSON.stringify(value, null, 2));
 }
+function createFileStore(dir) {
+  const file = name => path.join(dir, name + '.json');
+  // one change at a time, each against a fresh copy
+  let queue = Promise.resolve();
+  return {
+    kind: `local files (${dir})`,
+    loadDoc: (name, fallback) => readJSON(file(name), fallback),
+    saveDoc: (name, value) => writeJSON(file(name), value),
+    withDoc(name, fallback, fn) {
+      const run = queue.then(async () => {
+        const doc = await readJSON(file(name), null) ?? fallback();
+        const out = await fn(doc);
+        await writeJSON(file(name), doc);
+        return out;
+      });
+      queue = run.catch(() => {});
+      return run;
+    }
+  };
+}
+const docs = process.env.DATABASE_URL
+  ? createTigerStore({ url: process.env.DATABASE_URL, familyId: FAMILY_ID, root: ROOT })
+  : createFileStore(DATA);
+const media = process.env.S3_BUCKET ? createBucketMedia({ familyId: FAMILY_ID, types: TYPES }) : createLocalMedia(path.join(DATA, 'media'));
+export const storage = { documents: docs.kind, files: media.kind, docs, media };
+
+// chat, game and pack documents
+export const loadDoc = (name, fallback) => docs.loadDoc(name, fallback);
+export const saveDoc = (name, value) => docs.saveDoc(name, value);
+
+const shape = mat => {
+  for (const k of ['people', 'photos', 'voices', 'notes']) if (!Array.isArray(mat[k])) mat[k] = [];
+  if (!mat.profile) mat.profile = {};
+  return mat;
+};
 const emptyMaterials = () => ({ profile: {}, people: [], photos: [], voices: [], notes: [] });
-export const loadMaterials = () => readJSON(FILES.materials, emptyMaterials());
-export const saveMaterials = mat => writeJSON(FILES.materials, mat);
+export const loadMaterials = async () => shape(await docs.loadDoc('materials', null) ?? emptyMaterials());
 
 // The album, the share link and the guide can all change materials at once, so
-// every change runs one at a time against a fresh copy. Keep slow work (Gemini
-// calls, file writes) outside fn.
-let queue = Promise.resolve();
-export function withMaterials(fn) {
-  const run = queue.then(async () => {
-    const mat = await loadMaterials();
-    const out = await fn(mat);
-    await saveMaterials(mat);
-    return out;
-  });
-  queue = run.catch(() => {});
-  return run;
-}
+// every change runs one at a time against a fresh copy (a locked row in TigerData).
+// Keep slow work (Gemini calls, uploads) outside fn.
+export const withMaterials = fn => docs.withDoc('materials', emptyMaterials, mat => fn(shape(mat)));
+
 export const newId = p => p + '_' + crypto.randomBytes(4).toString('hex');
 
-// Accepts a data: URL, writes the file under data/media, returns its public path.
+/* photos and voices */
+// Accepts a data: URL, stores the file, returns its public path.
 export async function saveMedia(dataUrl, prefix) {
   const m = /^data:([^;,]+)(?:;[^,]*)?;base64,(.+)$/s.exec(dataUrl || '');
   if (!m) throw Object.assign(new Error('expected a base64 data URL'), { status: 400 });
   const ext = EXT_FOR[m[1]];
   if (!ext) throw Object.assign(new Error('unsupported file type ' + m[1]), { status: 400 });
   const name = prefix + '-' + crypto.randomBytes(6).toString('hex') + ext;
-  await fs.mkdir(MEDIA, { recursive: true });
-  await fs.writeFile(path.join(MEDIA, name), Buffer.from(m[2], 'base64'));
+  await media.put(name, Buffer.from(m[2], 'base64'));
   return '/media/' + name;
 }
 export async function dropMedia(url) {
-  if (url?.startsWith('/media/')) await fs.rm(path.join(MEDIA, path.basename(url)), { force: true });
+  if (url?.startsWith('/media/')) await media.remove(path.basename(url)).catch(err => console.warn('Could not delete', url, err.message));
+}
+// The file behind a /media/ path, for serving it.
+export async function readMedia(name) {
+  const base = path.basename(name);
+  return { bytes: await media.get(base), type: TYPES[path.extname(base).toLowerCase()] || 'application/octet-stream' };
 }
 // Reads an uploaded file back as an inline part for Gemini.
 export async function mediaPart(url) {
-  const file = path.join(MEDIA, path.basename(url));
-  return { inlineData: { mimeType: TYPES[path.extname(file)], data: (await fs.readFile(file)).toString('base64') } };
+  const { bytes, type } = await readMedia(url);
+  return { inlineData: { mimeType: type, data: bytes.toString('base64') } };
 }
 
 export async function removeMaterial(mat, id) {

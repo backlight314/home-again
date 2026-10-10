@@ -1,6 +1,6 @@
 // Turns everything the family shared into the game's content, using a fixed JSON schema.
 import { generate, MODELS } from './gemini.js';
-import { loadMaterials, describeMaterials, mediaPart, writeJSON, FILES } from './store.js';
+import { loadMaterials, describeMaterials, mediaPart, saveDoc } from './store.js';
 
 const SYSTEM = `You help a family personalize "Home Again", a gentle reminiscence game for an older relative who may be living with memory loss. The family uploads photos, voice messages, notes about the person and the family. You turn that into the game's content.
 
@@ -102,8 +102,8 @@ export async function buildGame() {
   if (!res.text) throw Object.assign(new Error('Gemini returned no game. Try again.'), { status: 502 });
   const cfg = resolve(JSON.parse(res.text), mat);
   const pack = toHomeAgainPack(cfg, mat);
-  await writeJSON(FILES.game, cfg);
-  await writeJSON(FILES.pack, pack);
+  await saveDoc('game', cfg);
+  await saveDoc('pack', pack);
   return { ...cfg, pack };
 }
 
