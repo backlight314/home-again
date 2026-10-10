@@ -259,3 +259,112 @@
 /* keep the album page's button off the paper */
 #s-album > .pressbtn { font-size: clamp(24px, 2.3cqw, 30px); padding: .2em 1em .25em; letter-spacing: .04em; right: 2cqw; bottom: 2.4cqw; }
 .memcard .print .pname { color: #2b2350; }
+
+/* ---------- the four rooms (kitchen, radio, porch, attic) ---------- */
+.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption {
+  left: 4cqw;
+  top: 4.4cqw;
+  max-width: 30cqw;
+  font-family: var(--hand);
+  font-size: clamp(34px, 4.4cqw, 60px);
+  line-height: 1.04;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(10, 8, 36, .7), 0 0 28px rgba(255, 255, 255, .2);
+}
+.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub {
+  margin-top: 1.2cqw;
+  font-family: var(--hand);
+  font-size: clamp(24px, 2.3cqw, 32px);
+  font-weight: 400;
+  letter-spacing: .06em;
+  color: rgba(255, 255, 255, .94);
+  text-shadow: 0 1px 8px rgba(10, 8, 36, .85);
+}
+
+/* buttons: same cream pills as the cover */
+.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn {
+  min-height: 64px;
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: clamp(26px, 2.8cqw, 36px);
+  letter-spacing: .06em;
+  padding: .3em 1.4em .35em;
+  border-radius: 999px;
+  border: 0;
+  background: #fff1d4;
+  color: #2b2350;
+  box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 34px rgba(255, 200, 120, .28);
+}
+.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red { background: #ffd9a0; color: #2b2350; }
+.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active { transform: translateY(2px); }
+.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn {
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: clamp(24px, 2.4cqw, 32px);
+  letter-spacing: .03em;
+  color: #fff;
+  border-bottom: 2px solid rgba(255, 255, 255, .75);
+  text-shadow: 0 1px 8px rgba(10, 8, 36, .85);
+}
+
+/* faces and photos: soft cream prints instead of hard black frames */
+.kitchen .print, .attic .print, .porch .print {
+  border: 0;
+  border-radius: 4px;
+  background: #fff1d4;
+  box-shadow: 0 10px 26px rgba(8, 6, 28, .55), 0 0 0 1px rgba(255, 255, 255, .2);
+}
+.print .pname, .kitchen .print .pname, .porch .print .pname {
+  font-family: var(--hand);
+  font-style: normal;
+  font-size: clamp(24px, 2.4cqw, 32px);
+  color: #2b2350;
+}
+.print.marked { outline: 3px solid #ffd9a0; outline-offset: 4px; }
+
+/* kitchen */
+.seat .lbl { font-family: var(--hand); font-weight: 400; font-size: clamp(22px, 2.2cqw, 28px); color: rgba(255, 255, 255, .85); text-shadow: 0 1px 6px rgba(10, 8, 36, .8); }
+.seat.target .lbl { font-size: clamp(40px, 4cqw, 56px); color: #ffe2a0; text-shadow: 0 0 18px rgba(255, 210, 120, .7); }
+.seat.filled { background: #fff1d4; border: 0; border-radius: 4px; box-shadow: 0 8px 20px rgba(8, 6, 28, .55), 0 0 0 1px rgba(255, 255, 255, .25); }
+.seat .ring svg path, .seat .ring svg ellipse { stroke: #ffe2a0; }
+.said {
+  background: rgba(22, 20, 52, .9);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 226, 160, .55), 0 10px 26px rgba(8, 6, 28, .55);
+  font-family: var(--hand);
+  font-weight: 400;
+  font-size: clamp(26px, 2.6cqw, 34px);
+  padding: .5em 1.4em .55em;
+}
+.wave i { background: #ffe2a0; }
+
+/* radio */
+.station { font-family: var(--hand); font-weight: 400; font-size: clamp(36px, 4cqw, 54px); color: #fff; text-shadow: 0 2px 14px rgba(10, 8, 36, .8); bottom: 25%; }
+.station.clear { color: #ffe2a0; text-shadow: 0 0 22px rgba(255, 210, 120, .75); }
+
+/* porch */
+.chain { background: rgba(60, 51, 38, .9); }
+.mic {
+  border: 0;
+  background: #fff1d4;
+  box-shadow: 0 0 0 .3cqw rgba(255, 226, 160, .45), 0 10px 28px rgba(8, 6, 28, .55), 0 0 40px rgba(255, 200, 120, .3);
+}
+.mic.live { background: #ffd9a0; box-shadow: 0 0 0 .35cqw rgba(255, 226, 160, .7), 0 0 50px rgba(255, 200, 120, .6); }
+.mic .m { background: #2b2350; }
+.mic .m::after { border-color: #2b2350; }
+.mic .mlbl { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.3cqw, 30px); color: #fff; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); }
+.heard { font-family: var(--hand); font-weight: 400; font-size: clamp(26px, 2.5cqw, 34px); line-height: 1.2; color: #fff; border-left-color: #ffe2a0; text-shadow: 0 1px 10px rgba(10, 8, 36, .9); }
+.followup { font-family: var(--hand); font-style: normal; font-size: clamp(30px, 3cqw, 40px); color: #ffe2a0; text-shadow: 0 1px 10px rgba(10, 8, 36, .9); }
+.stamped { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.3cqw, 30px); color: #ffe2a0; border-color: #ffe2a0; border-radius: 999px; padding: .3em 1em .35em; }
+
+/* attic */
+.shelfline .rule { border-bottom: 3px solid rgba(255, 255, 255, .6); }
+.shelfline .ends { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.3cqw, 30px); letter-spacing: .08em; color: #fff; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); }
+.mount.open { border: 3px dashed rgba(255, 255, 255, .6); border-radius: 4px; }
+.mount.next { border: 4px solid #ffe2a0; border-radius: 4px; box-shadow: 0 0 24px rgba(255, 210, 120, .5); }
+.mount.set { background: #fff1d4; border: 0; border-radius: 4px; box-shadow: 0 8px 20px rgba(8, 6, 28, .55); }
+.mount .num { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.3cqw, 30px); color: #ffe2a0; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); top: -34px; }
+.boxlbl { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.4cqw, 32px); letter-spacing: .04em; color: #fff; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); }
+.boxrow .pick { border: 0; border-radius: 4px; background: #fff1d4; box-shadow: 0 8px 20px rgba(8, 6, 28, .55), 0 0 0 1px rgba(255, 255, 255, .2); }
