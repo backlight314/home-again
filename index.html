@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/family.css?v=house">
 <link rel="stylesheet" href="css/play.css?v=house">
 <link rel="stylesheet" href="css/album.css?v=house">
-<link rel="stylesheet" href="css/dusk.css?v=dusk6">
+<link rel="stylesheet" href="css/dusk.css?v=dusk8">
 </head>
 <body data-mode="home">
 
@@ -430,11 +430,13 @@
   <polygon points="1220,900 1280,660 1400,590 1500,650 1560,900" fill="#2c4a3c"/><polygon points="1400,590 1500,650 1560,900 1430,760" fill="#3e594c"/>
   <g fill="#c25a48"><circle cx="230" cy="640" r="10"/><circle cx="286" cy="668" r="8"/><circle cx="1370" cy="660" r="10"/><circle cx="1440" cy="700" r="8"/></g>
   <!-- tea table -->
+  <g transform="translate(0,-86)">
   <ellipse cx="800" cy="786" rx="260" ry="36" fill="#2a1c12" opacity=".55"/>
   <polygon points="540,716 1060,716 1020,776 580,776" fill="#6e4e30"/>
   <ellipse cx="800" cy="716" rx="260" ry="40" fill="#b98c5b"/><ellipse cx="800" cy="716" rx="260" ry="40" fill="none" stroke="#6b4a30" stroke-width="6"/>
   <ellipse cx="690" cy="708" rx="30" ry="9" fill="#efe6cf"/><ellipse cx="910" cy="708" rx="30" ry="9" fill="#efe6cf"/>
   <polygon points="772,704 828,704 822,666 778,666" fill="#d8a53a"/><polygon points="778,666 822,666 816,654 784,654" fill="#f0c866"/><circle cx="800" cy="648" r="7" fill="#9c3b2e"/>
+  </g>
   <g fill="#ffe9a8"><circle cx="420" cy="500" r="5"/><circle cx="1180" cy="470" r="5"/><circle cx="640" cy="580" r="4"/><circle cx="1000" cy="560" r="4"/></g>
   <g fill="rgba(255,233,168,.35)"><circle cx="420" cy="500" r="18"/><circle cx="1180" cy="470" r="18"/><circle cx="640" cy="580" r="14"/><circle cx="1000" cy="560" r="14"/></g>
 </svg>
@@ -501,20 +503,38 @@
       <section class="scr ending" id="s-ending" aria-label="The letter">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <rect width="1600" height="900" fill="#2c3d55"/>
-          <circle cx="1260" cy="120" r="80" fill="#f3b07a" opacity=".55"/>
-          <rect y="540" width="1600" height="360" fill="#3d2a1c"/>
-          <rect x="180" y="80" width="360" height="260" fill="#7aa3b8" opacity=".5"/>
-          <ellipse cx="240" cy="360" rx="70" ry="100" fill="#ffd27a" opacity=".28"/>
-          <rect x="980" y="420" width="420" height="18" fill="#8a6244"/>
-          <rect x="1000" y="438" width="380" height="200" fill="#f0e2cc"/>
+          <defs>
+            <linearGradient id="dske" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1f45"/><stop offset=".35" stop-color="#403d78"/><stop offset=".62" stop-color="#8f5f8c"/><stop offset=".82" stop-color="#d58e7c"/><stop offset="1" stop-color="#f0bb88"/></linearGradient>
+            <radialGradient id="glwe"><stop offset="0" stop-color="rgba(255,214,140,.6)"/><stop offset="1" stop-color="rgba(255,214,140,0)"/></radialGradient>
+          </defs>
+          <rect width="1600" height="900" fill="url(#dske)"/>
+          <circle cx="1060" cy="130" r="120" fill="url(#glwe)"/><circle cx="1060" cy="130" r="56" fill="#f6eed6"/>
+          <g fill="#fff"><circle cx="220" cy="70" r="2.4"/><circle cx="520" cy="130" r="2"/><circle cx="780" cy="60" r="2.4"/><circle cx="1000" cy="150" r="2"/><circle cx="1500" cy="260" r="2.2"/><circle cx="360" cy="230" r="1.8"/></g>
+          <polygon points="0,520 240,430 480,500 760,410 1040,500 1300,420 1600,500 1600,700 0,700" fill="#5d5a8a"/>
+          <polygon points="0,600 300,540 640,590 980,550 1300,595 1600,555 1600,720 0,720" fill="#4d4c7d"/>
+          <rect y="680" width="1600" height="220" fill="#34503f"/>
+          <polygon points="0,680 1600,680 1600,720 0,760" fill="#000" opacity=".12"/>
+          <!-- the lit house -->
+          <ellipse cx="1240" cy="760" rx="520" ry="150" fill="url(#glwe)" opacity=".55"/>
+          <polygon points="1020,740 1460,740 1460,500 1020,500" fill="#8a6440"/>
+          <polygon points="1020,500 1460,500 1440,486 1040,486" fill="#a87c52"/>
+          <polygon points="990,510 1240,360 1490,510" fill="#6e3a2a"/><polygon points="1240,360 1490,510 1240,510" fill="#5a2e22"/>
+          <rect x="1360" y="380" width="44" height="90" fill="#7a5638"/>
+          <rect x="1070" y="560" width="110" height="90" fill="#ffd98a"/><rect x="1300" y="560" width="110" height="90" fill="#ffd98a"/>
+          <g stroke="#3c3326" stroke-width="8" fill="none"><rect x="1070" y="560" width="110" height="90"/><rect x="1300" y="560" width="110" height="90"/><path d="M1125 560V650M1070 605H1180M1355 560V650M1300 605H1410"/></g>
+          <rect x="1210" y="610" width="60" height="130" fill="#5a3a24"/><circle cx="1256" cy="680" r="5" fill="#d8a53a"/>
+          <polygon points="1210,740 1270,740 1330,900 1150,900" fill="#8a7c78"/>
+          <polygon points="900,740 940,610 1010,540 1040,740" fill="#2c4a3c"/><polygon points="900,740 940,610 990,700" fill="#3e594c"/>
+          <g fill="#ffe9a8"><circle cx="1080" cy="470" r="5"/><circle cx="1500" cy="640" r="5"/><circle cx="960" cy="700" r="4"/></g>
         </svg>
         <div class="caption">The week is whole<span class="sub">SUNDAY · TUESDAY · YESTERDAY · TODAY</span></div>
         <div class="sheet" id="sheet"></div>
         <div class="endrow">
           <button class="pressbtn" id="hearLetter" type="button">HEAR THE LETTER</button>
           <div class="calltile" id="calltile"></div>
+          <button class="pressbtn" type="button" data-go="album">BACK TO THE ALBUM</button>
         </div>
+        <button class="quietbtn" type="button" data-go="shelf" style="right:3.4%;top:13%">all the albums</button>
       </section>
 
       <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">
@@ -552,7 +572,7 @@
 <script src="js/pack.js?v=house"></script>
 <script src="js/voice.js?v=house"></script>
 <script src="js/family.js?v=house"></script>
-<script src="js/play.js?v=dusk3"></script>
+<script src="js/play.js?v=dusk4"></script>
 <script src="js/app.js?v=house"></script>
 </body>
 </html>
