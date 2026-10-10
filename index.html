@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/family.css?v=house">
 <link rel="stylesheet" href="css/play.css?v=house">
 <link rel="stylesheet" href="css/album.css?v=house">
-<link rel="stylesheet" href="css/dusk.css?v=dusk4">
+<link rel="stylesheet" href="css/dusk.css?v=dusk6">
 </head>
 <body data-mode="home">
 
@@ -76,16 +76,22 @@
     <ellipse cx="50" cy="50" rx="44" ry="42" fill="none" stroke="#9c3b2e" stroke-width="3" transform="rotate(-6 50 50)"/>
   </symbol>
   <symbol id="table" viewBox="0 0 200 72">
-    <ellipse cx="100" cy="36" rx="96" ry="32" fill="#c4a06a" stroke="#2b241f" stroke-width="3"/>
-    <ellipse cx="100" cy="32" rx="86" ry="24" fill="#e2c48a"/>
+    <ellipse cx="100" cy="42" rx="96" ry="28" fill="#2a1c12" opacity=".5"/>
+    <path d="M10 38v10c14 14 62 22 90 22s76-8 90-22V38z" fill="#6e4e30"/>
+    <ellipse cx="100" cy="34" rx="95" ry="29" fill="#b98c5b" stroke="#6b4a30" stroke-width="3"/>
+    <polygon points="30,30 100,10 80,34" fill="#fff" opacity=".1"/><polygon points="170,30 100,10 130,36" fill="#000" opacity=".08"/>
+    <ellipse cx="52" cy="38" rx="17" ry="5.5" fill="#efe6cf"/><ellipse cx="148" cy="38" rx="17" ry="5.5" fill="#efe6cf"/><ellipse cx="100" cy="46" rx="17" ry="5.5" fill="#efe6cf"/>
+    <polygon points="92,36 108,36 106,22 94,22" fill="#3f5a7a"/><circle cx="96" cy="17" r="3.4" fill="#d8a53a"/><circle cx="104" cy="15" r="3.4" fill="#9c3b2e"/><circle cx="100" cy="19" r="3" fill="#efe6cf"/>
   </symbol>
   <symbol id="radioset" viewBox="0 0 180 110">
-    <rect x="4" y="8" width="172" height="94" rx="10" fill="#6b4a32" stroke="#2b241f" stroke-width="4"/>
-    <rect x="16" y="22" width="88" height="66" rx="4" fill="#1b140f" stroke="#2b241f" stroke-width="3"/>
-    <g stroke="#c9784a" stroke-width="2"><path d="M24 32h72M24 44h72M24 56h72M24 68h72M24 80h72"/></g>
-    <circle cx="140" cy="44" r="24" fill="#f3e2c7" stroke="#2b241f" stroke-width="3"/>
-    <g class="needle" id="needle"><path d="M140 24v20" stroke="#c45c4a" stroke-width="4" stroke-linecap="round"/></g>
-    <circle cx="140" cy="44" r="5" fill="#2b241f"/>
+    <rect x="4" y="8" width="172" height="94" rx="8" fill="#8a6440" stroke="#3c3326" stroke-width="3"/>
+    <polygon points="4,16 176,16 168,8 12,8" fill="#a87c52"/>
+    <rect x="16" y="22" width="88" height="66" rx="4" fill="#2a2318" stroke="#3c3326" stroke-width="2"/>
+    <g stroke="#d8a53a" stroke-width="2" opacity=".75"><path d="M24 32h72M24 42h72M24 52h72M24 62h72M24 72h72M24 80h72"/></g>
+    <circle cx="140" cy="44" r="22" fill="#efe6cf" stroke="#3c3326" stroke-width="2.4"/>
+    <g class="needle" id="needle"><path d="M140 26v18" stroke="#9c3b2e" stroke-width="3.6" stroke-linecap="round"/></g>
+    <circle cx="140" cy="44" r="4" fill="#3c3326"/>
+    <rect x="122" y="76" width="36" height="12" rx="3" fill="#d8a53a" stroke="#3c3326" stroke-width="2"/>
   </symbol>
 </defs></svg>
 
@@ -268,38 +274,55 @@
       <section class="scr kitchen" id="s-kitchen" aria-label="Kitchen">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <rect width="1600" height="900" fill="#e4c49a"/>
-          <rect y="0" width="1600" height="70" fill="#8a5340"/>
-          <rect y="70" width="1600" height="500" fill="#d9a06e"/>
-          <g fill="#7a3f24">
-            <rect x="20" y="280" width="300" height="290"/>
-            <rect x="1280" y="280" width="300" height="290"/>
-          </g>
-          <g fill="#c4a06a">
-            <rect x="40" y="300" width="120" height="90"/>
-            <rect x="176" y="300" width="120" height="90"/>
-            <rect x="1300" y="300" width="120" height="90"/>
-            <rect x="1436" y="300" width="120" height="90"/>
-          </g>
-          <circle cx="100" cy="345" r="22" fill="#f4f0e6"/>
-          <circle cx="236" cy="345" r="22" fill="#c45c4a"/>
-          <circle cx="1360" cy="345" r="22" fill="#f4f0e6"/>
-          <rect x="40" y="420" width="256" height="120" fill="#5a3c28"/>
-          <rect x="70" y="440" width="90" height="70" fill="#c45c4a"/>
-          <ellipse cx="115" cy="438" rx="40" ry="10" fill="#a84838"/>
-          <path d="M98 400c0-20 34-20 34 0v40H98z" fill="#c45c4a"/>
-          <rect x="580" y="90" width="440" height="280" fill="#8ebdd9"/>
-          <rect x="580" y="90" width="440" height="280" fill="none" stroke="#3a322c" stroke-width="14"/>
-          <path d="M580 230h440M800 90v280" stroke="#3a322c" stroke-width="7"/>
-          <path d="M600 320c40-30 90-10 140-28 70-24 100 12 160-8 40-14 80 8 100 36H600z" fill="#4e7a48"/>
-          <rect y="560" width="1600" height="340" fill="#c4a06a"/>
-          <g stroke="#8a4f2e" stroke-width="5" opacity=".45"><path d="M0 640h1600M0 720h1600M0 800h1600"/></g>
-          <ellipse cx="200" cy="180" rx="36" ry="36" fill="#c45c4a"/>
-          <ellipse cx="280" cy="155" rx="26" ry="26" fill="#4e8a62"/>
-          <rect x="1320" y="160" width="18" height="90" fill="#4e7a48"/>
-          <ellipse cx="1329" cy="150" rx="28" ry="20" fill="#3f6b46"/>
-          <g fill="#c45c4a"><circle cx="1320" cy="142" r="6"/><circle cx="1340" cy="138" r="5"/></g>
-        </svg>
+  <defs>
+    <linearGradient id="kwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2a5a"/><stop offset=".6" stop-color="#4d3c66"/><stop offset="1" stop-color="#6b4a62"/></linearGradient>
+    <linearGradient id="dskk" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#1b1f45"/><stop offset=".35" stop-color="#403d78"/><stop offset=".62" stop-color="#8f5f8c"/>
+  <stop offset=".82" stop-color="#d58e7c"/><stop offset="1" stop-color="#f0bb88"/></linearGradient><radialGradient id="glwk"><stop offset="0" stop-color="rgba(255,214,140,.55)"/><stop offset="1" stop-color="rgba(255,214,140,0)"/></radialGradient><radialGradient id="glwkf"><stop offset="0" stop-color="rgba(255,200,120,.45)"/><stop offset="1" stop-color="rgba(255,200,120,0)"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#2a2018"/>
+  <rect y="0" width="1600" height="560" fill="url(#kwall)"/>
+  <polygon points="0,0 520,0 300,300" fill="#fff" opacity="0.04"/>
+  <polygon points="520,0 1100,0 800,260" fill="#000" opacity="0.06"/>
+  <polygon points="1100,0 1600,0 1600,320 1300,200" fill="#fff" opacity="0.05"/>
+  <polygon points="0,300 300,300 0,560" fill="#000" opacity="0.08"/>
+  <polygon points="1300,200 1600,320 1600,560 1250,560" fill="#000" opacity="0.07"/>
+  <rect x="600" y="80" width="400" height="280" fill="url(#dskk)"/>
+  <polygon points="600,298.4 680.0,248.0 768.0,287.2 864.0,236.8 1000,281.6 1000,360 600,360" fill="#4b4a7c"/>
+  <polygon points="600,332.0 720.0,298.4 832.0,326.4 928.0,304.0 1000,332.0 1000,360 600,360" fill="#34406a"/>
+  <circle cx="912.0" cy="152.8" r="25.2" fill="#f6eed6"/>
+  <rect x="600" y="80" width="400" height="280" fill="none" stroke="#3c3326" stroke-width="16"/>
+  <path d="M600 220.0H1000M800.0 80V360" stroke="#3c3326" stroke-width="9"/>
+  <rect x="580" y="366" width="440" height="16" fill="#8a6440"/><rect x="580" y="382" width="440" height="6" fill="#5a4130"/>
+  <!-- shelf unit -->
+  <polygon points="40,300 330,300 330,560 40,560" fill="#8a6440"/>
+  <polygon points="40,300 330,300 310,318 60,318" fill="#a87c52"/>
+  <polygon points="330,300 330,560 312,548 312,318" fill="#5a4130"/>
+  <rect x="62" y="318" width="248" height="10" fill="#3c3326" opacity=".5"/>
+  <rect x="62" y="430" width="248" height="14" fill="#5a4130"/>
+  <g><rect x="84" y="356" width="34" height="60" rx="3" fill="#9c3b2e"/><rect x="132" y="372" width="32" height="44" rx="3" fill="#d8a53a"/><rect x="178" y="362" width="34" height="54" rx="3" fill="#697a5c"/><rect x="226" y="376" width="46" height="40" rx="3" fill="#efe6cf"/></g>
+  <polygon points="90,444 190,444 180,520 100,520" fill="#9c3b2e"/><polygon points="90,444 190,444 182,462 98,462" fill="#c25a48"/>
+  <rect x="222" y="470" width="60" height="50" rx="4" fill="#3f5a7a"/><circle cx="252" cy="462" r="9" fill="#d8a53a"/>
+  <!-- cupboard + plant -->
+  <polygon points="1280,300 1560,300 1560,560 1280,560" fill="#7a5638"/>
+  <polygon points="1280,300 1560,300 1540,318 1300,318" fill="#9a7048"/>
+  <rect x="1300" y="330" width="116" height="200" fill="#8a6440"/><rect x="1424" y="330" width="116" height="200" fill="#8a6440"/>
+  <polygon points="1300,330 1416,330 1300,430" fill="#fff" opacity=".07"/><polygon points="1424,330 1540,330 1424,430" fill="#fff" opacity=".07"/>
+  <circle cx="1404" cy="440" r="8" fill="#d8a53a"/><circle cx="1436" cy="440" r="8" fill="#d8a53a"/>
+  <polygon points="1380,300 1460,300 1448,236 1392,236" fill="#b86a45"/><polygon points="1380,300 1460,300 1456,282 1384,282" fill="#d58a5e"/>
+  <polygon points="1420,236 1380,150 1408,150" fill="#3e594c"/><polygon points="1420,236 1470,130 1448,158" fill="#4a6757"/><polygon points="1420,236 1500,170 1462,200" fill="#3e594c"/><polygon points="1420,236 1350,190 1390,186" fill="#4a6757"/>
+  <!-- baseboard and floor -->
+  <rect y="546" width="1600" height="20" fill="#3c3326"/>
+  <rect y="566" width="1600" height="334" fill="#5e422c"/>
+  <g stroke="#3c2a1c" stroke-width="4" opacity=".55"><path d="M0 640H1600M0 726H1600M0 820H1600"/><path d="M200 566L40 900M520 566L420 900M800 566V900M1080 566L1180 900M1400 566L1560 900"/></g>
+  <polygon points="0,566 1600,566 1600,600 0,640" fill="#000" opacity=".12"/>
+  <ellipse cx="800" cy="700" rx="560" ry="150" fill="url(#glwkf)"/>
+  <!-- pendant lamp -->
+  <path d="M800 0V236" stroke="#3c3326" stroke-width="4"/>
+  <polygon points="720,300 880,300 846,236 754,236" fill="#3f5a7a"/><polygon points="720,300 880,300 868,288 732,288" fill="#6b8ab0"/>
+  <ellipse cx="800" cy="302" rx="34" ry="9" fill="#fff3d6"/>
+  <ellipse cx="800" cy="420" rx="480" ry="330" fill="url(#glwk)"/>
+</svg>
         <div class="caption" id="kCap">Who sat with you at lunch last Sunday?<span class="sub">SUNDAY · KITCHEN</span></div>
         <div class="ktable">
           <svg viewBox="0 0 200 72" aria-hidden="true"><use href="#table"/></svg>
@@ -316,27 +339,55 @@
       <section class="scr radio-pg" id="s-radio" aria-label="Radio room">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <rect width="1600" height="900" fill="#4a5c70"/>
-          <rect y="0" width="1600" height="420" fill="#6b7d93"/>
-          <rect x="80" y="60" width="1440" height="280" fill="#3d4f63"/>
-          <rect x="110" y="90" width="520" height="220" fill="#7aa3b8"/>
-          <rect x="110" y="90" width="520" height="220" fill="none" stroke="#2b241f" stroke-width="10"/>
-          <path d="M110 200h520M370 90v220" stroke="#2b241f" stroke-width="5"/>
-          <circle cx="1280" cy="150" r="48" fill="#f3b07a"/>
-          <rect y="420" width="1600" height="480" fill="#2c241e"/>
-          <ellipse cx="800" cy="780" rx="520" ry="70" fill="#1b140f"/>
-          <rect x="180" y="480" width="1240" height="220" rx="16" fill="#c9b08a"/>
-          <rect x="220" y="510" width="700" height="150" rx="8" fill="#1b140f"/>
-          <g stroke="#c9784a" stroke-width="3" opacity=".7">
-            <path d="M250 540h640M250 570h640M250 600h640M250 630h640"/>
-          </g>
-          <circle cx="1080" cy="585" r="70" fill="#2b241f"/>
-          <circle cx="1080" cy="585" r="28" fill="#8a9aab"/>
-          <circle cx="1240" cy="585" r="70" fill="#2b241f"/>
-          <circle cx="1240" cy="585" r="28" fill="#8a9aab"/>
-          <rect x="980" y="700" width="360" height="18" fill="#8a6244"/>
-          <path d="M0 900c80-160 200-220 340-200-20 70 0 140 20 200z" fill="#3f6b46"/>
-        </svg>
+  <defs>
+    <linearGradient id="rwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262a58"/><stop offset=".7" stop-color="#40386a"/><stop offset="1" stop-color="#5c4466"/></linearGradient>
+    <linearGradient id="dskr" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#1b1f45"/><stop offset=".35" stop-color="#403d78"/><stop offset=".62" stop-color="#8f5f8c"/>
+  <stop offset=".82" stop-color="#d58e7c"/><stop offset="1" stop-color="#f0bb88"/></linearGradient><radialGradient id="glwr"><stop offset="0" stop-color="rgba(255,214,140,.55)"/><stop offset="1" stop-color="rgba(255,214,140,0)"/></radialGradient><radialGradient id="glwrl"><stop offset="0" stop-color="rgba(255,206,130,.6)"/><stop offset="1" stop-color="rgba(255,206,130,0)"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#2a2018"/>
+  <rect y="0" width="1600" height="560" fill="url(#rwall)"/>
+  <polygon points="0,0 600,0 380,260" fill="#fff" opacity="0.04"/>
+  <polygon points="900,0 1600,0 1600,300 1180,140" fill="#000" opacity="0.07"/>
+  <polygon points="0,260 380,260 0,560" fill="#000" opacity="0.08"/>
+  <polygon points="1180,140 1600,300 1600,560 1300,560" fill="#fff" opacity="0.04"/>
+  <rect x="640" y="70" width="320" height="170" fill="url(#dskr)"/>
+  <polygon points="640,202.6 704.0,172.0 774.4,195.8 851.2,165.2 960,192.39999999999998 960,240 640,240" fill="#4b4a7c"/>
+  <polygon points="640,223.0 736.0,202.6 825.6,219.6 902.4,206.0 960,223.0 960,240 640,240" fill="#34406a"/>
+  <circle cx="889.6" cy="114.2" r="15.299999999999999" fill="#f6eed6"/>
+  <rect x="640" y="70" width="320" height="170" fill="none" stroke="#3c3326" stroke-width="16"/>
+  <path d="M640 155.0H960M800.0 70V240" stroke="#3c3326" stroke-width="9"/>
+  <rect x="620" y="246" width="360" height="16" fill="#8a6440"/><rect x="620" y="262" width="360" height="6" fill="#5a4130"/>
+  <!-- bookcase -->
+  <polygon points="1200,110 1520,110 1520,560 1200,560" fill="#7a5638"/>
+  <polygon points="1200,110 1520,110 1500,128 1220,128" fill="#a07650"/>
+  <g fill="#3c3326"><rect x="1222" y="250" width="276" height="10"/><rect x="1222" y="380" width="276" height="10"/><rect x="1222" y="500" width="276" height="10"/></g>
+  <g><rect x="1236" y="150" width="30" height="100" fill="#9c3b2e"/><rect x="1270" y="170" width="26" height="80" fill="#3f5a7a"/><rect x="1300" y="156" width="34" height="94" fill="#d8a53a"/><rect x="1338" y="180" width="24" height="70" fill="#697a5c"/><rect x="1366" y="150" width="30" height="100" fill="#efe6cf"/><rect x="1400" y="168" width="28" height="82" fill="#9c3b2e"/><rect x="1432" y="154" width="32" height="96" fill="#3f5a7a"/>
+  <rect x="1236" y="290" width="34" height="90" fill="#697a5c"/><rect x="1274" y="270" width="28" height="110" fill="#d8a53a"/><rect x="1306" y="300" width="32" height="80" fill="#9c3b2e"/><rect x="1342" y="284" width="26" height="96" fill="#efe6cf"/><rect x="1374" y="304" width="40" height="76" fill="#3f5a7a"/>
+  <rect x="1240" y="420" width="40" height="80" fill="#efe6cf"/><rect x="1284" y="436" width="30" height="64" fill="#9c3b2e"/><rect x="1318" y="414" width="34" height="86" fill="#697a5c"/></g>
+  <!-- armchair -->
+  <polygon points="90,420 380,420 400,640 70,640" fill="#697a5c"/>
+  <polygon points="90,420 380,420 360,450 110,450" fill="#7f9270"/>
+  <polygon points="70,520 400,520 420,640 50,640" fill="#56664a"/>
+  <polygon points="60,500 110,500 110,640 50,640" fill="#4a583f"/><polygon points="360,500 410,500 420,640 370,640" fill="#4a583f"/>
+  <rect x="86" y="640" width="14" height="40" fill="#3c3326"/><rect x="370" y="640" width="14" height="40" fill="#3c3326"/>
+  <!-- floor -->
+  <rect y="546" width="1600" height="20" fill="#3c3326"/>
+  <rect y="566" width="1600" height="334" fill="#4e3624"/>
+  <g stroke="#2e2014" stroke-width="4" opacity=".55"><path d="M0 640H1600M0 726H1600M0 820H1600"/><path d="M200 566L40 900M520 566L420 900M800 566V900M1080 566L1180 900M1400 566L1560 900"/></g>
+  <ellipse cx="800" cy="800" rx="460" ry="64" fill="#9c3b2e" opacity=".85"/><ellipse cx="800" cy="800" rx="380" ry="46" fill="none" stroke="#d8a53a" stroke-width="4" opacity=".7"/>
+  <!-- cabinet under the radio -->
+  <polygon points="520,520 1080,520 1100,708 500,708" fill="#8a6440"/>
+  <polygon points="520,520 1080,520 1096,540 504,540" fill="#a87c52"/>
+  <polygon points="500,708 1100,708 1100,726 500,726" fill="#3c3326"/>
+  <rect x="540" y="560" width="240" height="124" fill="#6e4e30"/><rect x="820" y="560" width="240" height="124" fill="#6e4e30"/>
+  <circle cx="760" cy="620" r="9" fill="#d8a53a"/><circle cx="840" cy="620" r="9" fill="#d8a53a"/>
+  <!-- floor lamp -->
+  <rect x="1130" y="300" width="9" height="410" fill="#3c3326"/><ellipse cx="1134" cy="712" rx="46" ry="12" fill="#3c3326"/>
+  <polygon points="1060,300 1210,300 1186,220 1084,220" fill="#d8a53a"/><polygon points="1060,300 1210,300 1200,284 1070,284" fill="#f0c866"/>
+  <ellipse cx="1134" cy="330" rx="330" ry="300" fill="url(#glwrl)"/>
+  <ellipse cx="800" cy="440" rx="430" ry="300" fill="url(#glwr)"/>
+</svg>
         <div class="caption" id="rCap">Find the song from the car on Tuesday<span class="sub">TUESDAY · IN THE CAR</span></div>
         <div class="setwrap"><svg viewBox="0 0 180 110"><use href="#radioset"/></svg></div>
         <div class="station" id="station">static</div>
@@ -351,29 +402,42 @@
       <section class="scr porch" id="s-porch" aria-label="Porch">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="gsky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#7aa3b8"/><stop offset="1" stop-color="#d7c49a"/>
-            </linearGradient>
-          </defs>
-          <rect width="1600" height="900" fill="url(#gsky)"/>
-          <circle cx="1240" cy="120" r="64" fill="#f3b07a"/>
-          <path d="M0 430c200-70 420-20 700-80 280-60 520 10 900 40v510H0z" fill="#4e8a62"/>
-          <path d="M0 620h1600v280H0z" fill="#c4a06a"/>
-          <rect x="160" y="0" width="16" height="900" fill="#5c3d28"/>
-          <rect x="1424" y="0" width="16" height="900" fill="#5c3d28"/>
-          <path d="M176 120h1248" stroke="#fff6ea" stroke-width="8" opacity=".35"/>
-          <path d="M80 900c50-280 160-380 280-400 30 110 50 250 70 400z" fill="#2f5536"/>
-          <path d="M1260 900c40-260 140-340 260-360 16 90 40 220 60 360z" fill="#3f6b46"/>
-          <ellipse cx="800" cy="700" rx="220" ry="24" fill="#8a6244"/>
-          <ellipse cx="800" cy="678" rx="190" ry="16" fill="#e2c48a"/>
-          <circle cx="700" cy="660" r="22" fill="#f4f0e6"/>
-          <circle cx="900" cy="660" r="22" fill="#f4f0e6"/>
-          <circle cx="800" cy="652" r="10" fill="#c9a24a"/>
-          <g fill="#c45c4a">
-            <circle cx="240" cy="500" r="10"/><circle cx="280" cy="520" r="8"/><circle cx="1320" cy="490" r="10"/>
-          </g>
-        </svg>
+  <defs>
+    <linearGradient id="dskp" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#1b1f45"/><stop offset=".35" stop-color="#403d78"/><stop offset=".62" stop-color="#8f5f8c"/>
+  <stop offset=".82" stop-color="#d58e7c"/><stop offset="1" stop-color="#f0bb88"/></linearGradient><radialGradient id="glwp"><stop offset="0" stop-color="rgba(255,222,160,.5)"/><stop offset="1" stop-color="rgba(255,222,160,0)"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#dskp)"/>
+  <circle cx="1240" cy="130" r="120" fill="url(#glwp)"/><circle cx="1240" cy="130" r="58" fill="#f6eed6"/>
+  <g fill="#fff"><circle cx="220" cy="90" r="2.4"/><circle cx="420" cy="50" r="2"/><circle cx="640" cy="120" r="2.6"/><circle cx="880" cy="60" r="2"/><circle cx="1020" cy="150" r="2.2"/><circle cx="1500" cy="80" r="2.4"/><circle cx="330" cy="190" r="1.8"/></g>
+  <polygon points="0,470 220,380 420,440 640,350 880,430 1100,340 1340,420 1600,360 1600,640 0,640" fill="#5d5a8a"/>
+  <polygon points="0,540 260,470 500,520 760,460 1020,520 1280,470 1600,530 1600,640 0,640" fill="#4d4c7d"/>
+  <polygon points="0,590 300,540 640,580 980,545 1300,585 1600,550 1600,660 0,660" fill="#34503f"/>
+  <polygon points="0,590 300,540 150,640 0,640" fill="#fff" opacity=".04"/>
+  <!-- porch floor -->
+  <rect y="640" width="1600" height="260" fill="#5e422c"/>
+  <g stroke="#3c2a1c" stroke-width="4" opacity=".6"><path d="M0 690H1600M0 750H1600M0 820H1600"/><path d="M300 640L140 900M700 640L620 900M1000 640L1060 900M1300 640L1480 900"/></g>
+  <rect y="628" width="1600" height="16" fill="#3c3326"/>
+  <!-- posts and beam -->
+  <polygon points="150,0 188,0 188,900 150,900" fill="#4a3424"/><polygon points="150,0 164,0 164,900 150,900" fill="#6b4a30"/>
+  <polygon points="1412,0 1450,0 1450,900 1412,900" fill="#4a3424"/><polygon points="1412,0 1426,0 1426,900 1412,900" fill="#6b4a30"/>
+  <rect x="150" y="0" width="1300" height="40" fill="#3c3326"/>
+  <path d="M188 118Q480 176 800 128T1412 118" fill="none" stroke="#2a2018" stroke-width="3"/>
+  <g fill="#ffe3a0"><circle cx="260" cy="140" r="9"/><circle cx="380" cy="156" r="9"/><circle cx="500" cy="158" r="9"/><circle cx="620" cy="150" r="9"/><circle cx="740" cy="134" r="9"/><circle cx="860" cy="134" r="9"/><circle cx="980" cy="146" r="9"/><circle cx="1100" cy="154" r="9"/><circle cx="1220" cy="148" r="9"/><circle cx="1340" cy="132" r="9"/></g>
+  <g fill="rgba(255,226,160,.28)"><circle cx="260" cy="140" r="26"/><circle cx="500" cy="158" r="26"/><circle cx="740" cy="134" r="26"/><circle cx="980" cy="146" r="26"/><circle cx="1220" cy="148" r="26"/></g>
+  <!-- bushes -->
+  <polygon points="60,900 120,640 250,560 330,640 400,900" fill="#2c4a3c"/><polygon points="60,900 120,640 250,560 210,760" fill="#3e594c"/>
+  <polygon points="1220,900 1280,660 1400,590 1500,650 1560,900" fill="#2c4a3c"/><polygon points="1400,590 1500,650 1560,900 1430,760" fill="#3e594c"/>
+  <g fill="#c25a48"><circle cx="230" cy="640" r="10"/><circle cx="286" cy="668" r="8"/><circle cx="1370" cy="660" r="10"/><circle cx="1440" cy="700" r="8"/></g>
+  <!-- tea table -->
+  <ellipse cx="800" cy="786" rx="260" ry="36" fill="#2a1c12" opacity=".55"/>
+  <polygon points="540,716 1060,716 1020,776 580,776" fill="#6e4e30"/>
+  <ellipse cx="800" cy="716" rx="260" ry="40" fill="#b98c5b"/><ellipse cx="800" cy="716" rx="260" ry="40" fill="none" stroke="#6b4a30" stroke-width="6"/>
+  <ellipse cx="690" cy="708" rx="30" ry="9" fill="#efe6cf"/><ellipse cx="910" cy="708" rx="30" ry="9" fill="#efe6cf"/>
+  <polygon points="772,704 828,704 822,666 778,666" fill="#d8a53a"/><polygon points="778,666 822,666 816,654 784,654" fill="#f0c866"/><circle cx="800" cy="648" r="7" fill="#9c3b2e"/>
+  <g fill="#ffe9a8"><circle cx="420" cy="500" r="5"/><circle cx="1180" cy="470" r="5"/><circle cx="640" cy="580" r="4"/><circle cx="1000" cy="560" r="4"/></g>
+  <g fill="rgba(255,233,168,.35)"><circle cx="420" cy="500" r="18"/><circle cx="1180" cy="470" r="18"/><circle cx="640" cy="580" r="14"/><circle cx="1000" cy="560" r="14"/></g>
+</svg>
         <div class="caption" id="pCap">Tell me about tea in the garden yesterday<span class="sub">YESTERDAY · GARDEN</span></div>
         <div class="chain" style="left:36%"></div><div class="chain" style="right:36%"></div>
         <div class="swing"><div class="print" id="porchPrint"></div></div>
@@ -388,21 +452,44 @@
       <section class="scr attic" id="s-attic" aria-label="Attic">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <rect width="1600" height="900" fill="#b08968"/>
-          <rect y="0" width="1600" height="70" fill="#7a4e32"/>
-          <rect y="540" width="1600" height="360" fill="#8a6244"/>
-          <rect x="120" y="100" width="1360" height="400" fill="#d7c4a6"/>
-          <rect x="120" y="100" width="1360" height="400" fill="none" stroke="#5c3d28" stroke-width="10"/>
-          <g>
-            <rect x="180" y="150" width="220" height="160" fill="#fff6ea" transform="rotate(-4 290 230)"/>
-            <rect x="480" y="170" width="220" height="160" fill="#e8c9a0" transform="rotate(3 590 250)"/>
-            <rect x="790" y="150" width="220" height="160" fill="#c5d6c0" transform="rotate(-2 900 230)"/>
-            <rect x="1100" y="180" width="220" height="160" fill="#f0e2cc" transform="rotate(5 1210 260)"/>
-          </g>
-          <rect x="200" y="620" width="280" height="160" fill="#c9784a"/>
-          <rect x="1120" y="600" width="320" height="180" fill="#6e4a32"/>
-          <ellipse cx="800" cy="820" rx="400" ry="40" fill="#5c3d28" opacity=".4"/>
-        </svg>
+  <defs>
+    <linearGradient id="awall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2552"/><stop offset="1" stop-color="#4a3a5a"/></linearGradient>
+    <radialGradient id="glwa"><stop offset="0" stop-color="rgba(255,205,130,.55)"/><stop offset="1" stop-color="rgba(255,205,130,0)"/></radialGradient><radialGradient id="glwaf"><stop offset="0" stop-color="rgba(255,200,120,.4)"/><stop offset="1" stop-color="rgba(255,200,120,0)"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#2a2018"/>
+  <rect y="0" width="1600" height="560" fill="url(#awall)"/>
+  <polygon points="0,0 800,0 0,330" fill="#000" opacity=".12"/><polygon points="1600,0 800,0 1600,330" fill="#000" opacity=".12"/>
+  <g stroke="#3c3326" stroke-width="22" stroke-linecap="square"><path d="M0 330L800 20M1600 330L800 20"/><path d="M0 190L420 30M1600 190L1180 30" opacity=".6"/></g>
+  <g stroke="#6b4a30" stroke-width="8" opacity=".7"><path d="M0 330L800 20M1600 330L800 20"/></g>
+  <rect x="300" y="260" width="1000" height="22" fill="#3c3326"/>
+  <!-- the photo wall -->
+  <rect x="130" y="130" width="1340" height="380" fill="#54415c"/>
+  <polygon points="130,130 700,130 400,510 130,510" fill="#fff" opacity=".04"/><polygon points="1470,130 1000,130 1200,510 1470,510" fill="#000" opacity=".1"/>
+  <rect x="130" y="130" width="1340" height="380" fill="none" stroke="#8a6440" stroke-width="14"/>
+  <rect x="130" y="496" width="1340" height="14" fill="#5a4130"/>
+  <!-- bare bulb -->
+  <path d="M800 0V96" stroke="#3c3326" stroke-width="4"/><rect x="788" y="96" width="24" height="22" fill="#3c3326"/><circle cx="800" cy="132" r="18" fill="#fff3d6"/>
+  <ellipse cx="800" cy="200" rx="560" ry="360" fill="url(#glwa)"/>
+  <!-- floor -->
+  <rect y="540" width="1600" height="20" fill="#3c3326"/>
+  <rect y="560" width="1600" height="340" fill="#4e3624"/>
+  <g stroke="#2e2014" stroke-width="4" opacity=".55"><path d="M0 640H1600M0 730H1600M0 825H1600"/><path d="M200 560L40 900M520 560L420 900M800 560V900M1080 560L1180 900M1400 560L1560 900"/></g>
+  <ellipse cx="800" cy="720" rx="640" ry="160" fill="url(#glwaf)"/>
+  <!-- trunk -->
+  <polygon points="200,640 480,640 520,610 240,610" fill="#c49660"/>
+  <polygon points="200,640 480,640 480,770 200,770" fill="#a77d50"/>
+  <rect x="200" y="640" width="280" height="22" fill="#6b4a30"/><rect x="232" y="640" width="18" height="130" fill="#6b4a30"/><rect x="430" y="640" width="18" height="130" fill="#6b4a30"/>
+  <rect x="326" y="640" width="28" height="34" fill="#d8a53a"/>
+  <polygon points="480,640 520,610 520,740 480,770" fill="#7a5638"/>
+  <!-- rocking horse -->
+  <path d="M1110 760Q1270 840 1430 760" fill="none" stroke="#9c3b2e" stroke-width="12" stroke-linecap="round"/>
+  <polygon points="1160,744 1180,640 1370,640 1390,744 1350,744 1340,690 1210,690 1200,744" fill="#efe6cf"/>
+  <polygon points="1330,650 1396,560 1450,590 1424,650" fill="#efe6cf"/><polygon points="1396,560 1470,590 1424,612" fill="#d9ceb4"/>
+  <polygon points="1330,650 1316,580 1344,572 1356,640" fill="#9c3b2e"/><circle cx="1424" cy="580" r="5" fill="#3c3326"/>
+  <polygon points="1170,640 1130,690 1150,700 1196,660" fill="#9c3b2e"/><rect x="1260" y="624" width="64" height="16" fill="#9c3b2e"/>
+  <!-- boxes -->
+  <polygon points="960,700 1080,700 1080,780 960,780" fill="#c4a477"/><polygon points="960,700 1080,700 1100,684 980,684" fill="#d9bd92"/><polygon points="1080,700 1100,684 1100,764 1080,780" fill="#9a7c52"/>
+</svg>
         <div class="caption" id="aCap">Which photo came first this week?<span class="sub">THIS WEEK · PHOTOGRAPHS</span></div>
         <div class="shelfline" id="shelf"><div class="rule"></div><div class="ends"><span>EARLIER</span><span>LATER</span></div></div>
         <div class="boxlbl">the photo box</div>
