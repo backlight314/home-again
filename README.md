@@ -40,7 +40,12 @@ The album recognizes family members it has been taught, so photos don't need sor
 
 - Faces are found and described (a list of 128 numbers per face) **in the browser**, using [`@vladmandic/face-api`](https://github.com/vladmandic/face-api) served from this server. Photos are never sent to an outside face service; only those numbers are stored, in `data/`.
 - Teach it a person by naming a detected face (click the box on a photo) or by making a portrait. A portrait with one face teaches that face automatically.
-- New photos are matched against everyone it knows (`faces.js`). Clear matches are filled in as guesses (yellow, "check names"), near misses show as "Bob?", and unknown faces as "Who is this?". Nothing counts as confirmed until a person clicks "Names look right" or names the face, and each confirmation teaches it more.
+- New photos are matched against everyone it knows (`faces.js`), conservatively, because a wrong name is worse than no name:
+  - A name is filled in automatically (yellow, "check names") only when two of that person's confirmed faces both match closely, the face is large and clear, and no one else comes close. With only one confirmed face, the album asks "Bob?" at most.
+  - Weaker matches, small faces, and anyone resembling a face the family rejected stay "Who is this?".
+  - "Not Bob" is remembered for that face and counts against Bob for lookalikes; on a confirmed face it also removes it from Bob's samples.
+  - Nothing counts as confirmed until a person says yes, clicks "Names look right" or names the face.
+- The cutoffs were measured on photos of nine different Asian women, after face-api's recognizer matched different Asian women too easily. Replaying the album on that test set, the current rules gave no wrong names and no wrong questions. The earlier rules filled in wrong names and asked about the wrong person hundreds of times. Existing guesses are re-checked whenever the rules change.
 - Clicking "Save as their portrait too" on a face crops it into that person's portrait in one step.
 - Photos added before this, or while it was off, are checked in the background when the album opens.
 - "Face recognition is on · turn off" forgets every face it has learned. Names already on photos stay.

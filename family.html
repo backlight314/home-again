@@ -287,10 +287,13 @@
         <div class="top"><canvas id="fPreview" width="96" height="96"></canvas><span class="q" id="fQuestion"></span></div>
         <label class="field">NAME<input type="text" id="fName" list="familyNames" placeholder="Bob"></label>
         <label class="field" id="fRelWrap" hidden>HOW THEY ARE RELATED TO THEM<input type="text" id="fRel" placeholder="son"></label>
+        <div class="actions" id="fGuessRow" hidden>
+          <button class="tool primary" id="fYes"></button>
+          <button class="tool" id="fNo"></button>
+        </div>
         <div class="actions">
           <button class="tool primary" id="fSave">Save name</button>
           <button class="tool" id="fPortrait">Save as their portrait too</button>
-          <button class="tool" id="fClear" hidden>Remove name</button>
           <button class="tool" id="fNotFace">Not a face</button>
         </div>
       </div>
@@ -425,7 +428,7 @@
       const found = await f.detectAllFaces(source, new f.SsdMobilenetv1Options({ minConfidence: 0.5 })).withFaceLandmarks().withFaceDescriptors();
       return found.filter(d => d.detection.box.width >= 24).map(d => {
         const b = d.detection.box;
-        return { box: { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }, descriptor: Array.from(d.descriptor) };
+        return { box: { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }, score: d.detection.score, descriptor: Array.from(d.descriptor) };
       });
     } catch (err) { console.warn('Face detection failed:', err); return undefined; }
   }
@@ -517,6 +520,7 @@
   const portraitIds = () => new Set(mat.people.map(f => f.photoId).filter(Boolean));
   const needsDetails = ph => !ph.caption || !ph.year;
   const guessed = ph => (ph.faces || []).some(f => f.status === 'auto' || f.status === 'suggested');
+  const filledIn = ph => (ph.faces || []).some(f => f.status === 'auto');
   function useState(r) {
     if (r.materials) mat = r.materials;
     if (r.progress) {
@@ -712,7 +716,7 @@
     const layer = $('faceLayer');
     layer.innerHTML = '';
     const faces = (current.faces || []).filter(f => f.status !== 'notface' && f.box.w > 0);
-    $('dConfirm').hidden = !guessed(current);
+    $('dConfirm').hidden = !filledIn(current);
     if (!$('cropUi').hidden || !$('dImg').naturalWidth) return;
     const ir = imageRect(), wr = $('cropwrap').getBoundingClientRect();
     for (const f of faces) {
@@ -735,10 +739,15 @@
     if (!f) return;
     activeFace = id;
     const name = personName(f.personId);
-    $('fQuestion').textContent = f.status === 'confirmed' && name ? 'This is ' + name + '.' : name ? 'Is this ' + name + '?' : 'Who is this?';
-    $('fName').value = name || '';
+    const guess = name && f.status !== 'confirmed';
+    $('fQuestion').textContent = !name ? 'Who is this?' : guess ? 'Is this ' + name + '?' : 'This is ' + name + '.';
+    // a guess gets a yes/no; a confirmed name can still be undone with "Not ..."
+    $('fGuessRow').hidden = !name;
+    $('fYes').hidden = !guess; $('fYes').textContent = 'Yes, it\'s ' + (name || '');
+    $('fNo').textContent = 'Not ' + (name || '');
+    $('fName').value = guess ? '' : name || '';
+    $('fName').placeholder = guess ? 'Or someone else' : 'Bob';
     $('fRelWrap').hidden = true; $('fRel').value = '';
-    $('fClear').hidden = !f.personId;
     // small preview of just this face
     const c = $('fPreview'), g = c.getContext('2d');
     g.clearRect(0, 0, c.width, c.height);
@@ -760,11 +769,12 @@
     } catch (err) { status('dStatus', err.message, true); }
   }
   $('fSave').onclick = () => faceAction({ person: $('fName').value, relation: $('fRel').value });
-  $('fClear').onclick = () => faceAction({ clear: true });
+  $('fYes').onclick = () => faceAction({ person: personName(current.faces.find(x => x.id === activeFace)?.personId) });
+  $('fNo').onclick = () => faceAction({ reject: true });
   $('fNotFace').onclick = () => faceAction({ notFace: true });
   // one click: name the face and crop it (with some room around it) as their portrait
   $('fPortrait').onclick = async () => {
-    const f = current.faces.find(x => x.id === activeFace), person = $('fName').value.trim();
+    const f = current.faces.find(x => x.id === activeFace), person = $('fName').value.trim() || personName(f.personId);
     if (!person) return status('dStatus', 'Write whose face this is.', true);
     const img = $('dImg'), pad = 0.35;
     const x = Math.max(0, f.box.x - f.box.w * pad), y = Math.max(0, f.box.y - f.box.h * pad);
