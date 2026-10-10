@@ -6,5 +6,9 @@ const S = {
   seatNext: 'And the next chair?',
   seatDone: 'Everyone is home.',
   putIn: 'PUT IT IN THE ALBUM',
-  closeMemory: 'BACK TO THE ALBUM'
+  closeMemory: 'BACK TO THE ALBUM',
+  placed: 'Another memory is home.',
+  bookFull: 'This album is full of memories.',
+  bookComplete: 'complete',
+  bookProgress: (n, m) => n + ' of ' + m + ' memories'
 };

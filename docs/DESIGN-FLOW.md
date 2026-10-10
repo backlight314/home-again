@@ -72,3 +72,14 @@ Welcome, Life map, Family chapter (Sunday table reunion, Porch story), photo pag
 - The memory card develops from sepia to colour, plays the family voice line, and **PUT IT IN THE ALBUM** flies the photo into the Family slot while the player watches. The slip gets a sage dot. Tapping a placed photo reopens its memory.
 - The radio, attic, letter strips and letter ending are gone from the flow.
 - Visual reference: *As Long As You're Here* (top-down desk, scattered photos, handwritten labels), kept 2D and tap-only.
+
+## 7. Update: five albums on a shelf (built)
+
+Supersedes section 6's single album page.
+
+- Cover, COME IN, then the **albums screen**: five books lie on the desk with Childhood, School & young adult, Work, Family and Today on their covers. Each shows "n of m memories"; a finished book gets a gold ribbon and reads "complete".
+- Tap a book: it zooms to full screen, the cover swings open, and you land on **that book's album page** (paper sheet, one empty slot per memory, pinned slips naming each memory).
+- Each pinned slip is one memory. Family has two playable ones: **Sunday table** (kitchen) and **Porch stories**. Slips in the other books say "coming soon" for now.
+- Finish a memory, watch its photo fly into its slot. When every slot is filled the book is complete ("This album is full of memories.") and the cover on the shelf gets its ribbon.
+- **close the book** returns to the shelf; **close the albums** returns to the cover.
+- Data: `chapters[].memories[]` in `js/data.js`; layout of slots by memory count is in `js/app.js`.

@@ -107,17 +107,25 @@
       <div class="sig">Your family left you something.<br>Come and look.</div>
       <div class="housewrap"><svg viewBox="0 0 120 96"><use href="#house"/></svg></div>
       <div class="bird" style="left:41%;top:9%;width:13%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="pressbtn go" data-go="album" style="position:absolute;left:7.4cqw;bottom:4cqw">COME IN</button>
+      <button class="pressbtn go" data-go="shelf" style="position:absolute;left:7.4cqw;bottom:4cqw">COME IN</button>
     </section>
 
-    <!-- the album page -->
-    <section class="scr album-pg" id="s-album" aria-label="The album">
+    <!-- the shelf of albums -->
+    <section class="scr album-pg shelf-pg" id="s-shelf" aria-label="The albums">
+      <div class="desk"></div>
+      <div class="caption shelfcap">Which album today?<span class="sub">TAP ONE TO OPEN IT</span></div>
+      <div class="books" id="books"></div>
+      <div class="bird" style="left:5%;bottom:4%;width:8%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
+      <button class="quietbtn closebtn" data-go="intro">close the albums</button>
+    </section>
+
+    <!-- one album's page -->
+    <section class="scr album-pg" id="s-album" aria-label="The album page">
       <div class="desk"></div>
       <div class="sheetpg" id="sheetpg"></div>
       <div id="tags"></div>
       <div class="bird" style="left:11%;bottom:3%;width:8%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
-      <button class="quietbtn closebtn" data-go="intro">close the album</button>
-      <div class="toast" id="toast" role="status"></div>
+      <button class="quietbtn closebtn" data-go="shelf">close the book</button>
     </section>
 
     <!-- kitchen -->
@@ -133,7 +141,7 @@
       <div class="bird" style="left:3%;top:46%;width:10%"><svg viewBox="0 0 100 70"><use href="#bird"/></svg></div>
       <div class="said" id="kSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="kSaidText"></span></div>
       <div class="krow" id="kRow"></div>
-      <button class="pressbtn red hide" id="kNext" style="position:absolute;right:3cqw;top:9cqw">ON TO THE PORCH</button>
+      <button class="pressbtn red hide" id="kNext" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
       <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
 
@@ -151,6 +159,8 @@
       <button class="pressbtn red hide" id="porchTake" style="position:absolute;right:3cqw;top:9cqw">KEEP THIS MEMORY</button>
       <button class="quietbtn" data-go="album" style="right:3cqw;bottom:3cqw">skip this one</button>
     </section>
+
+    <div class="toast" id="toast" role="status"></div>
 
     <!-- memory reveal -->
     <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">

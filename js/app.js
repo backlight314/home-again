@@ -1,35 +1,90 @@
 const $ = id => document.getElementById(id);
-const placed = {};            // chapter id -> true once its memory is in the album
-let pendingPlace = null;      // chapter id waiting to be placed with the animation
-let viewing = null;           // chapter id whose memory is open in the overlay
+const placed = {};            // memory id -> true once its photo is in its book
+let currentBook = 'family';   // chapter id of the open book
+let pendingPlace = null;      // memory id waiting to be placed with the animation
+let viewing = null;           // memory id open in the overlay
 let rereading = false;
 const face = n => '<svg viewBox="0 0 100 80" style="' + people[n] + '"><use href="#person"/></svg>';
 let timers = [];
 const later = (fn, ms) => timers.push(setTimeout(fn, ms));
 const clearAll = () => { timers.forEach(clearTimeout); timers = []; };
 const chapter = id => chapters.find(c => c.id === id);
+const memory = id => chapters.flatMap(c => c.memories).find(m => m.id === id);
+const bookOf = id => chapters.find(c => c.memories.some(m => m.id === id));
+const done = c => c.memories.filter(m => placed[m.id]).length;
+const complete = c => done(c) === c.memories.length;
 // Album photos carry no caption on the page; the caption and voice are in the memory overlay (tap the photo).
-const memPrint = c => '<svg viewBox="0 0 120 80"><use href="#' + c.memory.scene + '"/></svg>';
+const memPrint = m => '<svg viewBox="0 0 120 80"><use href="#' + m.scene + '"/></svg>';
 
-/* album page */
-function buildAlbum() {
-  const sheet = $('sheetpg'); sheet.innerHTML = '';
+/* slot positions on the sheet, by how many memories the book holds: [left %, top %, rotation] */
+const layout = {
+  1: [[33, 32, .8]],
+  2: [[8, 30, -2], [58, 30, 1.6]],
+  3: [[8, 10, -2], [58, 8, 1.6], [33, 52, .8]],
+  4: [[8, 9, -2], [58, 8, 1.6], [6, 50, 1.2], [56, 50, -1.6]]
+};
+/* pinned slip positions, in the order memories use them */
+const slipSpots = ['t1', 't4', 't2', 't5'];
+
+/* the shelf of books */
+function buildShelf() {
+  const box = $('books'); box.innerHTML = '';
   chapters.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'book b' + (i + 1) + (complete(c) ? ' full' : '');
+    b.style.setProperty('--bk', c.color);
+    b.dataset.id = c.id;
+    b.setAttribute('aria-label', c.title + ', ' + done(c) + ' of ' + c.memories.length + ' memories');
+    b.innerHTML = '<span class="plate">' + c.title + '</span><span class="prog">'
+      + (complete(c) ? S.bookComplete : S.bookProgress(done(c), c.memories.length)) + '</span>';
+    b.onclick = () => openBook(c.id, b);
+    box.appendChild(b);
+  });
+}
+/* zoom a book to full screen, open its cover, land on its album page */
+function openBook(id, el) {
+  currentBook = id;
+  const scr = $('screen').getBoundingClientRect(), r = el.getBoundingClientRect();
+  const fly = document.createElement('div');
+  fly.className = 'bookfly';
+  fly.style.setProperty('--bk', chapter(id).color);
+  fly.innerHTML = el.innerHTML;
+  fly.style.cssText += ';left:' + (r.left - scr.left) + 'px;top:' + (r.top - scr.top) + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+  el.style.visibility = 'hidden';
+  $('screen').appendChild(fly);
+  // plain timeouts: show() clears the managed timers, and the flyer must outlive that
+  setTimeout(() => { fly.style.left = '0px'; fly.style.top = '0px'; fly.style.width = scr.width + 'px'; fly.style.height = scr.height + 'px'; fly.classList.add('zoomed'); }, 30);
+  setTimeout(() => { show('album', true); fly.classList.add('opening'); }, 1000);
+  setTimeout(() => fly.remove(), 2100);
+}
+
+/* a book's album page */
+function buildAlbum() {
+  const book = chapter(currentBook), sheet = $('sheetpg'), n = book.memories.length;
+  sheet.innerHTML = ''; sheet.dataset.title = book.title.toUpperCase();
+  book.memories.forEach((m, i) => {
+    const [l, t, rot] = layout[n][i];
     const slot = document.createElement('div');
-    slot.className = 'slot s' + (i + 1) + (placed[c.id] ? ' filled' : '');
-    slot.id = 'slot-' + c.id;
+    slot.className = 'slot' + (placed[m.id] ? ' filled' : '');
+    slot.id = 'slot-' + m.id;
+    slot.style.cssText = 'left:' + l + '%;top:' + t + '%;transform:rotate(' + rot + 'deg)';
     slot.innerHTML = '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>'
-      + (c.memory ? '<button class="print" aria-label="' + c.memory.caption + '">' + (placed[c.id] ? memPrint(c) : '') + '</button>' : '');
+      + (m.scene ? '<button class="print" aria-label="' + m.caption + '">' + (placed[m.id] ? memPrint(m) : '') + '</button>' : '');
     const pr = slot.querySelector('.print');
-    if (pr) pr.onclick = () => { if (placed[c.id]) { rereading = true; openMemory(c.id); } };
+    if (pr) pr.onclick = () => { if (placed[m.id]) { rereading = true; openMemory(m.id); } };
     sheet.appendChild(slot);
   });
   const tags = $('tags'); tags.innerHTML = '';
-  chapters.forEach((c, i) => {
+  book.memories.forEach((m, i) => {
     const b = document.createElement('button');
-    b.className = 'slip-tag t' + (i + 1) + (c.playable && !placed[c.id] ? ' open' : '') + (placed[c.id] ? ' done' : '');
-    b.innerHTML = '<span>' + c.title + (c.playable && !placed[c.id] ? '<small>' + S.open + '</small>' : '') + '</span>';
-    b.onclick = () => { if (c.playable) show(c.id === 'family' ? 'kitchen' : c.id); else toast(S.comingSoon); };
+    const playable = !!m.activity, isDone = !!placed[m.id];
+    b.className = 'slip-tag ' + slipSpots[i] + (playable && !isDone ? ' open' : '') + (isDone ? ' done' : '');
+    b.innerHTML = '<span>' + m.title + (playable && !isDone ? '<small>' + S.open + '</small>' : '') + '</span>';
+    b.onclick = () => {
+      if (isDone) { rereading = true; openMemory(m.id); }
+      else if (playable) show(m.activity);
+      else toast(S.comingSoon);
+    };
     tags.appendChild(b);
   });
 }
@@ -38,11 +93,11 @@ function toast(msg) {
   clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 3600);
 }
 function placeMemory(id) {
-  const c = chapter(id), slot = $('slot-' + id), scr = $('screen').getBoundingClientRect();
+  const m = memory(id), slot = $('slot-' + id), scr = $('screen').getBoundingClientRect();
   const r = slot.getBoundingClientRect();
   const fly = document.createElement('div');
   fly.className = 'flyer';
-  fly.innerHTML = '<div class="print">' + memPrint(c) + '</div>';
+  fly.innerHTML = '<div class="print">' + memPrint(m) + '</div>';
   fly.style.cssText = 'left:' + (scr.width * .3) + 'px;top:' + (scr.height * .22) + 'px;width:' + (scr.width * .4) + 'px;transform:rotate(-1.4deg)';
   $('screen').appendChild(fly);
   later(() => {
@@ -51,16 +106,18 @@ function placeMemory(id) {
   }, 450);
   later(() => {
     placed[id] = true; buildAlbum(); fly.remove();
-    toast('Another memory is home.');
+    toast(complete(chapter(currentBook)) ? S.bookFull : S.placed);
   }, 2100);
 }
 
-function show(name) {
+function show(name, keepFly) {
   clearAll();
+  if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach(f => f.remove());
   document.querySelectorAll('#screen .flyer').forEach(f => f.remove());
   document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
   $('chrome').classList.toggle('on', name !== 'intro');
   document.querySelectorAll('#controls button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === name));
+  if (name === 'shelf') buildShelf();
   if (name === 'album') { buildAlbum(); if (pendingPlace) { const id = pendingPlace; pendingPlace = null; placeMemory(id); } }
   if (name === 'kitchen') initKitchen();
   if (name === 'porch') initPorch();
@@ -69,11 +126,11 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => show(b.dat
 
 /* memory overlay */
 function openMemory(id) {
-  const c = chapter(id); viewing = id;
-  $('mUse').setAttribute('href', '#' + c.memory.scene);
-  $('mCap').textContent = c.memory.caption;
-  $('mLine').textContent = '“' + c.memory.line + '”';
-  $('mBy').textContent = 'recorded by ' + c.memory.by;
+  const m = memory(id); viewing = id;
+  $('mUse').setAttribute('href', '#' + m.scene);
+  $('mCap').textContent = m.caption;
+  $('mLine').textContent = '“' + m.line + '”';
+  $('mBy').textContent = 'recorded by ' + m.by;
   $('mWave').classList.remove('on');
   $('mDone').textContent = rereading ? S.closeMemory : S.putIn;
   const pr = $('mPrint'); pr.classList.remove('developed');
@@ -83,13 +140,13 @@ function openMemory(id) {
 $('mPlay').onclick = () => { $('mWave').classList.add('on'); later(() => $('mWave').classList.remove('on'), 2600); };
 $('mDone').onclick = () => {
   $('reveal').classList.remove('on');
-  if (!rereading) pendingPlace = viewing;
+  if (!rereading) { pendingPlace = viewing; currentBook = bookOf(viewing).id; }
   rereading = false;
   show('album');
 };
 $('restBtn').onclick = () => $('rest').classList.add('on');
 $('restKeep').onclick = () => $('rest').classList.remove('on');
-$('restHome').onclick = () => { $('rest').classList.remove('on'); show('album'); };
+$('restHome').onclick = () => { $('rest').classList.remove('on'); show('shelf'); };
 
 /* kitchen: the Sunday table, reunion first */
 let round = 0;
@@ -133,7 +190,7 @@ function pick(n, btn, list) {
     later(() => $('kNext').classList.remove('hide'), 1200);
   }
 }
-$('kNext').onclick = () => show('porch');
+$('kNext').onclick = () => { rereading = false; openMemory('table'); };
 
 /* porch: tell the story of one photo */
 let talking = false;
@@ -162,11 +219,10 @@ $('mic').onclick = () => {
   };
   step();
 };
-// Finishing the porch finishes the Family chapter and earns its memory.
-$('porchTake').onclick = () => { rereading = false; openMemory('family'); };
+$('porchTake').onclick = () => { rereading = false; openMemory('lake'); };
 
 /* review strip (design review only) */
-[['intro','Cover'],['album','Album'],['kitchen','Kitchen'],['porch','Porch']]
+[['intro','Cover'],['shelf','Albums'],['album','Album page'],['kitchen','Kitchen'],['porch','Porch']]
   .forEach(([k, label]) => {
     const b = document.createElement('button'); b.textContent = label; b.dataset.jump = k;
     b.onclick = () => { $('reveal').classList.remove('on'); $('rest').classList.remove('on'); rereading = false; show(k); };
