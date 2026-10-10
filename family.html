@@ -10,10 +10,8 @@
 <style>
   :root {
     color-scheme: light dark;
-    --ink: #23344f;
     --stamp: #9c3b2e;
     --sage: #697a5c;
-    --crayon: #d8a53a;
     --display: "Petrona", "Iowan Old Style", Georgia, serif;
     --type: "Courier Prime", "Courier New", monospace;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -23,180 +21,237 @@
     --card: #faf5e8;
     --card-edge: #a89c84;
     --field: #fffdf7;
+    --mine: #23344f;
+    --mine-text: #f3eddf;
     --accent: var(--stamp);
+    --done: var(--sage);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19; --accent: #d77a6a;
+      --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19;
+      --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a;
     }
   }
-  :root[data-theme="dark"] { --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19; --accent: #d77a6a; }
+  :root[data-theme="dark"] {
+    --page-bg: #1c1915; --page-text: #e9e1d0; --page-soft: #a79d89; --card: #2a251f; --card-edge: #534a3c; --field: #221e19;
+    --mine: #3a4a66; --mine-text: #f3eddf; --accent: #d77a6a; --done: #9bb08a;
+  }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--page-bg); color: var(--page-text); font-family: var(--sans); line-height: 1.5;
-    padding: calc(26px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px));
-  }
-  button, input, textarea, select { font: inherit; color: inherit; }
-  button { cursor: pointer; }
+  html, body { height: 100%; }
+  body { background: var(--page-bg); color: var(--page-text); font-family: var(--sans); line-height: 1.5; }
+  button, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; background: none; border: none; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .wrap { max-width: 860px; margin: 0 auto; display: grid; gap: 20px; }
 
-  header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 5vw, 42px); line-height: 1.05; }
-  header p { color: var(--page-soft); font-size: 17px; max-width: 64ch; margin-top: 6px; }
-  header nav { margin-top: 10px; font-family: var(--type); font-size: 14px; }
-  header nav a { color: var(--accent); }
+  .app { height: 100dvh; display: grid; grid-template-rows: auto 1fr; max-width: 1120px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 10px; }
+  header h1 { font-family: var(--display); font-weight: 600; font-size: clamp(24px, 4vw, 32px); line-height: 1.1; }
+  header .links { display: flex; gap: 16px; font-family: var(--type); font-size: 14px; }
+  header .links a, header .links button { color: var(--page-soft); text-decoration: underline; }
 
-  section { background: var(--card); border: 1px solid var(--card-edge); padding: 20px; display: grid; gap: 14px; }
-  section h2 { font-family: var(--display); font-weight: 600; font-size: 24px; display: flex; gap: 10px; align-items: baseline; }
-  section h2 .num { font-family: var(--type); font-size: 14px; color: var(--accent); letter-spacing: .08em; }
-  section > p.hint { color: var(--page-soft); font-size: 15px; max-width: 64ch; margin-top: -8px; }
+  .main { display: grid; grid-template-columns: 1fr 280px; gap: 16px; padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px)); min-height: 0; }
+  @media (max-width: 820px) { .main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; } }
 
-  label { display: grid; gap: 4px; font-family: var(--type); font-size: 13px; letter-spacing: .03em; color: var(--page-soft); }
-  input[type=text], textarea, select { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); width: 100%; }
-  textarea { min-height: 84px; resize: vertical; }
-  .grid2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  /* conversation */
+  .chat { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; min-width: 0; background: var(--card); border: 1px solid var(--card-edge); }
+  .log, .composer { min-width: 0; }
+  .log { overflow-y: auto; padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: min(560px, 88%); display: grid; gap: 6px; }
+  .msg .who { font-family: var(--type); font-size: 12px; letter-spacing: .1em; color: var(--page-soft); }
+  .msg .body { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.guide .body { font-family: var(--display); font-size: 19px; line-height: 1.45; }
+  .msg.family { align-self: flex-end; justify-items: end; }
+  .msg.family .body { background: var(--mine); color: var(--mine-text); padding: 10px 14px; font-size: 16px; }
+  .msg .att { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .msg .att img { width: 140px; height: 105px; object-fit: cover; border: 6px solid var(--field); box-shadow: 0 2px 6px rgba(40,30,15,.25); }
+  .msg .att audio { width: 240px; max-width: 100%; }
+  .msg.err .body { color: var(--accent); font-family: var(--type); font-size: 14px; }
+  .typing { display: flex; gap: 5px; padding: 8px 0; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--page-soft); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
 
-  .btn { font-family: var(--type); font-weight: 700; font-size: 15px; letter-spacing: .04em; padding: 9px 16px; background: var(--field); color: var(--page-text); border: 2px solid var(--page-text); }
-  .btn.primary { border-color: var(--accent); color: var(--accent); }
-  .btn.big { font-size: 17px; padding: 12px 22px; }
-  .btn:disabled { opacity: .5; cursor: default; }
-  .link { background: none; border: none; font-family: var(--type); font-size: 13px; color: var(--page-soft); text-decoration: underline; padding: 0; }
-  .filebtn { position: relative; overflow: hidden; display: inline-block; }
-  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  /* composer */
+  .composer { border-top: 1px solid var(--card-edge); padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .tray { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tray:empty { display: none; }
+  .chip { position: relative; display: flex; align-items: center; gap: 8px; background: var(--field); border: 1px solid var(--card-edge); padding: 4px; }
+  .chip img { width: 56px; height: 42px; object-fit: cover; display: block; }
+  .chip audio { width: 200px; height: 32px; }
+  .chip .x { width: 24px; height: 24px; font-size: 18px; line-height: 1; color: var(--page-soft); }
+  .row { display: flex; gap: 8px; align-items: flex-end; }
+  textarea { flex: 1; min-width: 0; resize: none; min-height: 44px; max-height: 180px; background: var(--field); border: 1px solid var(--card-edge); padding: 10px 12px; font-size: 16px; color: var(--page-text); }
+  .tool { height: 44px; min-width: 44px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--card-edge); background: var(--field); font-family: var(--type); font-size: 13px; }
+  .tool svg { width: 20px; height: 20px; flex: none; }
+  .tool.live { border-color: var(--accent); color: var(--accent); }
+  .tool.send { background: var(--mine); color: var(--mine-text); border-color: var(--mine); }
+  .tool:disabled { opacity: .45; cursor: default; }
+  .tool .lbl { display: inline; }
+  @media (max-width: 520px) { .tool .lbl { display: none; } }
+  .hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-  .items { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
-  .item { border: 1px solid var(--card-edge); background: var(--field); padding: 8px; display: grid; gap: 6px; align-content: start; }
-  .item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--card-edge); }
-  .item .t { font-weight: 600; font-size: 15px; }
-  .item .s { font-size: 13px; color: var(--page-soft); }
-  .item audio { width: 100%; height: 34px; }
-  .list { display: grid; gap: 8px; }
-  .list .item { grid-template-columns: 1fr auto; align-items: start; }
-
-  .recorder { display: flex; align-items: center; gap: 12px; }
-  .recdot { width: 14px; height: 14px; border-radius: 50%; background: var(--card-edge); }
-  .recdot.on { background: var(--stamp); animation: pulse 1s ease-in-out infinite alternate; }
-  @keyframes pulse { from { opacity: .4; } to { opacity: 1; } }
-  .preview audio { width: 100%; }
-
-  .agent { border: 2px solid var(--accent); }
-  .status { font-family: var(--type); font-size: 14px; color: var(--page-soft); min-height: 1.5em; }
-  .status.err { color: var(--accent); }
-  .summary { font-family: var(--display); font-size: 19px; line-height: 1.45; }
-  .rooms { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .room { border: 1px solid var(--card-edge); background: var(--field); padding: 12px; display: grid; gap: 6px; align-content: start; }
-  .room h3 { font-family: var(--type); font-size: 13px; letter-spacing: .1em; color: var(--accent); font-weight: 700; }
-  .room .line { font-family: var(--display); font-style: italic; font-size: 16px; }
-  .room .meta { font-size: 13px; color: var(--page-soft); }
-  .room .thumbs { display: flex; gap: 6px; }
-  .room .thumbs img { width: 56px; height: 42px; object-fit: cover; }
-  .qs { display: grid; gap: 10px; }
-  .qs label { font-family: var(--sans); font-size: 15px; color: var(--page-text); letter-spacing: 0; }
-  .empty { color: var(--page-soft); font-size: 14px; font-style: italic; }
-  @media (prefers-reduced-motion: reduce) { .recdot.on { animation: none; } }
+  /* what the guide has gathered */
+  aside { display: grid; gap: 14px; align-content: start; overflow-y: auto; min-height: 0; }
+  .panel { background: var(--card); border: 1px solid var(--card-edge); padding: 14px; display: grid; gap: 10px; }
+  .panel h2 { font-family: var(--type); font-size: 12px; letter-spacing: .12em; color: var(--page-soft); font-weight: 700; }
+  .check { list-style: none; display: grid; gap: 6px; font-size: 15px; }
+  .check li { display: flex; align-items: center; gap: 8px; }
+  .check .box { width: 16px; height: 16px; border: 1.5px solid var(--card-edge); flex: none; display: grid; place-items: center; }
+  .check li.done .box { background: var(--done); border-color: var(--done); }
+  .check li.done .box::after { content: ""; width: 8px; height: 4px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: rotate(-45deg) translate(1px, -1px); }
+  .check .n { margin-left: auto; font-family: var(--type); font-size: 12px; color: var(--page-soft); }
+  .play { display: block; text-align: center; font-family: var(--type); font-weight: 700; letter-spacing: .04em; padding: 10px; border: 2px solid var(--accent); color: var(--accent); text-decoration: none; }
+  .play[hidden] { display: none; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+  .thumbs img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .people { font-size: 14px; color: var(--page-soft); }
+  /* on phones: a compact checklist above the conversation */
+  @media (max-width: 820px) {
+    aside { order: -1; overflow: visible; }
+    .panel { padding: 8px 10px; gap: 6px; }
+    .panel h2 { display: none; }
+    .panel.saved { display: none; }
+    .check { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+    .check .n { margin-left: 0; }
+    .play { padding: 6px; font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app">
   <header>
     <h1>Family Workshop</h1>
-    <p>Add photos, voices and the stories you know. The guide reads everything, fills the four rooms of the game with your family, and asks you about anything it couldn't work out.</p>
-    <nav><a href="/">Open the game &rarr;</a></nav>
+    <div class="links"><button id="newChat">new conversation</button><a href="/">open the game</a></div>
   </header>
 
-  <section id="about">
-    <h2><span class="num">01</span>About them</h2>
-    <p class="hint">The person who will play. Only what you are comfortable sharing.</p>
-    <div class="grid2">
-      <label>Their name<input type="text" data-p="name" placeholder="Margaret Chen"></label>
-      <label>What the family calls them<input type="text" data-p="callName" placeholder="Mom, Grandma Meg"></label>
-    </div>
-    <label>Places that matter<input type="text" data-p="hometown" placeholder="the lake house in Wisconsin, the bakery on Main St"></label>
-    <label>Music they love<input type="text" data-p="music" placeholder="Nat King Cole, the song from their wedding"></label>
-    <label>Things they love<textarea data-p="loves" placeholder="gardening, Sunday dinners, card games with Rose"></textarea></label>
-    <label>Please avoid<textarea data-p="avoid" placeholder="Don't mention Dad's passing. The old apartment upsets her."></textarea></label>
-    <div class="row"><button class="btn" id="saveProfile">SAVE</button><span class="status" id="profileStatus"></span></div>
-  </section>
+  <div class="main">
+    <section class="chat" aria-label="Conversation with the guide">
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="composer">
+        <div class="tray" id="tray"></div>
+        <div class="row">
+          <button class="tool" id="photoBtn" title="Add photos" aria-label="Add photos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span class="lbl">Photo</span>
+          </button>
+          <input type="file" id="photoInput" class="hidden-input" accept="image/*" multiple tabindex="-1">
+          <button class="tool" id="micBtn" title="Record a voice message" aria-label="Record a voice message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="lbl" id="micLbl">Voice</span>
+          </button>
+          <textarea id="input" rows="1" placeholder="Write to the guide" aria-label="Your message"></textarea>
+          <button class="tool send" id="sendBtn" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
 
-  <section id="family">
-    <h2><span class="num">02</span>The family</h2>
-    <p class="hint">The people who show up at the kitchen table. A clear photo of just their face works best.</p>
-    <div class="items" id="peopleList"></div>
-    <div class="grid2">
-      <label>Name<input type="text" id="fName" placeholder="Mei"></label>
-      <label>Relation to them<input type="text" id="fRel" placeholder="daughter"></label>
-    </div>
-    <label>Something about them (optional)<input type="text" id="fNote" placeholder="brings bread every Sunday, lives nearby"></label>
-    <div class="row">
-      <span class="btn filebtn">CHOOSE PORTRAIT<input type="file" id="fPhoto" accept="image/*"></span>
-      <span class="status" id="fPhotoName"></span>
-      <button class="btn primary" id="addPerson">ADD PERSON</button>
-    </div>
-  </section>
-
-  <section id="photos">
-    <h2><span class="num">03</span>Photos</h2>
-    <p class="hint">Places, trips, holidays, the house. A caption and a rough year help the guide put them in order.</p>
-    <div class="items" id="photoList"></div>
-    <div class="grid2">
-      <label>Caption<input type="text" id="phCap" placeholder="the lake, summer, Dad teaching Mei to steer"></label>
-      <label>Year (rough is fine)<input type="text" id="phYear" placeholder="1986"></label>
-    </div>
-    <div class="row">
-      <span class="btn primary filebtn">ADD PHOTOS<input type="file" id="phFiles" accept="image/*" multiple></span>
-      <span class="status" id="phStatus"></span>
-    </div>
-  </section>
-
-  <section id="voices">
-    <h2><span class="num">04</span>Voice messages</h2>
-    <p class="hint">Say something you'd want them to hear: a hello, a memory, a line for the letter. They will hear your real voice. The guide only reads the words, so check the transcript.</p>
-    <div class="list" id="voiceList"></div>
-    <label>Who is speaking<input type="text" id="vFrom" list="familyNames" placeholder="Mei"></label>
-    <datalist id="familyNames"></datalist>
-    <div class="row">
-      <div class="recorder"><span class="recdot" id="recDot"></span><button class="btn" id="recBtn">RECORD</button></div>
-      <span class="btn filebtn">OR UPLOAD AUDIO<input type="file" id="vFile" accept="audio/*"></span>
-    </div>
-    <div class="preview" id="vPreview"></div>
-    <label>Transcript<textarea id="vText" placeholder="Fills in as you talk where the browser supports it. Otherwise type what you said."></textarea></label>
-    <div class="row"><button class="btn primary" id="saveVoice" disabled>SAVE MESSAGE</button><span class="status" id="vStatus"></span></div>
-  </section>
-
-  <section id="notes">
-    <h2><span class="num">05</span>Stories and notes</h2>
-    <p class="hint">Anything else: family stories, routines, nicknames, who sat where at dinner.</p>
-    <div class="list" id="noteList"></div>
-    <label>From<input type="text" id="nFrom" list="familyNames" placeholder="Daniel"></label>
-    <label>Note<textarea id="nText" placeholder="Every Sunday Mom made dumplings and Mei sat next to her."></textarea></label>
-    <div class="row"><button class="btn primary" id="addNote">ADD NOTE</button></div>
-  </section>
-
-  <section class="agent" id="agent">
-    <h2><span class="num">06</span>Build the game</h2>
-    <p class="hint">The guide reads everything above and writes the kitchen, radio, porch, attic and the letter. Build again whenever you add something.</p>
-    <div class="row"><button class="btn primary big" id="build">BUILD THE GAME</button><a class="btn" href="/" id="playLink" hidden>PLAY IT</a></div>
-    <div class="status" id="buildStatus"></div>
-    <div id="result"></div>
-  </section>
+    <aside>
+      <div class="panel">
+        <h2>FOR THE GAME</h2>
+        <ul class="check" id="check"></ul>
+        <a class="play" id="play" href="/" hidden>PLAY THE GAME</a>
+      </div>
+      <div class="panel saved">
+        <h2>SHARED SO FAR</h2>
+        <div class="people" id="people"></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+    </aside>
+  </div>
 </div>
 
 <script>
   const $ = id => document.getElementById(id);
-  let mat = { profile: {}, people: [], photos: [], voices: [], notes: [] };
-
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  let photos = [], voice = null, busy = false;
+
   async function api(method, url, body) {
     const res = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || res.statusText);
     return data;
   }
-  function status(id, text, err) { $(id).textContent = text; $(id).classList.toggle('err', !!err); }
 
-  // Shrinks photos before upload so requests stay small and the guide gets a sensible size.
+  /* conversation log */
+  function addMessage(role, text, attachments = []) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + role;
+    const who = role === 'guide' ? 'GUIDE' : role === 'family' ? 'YOU' : '';
+    const att = attachments.map(a => a.kind === 'photo'
+      ? `<img src="${esc(a.url)}" alt="shared photo">`
+      : `<audio controls preload="none" src="${esc(a.url)}"></audio>`).join('');
+    el.innerHTML = (who ? `<span class="who">${who}</span>` : '') +
+      (att ? `<div class="att">${att}</div>` : '') +
+      (text ? `<div class="body">${esc(text)}</div>` : '');
+    $('log').appendChild(el);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+  function typing(on) {
+    $('typing')?.remove();
+    if (!on) return;
+    const el = document.createElement('div');
+    el.className = 'msg guide'; el.id = 'typing';
+    el.innerHTML = '<span class="who">GUIDE</span><div class="typing" aria-label="The guide is writing"><i></i><i></i><i></i></div>';
+    $('log').appendChild(el);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+
+  /* gathered so far */
+  function showState({ progress, materials }) {
+    $('check').innerHTML = progress.items.map(i =>
+      `<li class="${i.done ? 'done' : ''}"><span class="box"></span>${esc(i.label)}${i.count ? `<span class="n">${i.count}</span>` : ''}</li>`).join('');
+    $('play').hidden = !progress.built;
+    $('people').textContent = materials.people.length
+      ? materials.people.map(f => f.name + (f.relation ? ' (' + f.relation + ')' : '')).join(', ')
+      : 'Nobody yet.';
+    $('thumbs').innerHTML = materials.photos.map(p => `<img src="${esc(p.url)}" alt="${esc(p.caption)}" title="${esc(p.caption)}">`).join('');
+  }
+
+  /* sending */
+  async function send(extra = {}) {
+    if (busy) return;
+    const text = $('input').value.trim();
+    if (!extra.start && !text && !photos.length && !voice) return;
+    busy = true; setBusy();
+    const body = { text, photos: photos.map(p => p.dataUrl), voice: voice?.dataUrl || null, ...extra };
+    if (!extra.start) {
+      addMessage('family', text, [...photos.map(p => ({ kind: 'photo', url: p.dataUrl })), ...(voice ? [{ kind: 'voice', url: voice.url }] : [])]);
+      $('input').value = ''; autosize();
+      photos = []; voice = null; drawTray();
+    }
+    typing(true);
+    try {
+      const r = await api('POST', '/api/chat', body);
+      typing(false);
+      addMessage('guide', r.reply);
+      showState(r);
+    } catch (err) {
+      typing(false);
+      addMessage('err', err.message);
+    } finally { busy = false; setBusy(); $('input').focus(); }
+  }
+  function setBusy() { $('sendBtn').disabled = busy; }
+  $('sendBtn').onclick = () => send();
+  $('input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  function autosize() { const t = $('input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px'; }
+  $('input').addEventListener('input', autosize);
+
+  /* attachments waiting to be sent */
+  function drawTray() {
+    $('tray').innerHTML = photos.map((p, i) => `<span class="chip"><img src="${p.dataUrl}" alt=""><button class="x" data-photo="${i}" aria-label="Remove photo">&times;</button></span>`).join('') +
+      (voice ? `<span class="chip"><audio controls src="${voice.url}"></audio><button class="x" data-voice aria-label="Remove recording">&times;</button></span>` : '');
+  }
+  $('tray').onclick = e => {
+    if (e.target.dataset.photo !== undefined) photos.splice(+e.target.dataset.photo, 1);
+    else if (e.target.dataset.voice !== undefined) voice = null;
+    else return;
+    drawTray();
+  };
+
+  // Shrinks photos before upload so requests stay small.
   function shrinkImage(file, max = 1280) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -208,175 +263,87 @@
         URL.revokeObjectURL(img.src);
         resolve(c.toDataURL('image/jpeg', 0.85));
       };
-      img.onerror = () => reject(new Error("Couldn't read " + file.name + '. Try a JPEG or PNG.'));
+      img.onerror = () => reject(new Error("Couldn't open " + file.name + '. Try a JPEG or PNG.'));
       img.src = URL.createObjectURL(file);
     });
   }
-  const readDataUrl = blob => new Promise((resolve, reject) => {
-    const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(blob);
-  });
-
-  function render() {
-    const p = mat.profile || {};
-    document.querySelectorAll('[data-p]').forEach(el => { if (document.activeElement !== el) el.value = p[el.dataset.p] || ''; });
-
-    const photoUrl = id => mat.photos.find(x => x.id === id)?.url;
-    $('peopleList').innerHTML = mat.people.map(f => `<div class="item">
-      ${photoUrl(f.photoId) ? `<img src="${esc(photoUrl(f.photoId))}" alt="">` : ''}
-      <span class="t">${esc(f.name)}</span><span class="s">${esc(f.relation)}${f.note ? ' · ' + esc(f.note) : ''}</span>
-      <button class="link" data-del="${f.id}">remove</button></div>`).join('') || '<p class="empty">No one added yet.</p>';
-    $('familyNames').innerHTML = mat.people.map(f => `<option value="${esc(f.name)}">`).join('');
-
-    const portraits = new Set(mat.people.map(f => f.photoId));
-    const loose = mat.photos.filter(ph => !portraits.has(ph.id));
-    $('photoList').innerHTML = loose.map(ph => `<div class="item">
-      <img src="${esc(ph.url)}" alt="${esc(ph.caption)}">
-      <span class="s">${esc(ph.caption || 'no caption')}${ph.year ? ' · ' + esc(ph.year) : ''}</span>
-      <button class="link" data-del="${ph.id}">remove</button></div>`).join('') || '<p class="empty">No photos yet.</p>';
-
-    $('voiceList').innerHTML = mat.voices.map(v => `<div class="item"><div>
-      <span class="t">${esc(v.from || 'Someone')}</span>
-      <audio controls preload="none" src="${esc(v.url)}"></audio>
-      <span class="s">${esc(v.transcript || 'no transcript')}</span></div>
-      <button class="link" data-del="${v.id}">remove</button></div>`).join('') || '<p class="empty">No voice messages yet.</p>';
-
-    $('noteList').innerHTML = mat.notes.map(n => `<div class="item"><span>${n.from ? '<b>' + esc(n.from) + ':</b> ' : ''}${esc(n.text)}</span>
-      <button class="link" data-del="${n.id}">remove</button></div>`).join('') || '<p class="empty">No notes yet.</p>';
-  }
-  document.addEventListener('click', async e => {
-    const id = e.target.dataset?.del;
-    if (!id) return;
-    mat = await api('DELETE', '/api/materials/' + id); render();
-  });
-
-  /* 01 profile */
-  $('saveProfile').onclick = async () => {
-    const profile = {};
-    document.querySelectorAll('[data-p]').forEach(el => profile[el.dataset.p] = el.value.trim());
-    try { mat = await api('PUT', '/api/profile', profile); status('profileStatus', 'saved'); }
-    catch (err) { status('profileStatus', err.message, true); }
-  };
-
-  /* 02 family */
-  $('fPhoto').onchange = () => $('fPhotoName').textContent = $('fPhoto').files[0]?.name || '';
-  $('addPerson').onclick = async () => {
-    const name = $('fName').value.trim();
-    if (!name) return status('fPhotoName', 'add a name first', true);
-    try {
-      const file = $('fPhoto').files[0];
-      mat = await api('POST', '/api/people', { name, relation: $('fRel').value.trim(), note: $('fNote').value.trim(), photo: file ? await shrinkImage(file, 800) : null });
-      ['fName', 'fRel', 'fNote', 'fPhoto'].forEach(id => $(id).value = '');
-      status('fPhotoName', ''); render();
-    } catch (err) { status('fPhotoName', err.message, true); }
-  };
-
-  /* 03 photos */
-  $('phFiles').onchange = async () => {
-    const files = [...$('phFiles').files];
-    for (const [i, file] of files.entries()) {
-      status('phStatus', `adding ${i + 1} of ${files.length}`);
-      try { mat = await api('POST', '/api/photos', { photo: await shrinkImage(file), caption: $('phCap').value.trim(), year: $('phYear').value.trim() }); render(); }
-      catch (err) { return status('phStatus', err.message, true); }
+  $('photoBtn').onclick = () => $('photoInput').click();
+  $('photoInput').onchange = async () => {
+    for (const file of $('photoInput').files) {
+      try { photos.push({ dataUrl: await shrinkImage(file) }); }
+      catch (err) { addMessage('err', err.message); }
     }
-    $('phFiles').value = ''; $('phCap').value = ''; $('phYear').value = '';
-    status('phStatus', files.length > 1 ? files.length + ' photos added' : 'photo added');
+    $('photoInput').value = '';
+    drawTray(); $('input').focus();
   };
 
-  /* 04 voices */
-  let recorder = null, recognizer = null, clip = null;
-  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-  function setClip(blob) {
-    clip = blob;
-    $('vPreview').innerHTML = blob ? `<audio controls src="${URL.createObjectURL(blob)}"></audio>` : '';
-    $('saveVoice').disabled = !blob;
+  // Gemini can't hear the WebM that browsers record, so recordings are re-encoded
+  // as 16 kHz mono WAV, which is plenty for speech and plays everywhere.
+  async function toWav(blob) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+    ctx.close();
+    const rate = 16000, length = Math.ceil(decoded.duration * rate);
+    const offline = new OfflineAudioContext(1, length, rate);
+    const src = offline.createBufferSource();
+    src.buffer = decoded; src.connect(offline.destination); src.start();
+    const samples = (await offline.startRendering()).getChannelData(0);
+    const view = new DataView(new ArrayBuffer(44 + samples.length * 2));
+    const str = (o, s) => [...s].forEach((c, i) => view.setUint8(o + i, c.charCodeAt(0)));
+    str(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); str(8, 'WAVEfmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    str(36, 'data'); view.setUint32(40, samples.length * 2, true);
+    samples.forEach((v, i) => view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, v)) * 0x7fff, true));
+    return new Blob([view], { type: 'audio/wav' });
   }
-  $('recBtn').onclick = async () => {
-    if (recorder) { recorder.stop(); recognizer?.stop(); return; }
+
+  // Records in the browser; the guide listens to the audio itself.
+  let recorder = null, recTimer = null;
+  $('micBtn').onclick = async () => {
+    if (recorder) { recorder.stop(); return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { return status('vStatus', 'The browser could not use the microphone. You can upload a recording instead.', true); }
+    catch { return addMessage('err', 'The browser could not use the microphone. Check its permission and try again.'); }
     const chunks = [];
     recorder = new MediaRecorder(stream);
     recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
-      setClip(new Blob(chunks, { type: recorder.mimeType.split(';')[0] || 'audio/webm' }));
-      recorder = null; $('recBtn').textContent = 'RECORD AGAIN'; $('recDot').classList.remove('on');
+      clearInterval(recTimer);
+      const type = recorder.mimeType.split(';')[0] || 'audio/webm';
+      recorder = null;
+      $('micBtn').classList.remove('live'); $('micLbl').textContent = 'Voice';
+      try {
+        const wav = await toWav(new Blob(chunks, { type }));
+        const reader = new FileReader();
+        reader.onload = () => { voice = { dataUrl: reader.result, url: URL.createObjectURL(wav) }; drawTray(); };
+        reader.readAsDataURL(wav);
+      } catch { addMessage('err', "That recording couldn't be read. Please try again."); }
     };
     recorder.start();
-    $('recBtn').textContent = 'STOP'; $('recDot').classList.add('on'); status('vStatus', '');
-    if (Speech) {
-      recognizer = new Speech();
-      recognizer.continuous = true; recognizer.interimResults = true;
-      const before = $('vText').value ? $('vText').value.trim() + ' ' : '';
-      recognizer.onresult = e => { $('vText').value = before + [...e.results].map(r => r[0].transcript).join(' ').trim(); };
-      recognizer.onend = () => recognizer = null;
-      try { recognizer.start(); } catch { recognizer = null; }
-    }
-  };
-  $('vFile').onchange = () => { const f = $('vFile').files[0]; if (f) setClip(f); };
-  $('saveVoice').onclick = async () => {
-    if (!clip) return;
-    try {
-      status('vStatus', 'saving');
-      mat = await api('POST', '/api/voices', { audio: await readDataUrl(clip), from: $('vFrom').value.trim(), transcript: $('vText').value.trim() });
-      setClip(null); $('vFile').value = ''; $('vText').value = ''; $('recBtn').textContent = 'RECORD';
-      status('vStatus', 'saved'); render();
-    } catch (err) { status('vStatus', err.message, true); }
+    const started = Date.now();
+    $('micBtn').classList.add('live');
+    const tick = () => { const s = Math.floor((Date.now() - started) / 1000); $('micLbl').textContent = 'Stop ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+    tick(); recTimer = setInterval(tick, 500);
   };
 
-  /* 05 notes */
-  $('addNote').onclick = async () => {
-    const text = $('nText').value.trim();
-    if (!text) return;
-    mat = await api('POST', '/api/notes', { text, from: $('nFrom').value.trim() });
-    $('nText').value = ''; render();
+  $('newChat').onclick = async () => {
+    if (busy || !confirm('Start a new conversation? Everything already shared stays saved.')) return;
+    await api('POST', '/api/chat/reset');
+    $('log').innerHTML = '';
+    send({ start: true });
   };
-
-  /* 06 build */
-  function showGame(g) {
-    const thumbs = urls => urls.filter(Boolean).map(u => `<img src="${esc(u)}" alt="">`).join('');
-    const piece = i => g.letter[i] ? `<div class="line">"${esc(g.letter[i].line)}"</div><div class="meta">${esc(g.letter[i].by)}${g.letter[i].voice ? ' · with their voice' : ''}</div>` : '';
-    const seated = g.kitchen.seats.map(n => g.people.find(p => p.name === n)).filter(Boolean);
-    $('result').innerHTML = `
-      <p class="summary">${esc(g.summary)}</p>
-      <div class="rooms">
-        <div class="room"><h3>KITCHEN</h3><div class="thumbs">${thumbs(g.people.slice(0, 3).map(p => p.photo))}</div>
-          <div class="meta">Chairs for ${seated.map(p => esc(p.name)).join(' and ') || 'nobody yet'}. ${seated[0] ? `"${esc(seated[0].hello)}"` : ''}</div>${piece(0)}</div>
-        <div class="room"><h3>RADIO ROOM</h3><div class="meta">${esc(g.radio.song.title)}${g.radio.song.artist ? ', ' + esc(g.radio.song.artist) : ''}${g.radio.song.year ? ' (' + esc(g.radio.song.year) + ')' : ''}</div>${piece(1)}</div>
-        <div class="room"><h3>PORCH</h3><div class="thumbs">${thumbs([g.porch.photo])}</div><div class="meta">"${esc(g.porch.prompt)}"</div>${piece(2)}</div>
-        <div class="room"><h3>ATTIC</h3><div class="thumbs">${thumbs(g.attic.photos)}</div><div class="meta">${g.attic.photos.length} of 3 photos chosen, earliest first</div>${piece(3)}</div>
-      </div>
-      ${g.questions?.length ? `<h3 style="font-family:var(--display);font-size:20px;margin-top:6px">The guide would like to know</h3>
-      <div class="qs">${g.questions.map((q, i) => `<label>${esc(q)}<input type="text" data-q="${i}"></label>`).join('')}</div>
-      <label>Your name (optional)<input type="text" id="ansFrom" list="familyNames"></label>
-      <div class="row"><button class="btn primary" id="answer">ANSWER AND REBUILD</button></div>` : ''}`;
-    $('playLink').hidden = false;
-    const ans = $('answer');
-    if (ans) ans.onclick = async () => {
-      const from = $('ansFrom').value.trim();
-      const answered = [...document.querySelectorAll('[data-q]')].filter(el => el.value.trim());
-      if (!answered.length) return;
-      for (const el of answered) mat = await api('POST', '/api/notes', { text: `Q: ${g.questions[el.dataset.q]} A: ${el.value.trim()}`, from });
-      render(); build();
-    };
-  }
-  async function build() {
-    const btn = $('build');
-    btn.disabled = true; status('buildStatus', 'The guide is reading your photos and stories. This can take a minute.');
-    try {
-      const g = await api('POST', '/api/build');
-      status('buildStatus', 'Built ' + new Date(g.builtAt).toLocaleTimeString() + '.');
-      showGame(g);
-    } catch (err) { status('buildStatus', err.message, true); }
-    finally { btn.disabled = false; }
-  }
-  $('build').onclick = build;
 
   (async () => {
-    try { mat = await api('GET', '/api/materials'); render(); }
-    catch { status('buildStatus', 'Start the server with "npm start" and open this page from it.', true); }
-    try { const g = await api('GET', '/api/game'); status('buildStatus', 'Last built ' + new Date(g.builtAt).toLocaleString() + '.'); showGame(g); } catch {}
+    try {
+      const r = await api('GET', '/api/chat');
+      showState(r);
+      r.transcript.forEach(m => addMessage(m.role, m.text, m.attachments));
+      if (!r.transcript.length) send({ start: true });
+    } catch {
+      addMessage('err', 'Start the server with "npm start" and open this page from it.');
+    }
   })();
 </script>
 </body>
