@@ -41,15 +41,24 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
   const scene = new THREE.Scene();
   // dusk: a painted indigo-to-peach sky behind everything, so white labels read
   const sky = document.createElement('canvas'); sky.width = 4; sky.height = 512;
-  const sg = sky.getContext('2d'), grad = sg.createLinearGradient(0, 0, 0, 512);
-  [[0, '#1b1f45'], [.16, '#3b3873'], [.3, '#7d5a8c'], [.41, '#cf8a80'], [.5, '#f0bb88'], [1, '#f0bb88']].forEach(([s, c]) => grad.addColorStop(s, c));
-  sg.fillStyle = grad; sg.fillRect(0, 0, 4, 512);
+  const sg = sky.getContext('2d');
+  const SKY = {
+    night: [[0, '#1b1f45'], [.16, '#3b3873'], [.3, '#7d5a8c'], [.41, '#cf8a80'], [.5, '#f0bb88'], [1, '#f0bb88']],
+    day: [[0, '#4fa6ea'], [.16, '#7cc0ee'], [.3, '#a9d9f4'], [.41, '#d8eef9'], [.5, '#fdf1cf'], [1, '#fdf1cf']]
+  };
+  function paintSky(stops) {
+    const g = sg.createLinearGradient(0, 0, 0, 512);
+    stops.forEach(([s, c]) => g.addColorStop(s, c));
+    sg.fillStyle = g; sg.fillRect(0, 0, 4, 512);
+  }
+  paintSky(SKY.night);
   const skyTex = new THREE.CanvasTexture(sky); skyTex.colorSpace = THREE.SRGBColorSpace;
   scene.background = skyTex;
-  scene.fog = new THREE.Fog('#8a6288', 30, 80);
+  const fog = scene.fog = new THREE.Fog('#8a6288', 30, 80);
   const camera = new THREE.PerspectiveCamera(34, 1.6, .1, 200);
 
-  scene.add(new THREE.HemisphereLight('#9a9ad0', '#34403f', 1.15));
+  const hemi = new THREE.HemisphereLight('#9a9ad0', '#34403f', 1.15);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight('#cfd4ff', 1.25);
   sun.position.set(7, 12, 10);
   sun.castShadow = true;
@@ -412,7 +421,7 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
     const hill = put(new THREE.SphereGeometry(1, 24, 12), c, x, 0, z);
     hill.scale.set(...s); hill.castShadow = false;
   }
-  put(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: '#f6eed6', fog: false }), 16, 13, -30);
+  const orb = put(new THREE.SphereGeometry(1.5, 16, 12), new THREE.MeshBasicMaterial({ color: '#f6eed6', fog: false }), 16, 13, -30);
   for (const [x, z, s] of [[-7, -1.5, 1.2], [7.6, -2.6, 1.4], [-9.5, -6, 1.1]]) {
     put(new THREE.CylinderGeometry(.12 * s, .16 * s, 1.5 * s, 6), SHELL, x, .75 * s, z);
     put(new THREE.IcosahedronGeometry(1.1 * s, 0), '#3e594c', x, 2 * s, z);
@@ -515,6 +524,7 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
   });
 
   /* ---------- state ---------- */
+  let night = true;
   let active = true, mode = 'home', glide = null, room = 'kitchen', last = 0;
   let birdMode = 'rest', birdT0 = 0, listening = false, kitchenLit = false, peopleKey = '';
   const lit = { kitchen: false, porch: false, radio: false, attic: false, hall: false };
@@ -595,11 +605,11 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
     windows.kitchen.emissiveIntensity = (kitchenLit || lit.kitchen) ? 1.5 : .25 + .55 * pulse;
     windowGlow.intensity = (kitchenLit || lit.kitchen) ? 2.5 : 0;
     ['porch', 'radio', 'attic', 'hall'].forEach((name) => {
-      if (windows[name]) windows[name].emissiveIntensity = lit[name] ? 1.6 : hoverRoom === name ? 1.2 : 0.7;
+      if (windows[name]) windows[name].emissiveIntensity = lit[name] ? 1.6 : hoverRoom === name ? (night ? 1.2 : .55) : (night ? 0.7 : 0.08);
     });
     lamp.intensity = hoverRoom === 'kitchen' ? 6 : 3;
     for (const [name, l] of Object.entries(roomLights)) {
-      const goal = mode !== 'home' && room === name ? 1.6 : hoverRoom === name ? 3.6 : 1.5;
+      const goal = mode !== 'home' && room === name ? 1.6 : hoverRoom === name ? 3.6 : (night ? 1.5 : .3);
       l.intensity = calm ? goal : l.intensity + (goal - l.intensity) * Math.min(1, dt * 6);
     }
 
@@ -635,7 +645,22 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
   }
   requestAnimationFrame(frame);
 
-  return {
+  // day palette = the original sunny colours; night palette = the dusk ones used by default
+  const DAY_TINT = { '#3c5045': '#8c9a74', '#8a7c78': '#cdbf9f', '#5d5a8a': '#b9b597', '#4d4c7d': '#a3a382', '#3e594c': '#6f8160', '#4a6757': '#7d8d6e' };
+  function setTime(m) {
+    night = m !== 'day';
+    paintSky(night ? SKY.night : SKY.day);
+    skyTex.needsUpdate = true;
+    fog.color.set(night ? '#8a6288' : '#e9f0e4');
+    hemi.color.set(night ? '#9a9ad0' : '#fff4e0'); hemi.groundColor.set(night ? '#34403f' : '#8c9a74'); hemi.intensity = night ? 1.15 : 1.6;
+    sun.color.set(night ? '#cfd4ff' : '#ffe9c4'); sun.intensity = night ? 1.25 : 2.2;
+    for (const [nightHex, dayHex] of Object.entries(DAY_TINT)) if (mats[nightHex]) mats[nightHex].color.set(night ? nightHex : dayHex);
+    orb.material.color.set(night ? '#f6eed6' : '#ffd95e');
+  }
+  window.addEventListener('homeagain:time', e => setTime(e.detail));
+
+  const api = {
+    setTime,
     setActive(on) { active = on; },
     reset() { glide = null; finishGlide(-1); },
     glideIn: (name = 'kitchen') => go(1, name),
@@ -669,6 +694,8 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
       });
     }
   };
+  setTime(window.HomeAgainTime ? window.HomeAgainTime.get() : 'night');
+  return api;
 }
 
 // crop a photo texture to fill the frame, like object-fit: cover

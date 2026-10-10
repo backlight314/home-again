@@ -404,7 +404,7 @@
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=merge1');
+      const { createHub } = await import('./hub3d.js?v=merge3');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -429,7 +429,7 @@
   async function ensureIntroHub() {
     if (introHub || hubFailed || new URLSearchParams(location.search).has('flat')) return;
     try {
-      const { createHub } = await import('./hub3d.js?v=merge1');
+      const { createHub } = await import('./hub3d.js?v=merge3');
       introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
       ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
       introHub.setActive($('s-intro').classList.contains('on'));

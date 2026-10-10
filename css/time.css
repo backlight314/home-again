@@ -1,0 +1,154 @@
+/* Day / night. Night (the dusk look) is the default; everything under html[data-time="day"] turns it sunny.
+   The toggle itself is built by js/theme.js. */
+:root {
+  --ink-day: #2b2350;
+  --halo-day: 0 1px 0 rgba(255, 255, 255, .8), 0 0 16px rgba(255, 255, 255, .9), 0 0 32px rgba(255, 244, 214, .7);
+  --gold-day: #a85d10;
+}
+
+/* ---------- the toggle ---------- */
+#timeToggle {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 0;
+  font-family: "Patrick Hand", "Segoe Print", system-ui, sans-serif;
+  font-size: 24px;
+  letter-spacing: .04em;
+  background: #fff1d4;
+  color: #2b2350;
+  box-shadow: 0 0 0 2px rgba(255, 226, 160, .5), 0 8px 24px rgba(10, 6, 30, .45);
+  cursor: pointer;
+  transition: transform .4s, box-shadow .4s;
+}
+#timeToggle:hover, #timeToggle:focus-visible { transform: translateX(-50%) scale(1.04); }
+#timeToggle.inline { position: static; transform: none; min-height: 48px; padding: 0 14px; font-size: 20px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
+#timeToggle.inline:hover, #timeToggle.inline:focus-visible { transform: scale(1.04); }
+html[data-time="day"] #timeToggle { background: #2b2350; color: #ffe2a0; box-shadow: 0 0 0 2px rgba(43, 35, 80, .4), 0 8px 24px rgba(40, 60, 100, .35); }
+
+/* ---------- SVG room scenes ---------- */
+html[data-time="day"] .sk0 { stop-color: #4fa6ea; }
+html[data-time="day"] .sk1 { stop-color: #7cc0ee; }
+html[data-time="day"] .sk2 { stop-color: #a9d9f4; }
+html[data-time="day"] .sk3 { stop-color: #d8eef9; }
+html[data-time="day"] .sk4 { stop-color: #fdf1cf; }
+html[data-time="day"] .wall0 { stop-color: #f8e5bd; }
+html[data-time="day"] .wall1 { stop-color: #f1d0a0; }
+html[data-time="day"] .wall2 { stop-color: #e6b98a; }
+html[data-time="day"] .awall0 { stop-color: #e7cfa6; }
+html[data-time="day"] .awall1 { stop-color: #d3b087; }
+html[data-time="day"] .photowall { fill: #bda08a; }
+html[data-time="day"] .glw { stop-color: rgba(255, 240, 190, .16); }
+html[data-time="day"] .floor { fill: #b98b5b; }
+html[data-time="day"] .floorline { stroke: #8a6037; }
+html[data-time="day"] .base { fill: #6b4a30; }
+html[data-time="day"] .hill1 { fill: #86c093; }
+html[data-time="day"] .hill2 { fill: #62a67c; }
+html[data-time="day"] .ph1 { fill: #9fd1a0; }
+html[data-time="day"] .ph2 { fill: #7fbf8a; }
+html[data-time="day"] .ph3 { fill: #5ea872; }
+html[data-time="day"] .ground { fill: #6fb27c; }
+html[data-time="day"] .bush1 { fill: #4f8a5c; }
+html[data-time="day"] .bush2 { fill: #66a273; }
+html[data-time="day"] .leaf1 { fill: #5a9a68; }
+html[data-time="day"] .leaf2 { fill: #74b37f; }
+html[data-time="day"] .orb { fill: #ffd95e; }
+html[data-time="day"] .orbglow { opacity: .55; }
+html[data-time="day"] .winlit { fill: #bfe3f2; }
+html[data-time="day"] .bulb { fill: #fff8e8; }
+html[data-time="day"] .nightonly { opacity: 0; }
+
+/* ---------- text and buttons that sit on a scene: dark ink in daylight ---------- */
+html[data-time="day"] .hub.is3d .caption,
+html[data-time="day"] .kitchen .caption, html[data-time="day"] .radio-pg .caption, html[data-time="day"] .porch .caption,
+html[data-time="day"] .attic .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .shelf-pg .shelfcap {
+  color: var(--ink-day);
+  text-shadow: var(--halo-day);
+}
+html[data-time="day"] .hub.is3d .caption .sub,
+html[data-time="day"] .kitchen .caption .sub, html[data-time="day"] .radio-pg .caption .sub, html[data-time="day"] .porch .caption .sub,
+html[data-time="day"] .attic .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .shelf-pg .shelfcap .sub {
+  color: var(--ink-day);
+  text-shadow: var(--halo-day);
+}
+html[data-time="day"] .hub.is3d .quietbtn, html[data-time="day"] .hub.is3d .closebtn,
+html[data-time="day"] .kitchen .quietbtn, html[data-time="day"] .radio-pg .quietbtn, html[data-time="day"] .porch .quietbtn,
+html[data-time="day"] .attic .quietbtn, html[data-time="day"] .ending .quietbtn,
+html[data-time="day"] .album-pg .closebtn, html[data-time="day"] .album-pg .quietbtn {
+  color: var(--ink-day);
+  border-color: rgba(43, 35, 80, .7);
+  text-shadow: var(--halo-day);
+}
+html[data-time="day"] .seat .lbl { color: var(--ink-day); text-shadow: var(--halo-day); }
+html[data-time="day"] .seat.target .lbl, html[data-time="day"] .station.clear, html[data-time="day"] .followup,
+html[data-time="day"] .mount .num { color: var(--gold-day); text-shadow: var(--halo-day); }
+html[data-time="day"] .seat .ring svg path, html[data-time="day"] .seat .ring svg ellipse { stroke: var(--gold-day); }
+html[data-time="day"] .station, html[data-time="day"] .heard, html[data-time="day"] .mic .mlbl,
+html[data-time="day"] .shelfline .ends, html[data-time="day"] .boxlbl { color: var(--ink-day); text-shadow: var(--halo-day); }
+html[data-time="day"] .heard { border-left-color: var(--gold-day); }
+html[data-time="day"] .stamped { color: var(--gold-day); border-color: var(--gold-day); text-shadow: none; }
+html[data-time="day"] .shelfline .rule { border-bottom-color: rgba(43, 35, 80, .55); }
+html[data-time="day"] .mount.open { border-color: rgba(43, 35, 80, .5); }
+html[data-time="day"] .mount.next { border-color: var(--gold-day); box-shadow: 0 0 22px rgba(255, 190, 80, .6); }
+html[data-time="day"] .chain { background: rgba(60, 51, 38, .85); }
+html[data-time="day"] .said { background: rgba(255, 250, 238, .96); color: var(--ink-day); box-shadow: 0 0 0 2px rgba(168, 93, 16, .45), 0 10px 26px rgba(60, 50, 40, .3); }
+html[data-time="day"] .wave i { background: var(--gold-day); }
+
+/* ---------- the dollhouse hub: labels become cream pills ---------- */
+html[data-time="day"] .hub3d { background: #bfe0f2; }
+html[data-time="day"] .hub3d .roomlbl {
+  color: var(--ink-day);
+  background: rgba(255, 250, 238, .92);
+  box-shadow: 0 0 0 1px rgba(43, 35, 80, .2), 0 6px 16px rgba(60, 50, 40, .28);
+  text-shadow: none;
+}
+html[data-time="day"] .hub3d .roomlbl.here { color: var(--gold-day); box-shadow: 0 0 0 2px rgba(168, 93, 16, .55), 0 6px 16px rgba(60, 50, 40, .28); }
+html[data-time="day"] .hub3d .roomlbl.hot { background: #2b2350; color: #fff1d4; }
+
+/* ---------- the albums shelf and album page ---------- */
+html[data-time="day"] .album-pg .desk {
+  background:
+    radial-gradient(ellipse at 50% 112%, rgba(255, 255, 255, .45), transparent 55%),
+    radial-gradient(ellipse at 50% 28%, #f3d9a2 0%, #e2b673 52%, #c98f55 100%);
+}
+html[data-time="day"] .album-pg .desk::after { opacity: .12; }
+html[data-time="day"] .book:hover, html[data-time="day"] .book:focus-visible { box-shadow: .4cqw 1.2cqw 2.4cqw rgba(80, 50, 20, .45), 0 0 34px rgba(255, 255, 255, .6); }
+html[data-time="day"] .book { box-shadow: .4cqw .9cqw 1.8cqw rgba(80, 50, 20, .4), inset 0 0 0 .25cqw rgba(0, 0, 0, .12); }
+html[data-time="day"] .slip-tag { box-shadow: .3cqw .7cqw 1.2cqw rgba(80, 50, 20, .35); }
+html[data-time="day"] .album-pg .sheetpg { box-shadow: 0 1.4cqw 3.4cqw rgba(80, 50, 20, .4); }
+
+/* ---------- the cover ---------- */
+html[data-time="day"] .intro { background: linear-gradient(180deg, #4fa6ea 0%, #8ccdf2 46%, #d8eef9 72%, #fdf1cf 100%); }
+html[data-time="day"] .intro::before {
+  background:
+    radial-gradient(ellipse at 30% 22%, rgba(255, 214, 120, .9), transparent 58%),
+    radial-gradient(ellipse at 14% 70%, rgba(255, 190, 110, .6), transparent 54%),
+    radial-gradient(ellipse at 60% 48%, rgba(255, 236, 170, .4), transparent 50%);
+  opacity: .5;
+}
+html[data-time="day"] .intro::after { background: radial-gradient(ellipse at 62% 52%, transparent 55%, rgba(60, 100, 150, .28) 100%); }
+html[data-time="day"] .intro .stars, html[data-time="day"] .intro .fly { display: none; }
+html[data-time="day"] .intro .title { color: #fff; text-shadow: 0 3px 0 rgba(43, 35, 80, .35), 0 4px 24px rgba(30, 70, 120, .55); }
+html[data-time="day"] .intro .title em { color: #fff3c8; }
+html[data-time="day"] .intro .sig, html[data-time="day"] .intro .torn { color: var(--ink-day); text-shadow: var(--halo-day); }
+html[data-time="day"] .intro .go { box-shadow: 0 0 0 .3cqw rgba(255, 255, 255, .6), 0 10px 30px rgba(60, 90, 140, .4), 0 0 40px rgba(255, 255, 255, .6); }
+
+/* ---------- the ending ---------- */
+html[data-time="day"] .sheet { box-shadow: 0 16px 40px rgba(60, 50, 40, .35), 0 0 0 1px rgba(168, 93, 16, .25); }
+html[data-time="day"] .calltile { background: rgba(255, 250, 238, .96); color: var(--ink-day); box-shadow: 0 0 0 2px rgba(168, 93, 16, .45), 0 10px 26px rgba(60, 50, 40, .3); }
+
+/* ---------- gentle fade when switching ---------- */
+.scene, .intro, .album-pg .desk, .hub3d { transition: filter .5s; }
+@media (prefers-reduced-motion: reduce) { #timeToggle { transition: none; } }
