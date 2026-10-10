@@ -3,10 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node --env-file-if-exists=.env server.js"
+    "start": "node --env-file-if-exists=.env server.js",
+    "migrate": "node --env-file-if-exists=.env scripts/migrate.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1149.0",
     "@google/genai": "^2.28.0",
-    "@vladmandic/face-api": "^1.7.15"
+    "@vladmandic/face-api": "^1.7.15",
+    "pg": "^8.23.1"
   }
 }
