@@ -273,7 +273,7 @@
       const book = chapter(currentBook);
       toast(complete(book) ? S.bookFull : S.placed);
       if (complete(book)) later(() => show('ending'), 1600);
-      else later(() => leaveHouse(), 900);
+      // stay on the album page; the player taps BACK TO THE HOUSE when ready
     }, 2100);
   }
 
