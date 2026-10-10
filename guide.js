@@ -5,7 +5,7 @@ import { generate, MODELS } from './gemini.js';
 import { buildGame } from './build.js';
 import {
   loadMaterials, withMaterials, describeMaterials, progress, removeMaterial, findDuplicate,
-  saveMedia, dropMedia, mediaPart, readJSON, writeJSON, newId, FILES
+  saveMedia, dropMedia, mediaPart, loadDoc, saveDoc, newId
 } from './store.js';
 import { ingestFaces, learnPortrait } from './faces.js';
 
@@ -231,13 +231,13 @@ function contextPart(mat, built) {
   };
 }
 
-export const loadChat = () => readJSON(FILES.chat, { contents: [], transcript: [] });
-export const resetChat = () => writeJSON(FILES.chat, { contents: [], transcript: [] });
+export const loadChat = () => loadDoc('chat', { contents: [], transcript: [] });
+export const resetChat = () => saveDoc('chat', { contents: [], transcript: [] });
 
 // body: { text, photos: [{ dataUrl, hash, faces? }], voice: dataURL | null, name, start: bool }
 export async function chat(body) {
   const chatState = await loadChat();
-  let built = !!(await readJSON(FILES.game, null));
+  let built = !!(await loadDoc('game', null));
 
   // save uploads first (into the shared album) so the guide can refer to them by id
   const userParts = [], shown = [];
@@ -303,7 +303,7 @@ export async function chat(body) {
   chatState.contents.push({ role: 'user', parts: userParts }, ...pending);
   if (!body.start) chatState.transcript.push({ role: 'family', text, attachments: shown });
   if (reply) chatState.transcript.push({ role: 'guide', text: reply, attachments: guideShown });
-  await writeJSON(FILES.chat, chatState);
+  await saveDoc('chat', chatState);
   if (failure) throw failure;
   return { reply, attachments: guideShown, progress: progress(await loadMaterials(), built), materials: await loadMaterials() };
 }
