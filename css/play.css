@@ -386,6 +386,7 @@
   z-index: 2;
   background: transparent;
 }
+.roombtn.albumhit { z-index: 5; }
 .roombtn:hover,
 .roombtn:focus-visible { background: rgba(216, 165, 58, 0.12); }
 .hub.is3d .caption {
@@ -879,6 +880,94 @@ html[data-time="day"] .mount .when { color: var(--ink-day); text-shadow: var(--h
   .wave.on i { animation: none; }
   .needle { transition: none; }
 }
+
+/* work rooms */
+.wrow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.6cqw;
+}
+.wcard, .wdial-key, .wmug, .wtray {
+  font-family: var(--hand, "Patrick Hand", sans-serif);
+  font-size: clamp(22px, 2.4cqw, 32px);
+  color: #2b2350;
+  background: #fff1d4;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(8, 6, 28, .45), 0 0 0 1px rgba(255, 255, 255, .25);
+}
+.wcard {
+  width: 18cqw;
+  min-width: 140px;
+  border-radius: 12px;
+  padding: 1.1em .8em 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
+}
+.wcard small { letter-spacing: .14em; font-size: .55em; opacity: .7; }
+.wdial-key {
+  width: 4.6cqw;
+  min-width: 64px;
+  height: 4.6cqw;
+  min-height: 64px;
+  border-radius: 50%;
+  font-size: clamp(28px, 3cqw, 40px);
+}
+.wmug {
+  border-radius: 18px 18px 10px 10px;
+  padding: 1.4em 1.4em 1em;
+  min-width: 160px;
+}
+.wmug.white { background: #f4f0e6; }
+.wmug.blue { background: #9bb7d0; }
+.wmug.red { background: #e0a090; }
+.wtray {
+  min-width: 140px;
+  border-radius: 8px;
+  padding: 1.2em 1.4em;
+  letter-spacing: .12em;
+  font-weight: 700;
+}
+.wcard.found, .wmug.found, .wtray.found { opacity: .7; }
+.wcard.clear, .wmug.clear, .wtray.clear, .wdialed.ok {
+  box-shadow: 0 0 0 3px #ffe2a0, 0 8px 20px rgba(8, 6, 28, .45);
+}
+.wcard:active, .wdial-key:active, .wmug:active, .wtray:active { transform: translateY(2px); }
+.wdial-note, .wdialed {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-family: var(--hand, "Patrick Hand", sans-serif);
+  color: #fff1d4;
+  text-shadow: 0 2px 10px rgba(10, 8, 36, .7);
+  text-align: center;
+}
+.wdial-note { top: 38%; font-size: clamp(24px, 2.6cqw, 34px); }
+.wdialed { top: 48%; font-size: clamp(28px, 3.2cqw, 42px); letter-spacing: .16em; }
+.wletter {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  transform: translateX(-50%) rotate(-3deg);
+  z-index: 5;
+  background: #fff6ea;
+  color: #2b2350;
+  padding: 1.4em 1.8em;
+  font-family: var(--hand, "Patrick Hand", sans-serif);
+  font-size: clamp(22px, 2.4cqw, 32px);
+  box-shadow: 0 10px 24px rgba(8, 6, 28, .4);
+}
+.wletter.sent { opacity: .35; transform: translateX(-50%) rotate(6deg) translateY(8cqw); }
+.work-desk .said, .work-phone .said, .work-break .said { bottom: 38%; }
+.work-files .wtrays { bottom: 18%; }
 
 @media (max-width: 720px) {
   .hub .list { grid-template-columns: 1fr; top: 26%; }

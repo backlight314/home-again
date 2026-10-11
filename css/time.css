@@ -77,6 +77,7 @@ html[data-time="day"] .nightonly { opacity: 0; }
 html[data-time="day"] .hub.is3d .caption,
 html[data-time="day"] .kitchen .caption, html[data-time="day"] .radio-pg .caption, html[data-time="day"] .porch .caption,
 html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .today-book .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .work-desk .caption, html[data-time="day"] .work-phone .caption, html[data-time="day"] .work-break .caption, html[data-time="day"] .work-files .caption,
 html[data-time="day"] .shelf-pg .shelfcap {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
@@ -84,6 +85,7 @@ html[data-time="day"] .shelf-pg .shelfcap {
 html[data-time="day"] .hub.is3d .caption .sub,
 html[data-time="day"] .kitchen .caption .sub, html[data-time="day"] .radio-pg .caption .sub, html[data-time="day"] .porch .caption .sub,
 html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .today-book .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .work-desk .caption .sub, html[data-time="day"] .work-phone .caption .sub, html[data-time="day"] .work-break .caption .sub, html[data-time="day"] .work-files .caption .sub,
 html[data-time="day"] .shelf-pg .shelfcap .sub {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
@@ -91,6 +93,7 @@ html[data-time="day"] .shelf-pg .shelfcap .sub {
 html[data-time="day"] .hub.is3d .quietbtn, html[data-time="day"] .hub.is3d .closebtn,
 html[data-time="day"] .kitchen .quietbtn, html[data-time="day"] .radio-pg .quietbtn, html[data-time="day"] .porch .quietbtn,
 html[data-time="day"] .attic .quietbtn, html[data-time="day"] .hall .quietbtn, html[data-time="day"] .ending .quietbtn,
+html[data-time="day"] .work-desk .quietbtn, html[data-time="day"] .work-phone .quietbtn, html[data-time="day"] .work-break .quietbtn, html[data-time="day"] .work-files .quietbtn,
 html[data-time="day"] .album-pg .closebtn, html[data-time="day"] .album-pg .quietbtn {
   color: var(--ink-day);
   border-color: rgba(43, 35, 80, .7);
