@@ -504,10 +504,11 @@
     if (hub || hubFailed) return hub;
     if (new URLSearchParams(location.search).has('flat')) {
       hubFailed = true;
+      $('s-hub').classList.add('no3d');
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=merge3');
+      const { createHub } = await import('./hub3d.js?v=merge4');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -523,16 +524,23 @@
     } catch (err) {
       console.warn('3D house unavailable', err);
       hubFailed = true;
+      $('s-hub').classList.add('no3d'); // only now show the flat door list
     }
     return hub;
   }
 
   // the same 3D house, lit up and still, behind the cover
   let introHub = null;
+  let introLoading = false;
   async function ensureIntroHub() {
-    if (introHub || hubFailed || new URLSearchParams(location.search).has('flat')) return;
+    if (introHub || introLoading) return;
+    if (hubFailed || new URLSearchParams(location.search).has('flat')) {
+      $('s-intro').classList.add('no3d');
+      return;
+    }
+    introLoading = true;
     try {
-      const { createHub } = await import('./hub3d.js?v=merge3');
+      const { createHub } = await import('./hub3d.js?v=merge4');
       introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
       ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
       introHub.setActive($('s-intro').classList.contains('on'));
@@ -543,7 +551,9 @@
       };
     } catch (err) {
       console.warn('3D cover unavailable', err);
+      $('s-intro').classList.add('no3d'); // only now show the flat house
     }
+    introLoading = false;
   }
 
   async function enterHouseRoom(name) {
@@ -1402,6 +1412,8 @@
       HomeAgainVoice.preload();
     }
     wireOnce();
+    ensureIntroHub(); // load both 3D houses now, so nothing flat flashes the first time they appear
+    ensureHub();
     show('intro');
   }
 

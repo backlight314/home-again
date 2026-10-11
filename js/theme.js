@@ -17,10 +17,12 @@
   let btn = null;
   function paint() {
     if (!btn) return;
-    const toDay = mode === 'night';
-    btn.innerHTML = (toDay ? SUN : MOON) + '<span>' + (toDay ? 'Day' : 'Night') + '</span>';
-    btn.setAttribute('aria-label', toDay ? 'Switch to daytime' : 'Switch to nighttime');
-    btn.setAttribute('aria-pressed', String(mode === 'day'));
+    const day = mode === 'day';
+    btn.innerHTML =
+      '<span class="opt' + (day ? ' on' : '') + '">' + SUN + 'Day</span>' +
+      '<span class="opt' + (day ? '' : ' on') + '">' + MOON + 'Night</span>';
+    btn.setAttribute('aria-label', day ? 'It is daytime. Switch to nighttime' : 'It is nighttime. Switch to daytime');
+    btn.setAttribute('aria-pressed', String(day));
   }
 
   function set(next) {

@@ -6,35 +6,40 @@
   --gold-day: #a85d10;
 }
 
-/* ---------- the toggle ---------- */
+/* ---------- the toggle: a two-option switch, the current mode lit ---------- */
 #timeToggle {
   position: fixed;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
-  min-width: 64px;
-  min-height: 64px;
-  padding: 0 18px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 999px;
+  align-items: stretch;
+  padding: 5px;
+  gap: 4px;
   border: 0;
+  border-radius: 999px;
+  background: rgba(22, 20, 52, .82);
+  box-shadow: 0 0 0 2px rgba(255, 226, 160, .45), 0 8px 24px rgba(10, 6, 30, .45);
   font-family: "Patrick Hand", "Segoe Print", system-ui, sans-serif;
-  font-size: 24px;
-  letter-spacing: .04em;
-  background: #fff1d4;
-  color: #2b2350;
-  box-shadow: 0 0 0 2px rgba(255, 226, 160, .5), 0 8px 24px rgba(10, 6, 30, .45);
+  font-size: 22px;
+  letter-spacing: .03em;
   cursor: pointer;
-  transition: transform .4s, box-shadow .4s;
 }
-#timeToggle:hover, #timeToggle:focus-visible { transform: translateX(-50%) scale(1.04); }
-#timeToggle.inline { position: static; transform: none; min-height: 48px; padding: 0 14px; font-size: 20px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
-#timeToggle.inline:hover, #timeToggle.inline:focus-visible { transform: scale(1.04); }
-html[data-time="day"] #timeToggle { background: #2b2350; color: #ffe2a0; box-shadow: 0 0 0 2px rgba(43, 35, 80, .4), 0 8px 24px rgba(40, 60, 100, .35); }
+#timeToggle .opt {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 54px; padding: 0 18px;
+  border-radius: 999px;
+  color: #e9e4ff;
+  transition: background .35s, color .35s;
+}
+#timeToggle .opt.on { background: #fff1d4; color: #2b2350; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+#timeToggle:hover, #timeToggle:focus-visible { box-shadow: 0 0 0 3px rgba(255, 226, 160, .8), 0 8px 24px rgba(10, 6, 30, .45); }
+#timeToggle.inline { position: static; transform: none; padding: 3px; font-size: 18px; }
+#timeToggle.inline .opt { min-height: 40px; padding: 0 12px; }
+html[data-time="day"] #timeToggle { background: rgba(255, 250, 238, .92); box-shadow: 0 0 0 2px rgba(168, 93, 16, .4), 0 8px 24px rgba(60, 90, 140, .3); }
+html[data-time="day"] #timeToggle .opt { color: #5a4a30; }
+html[data-time="day"] #timeToggle .opt.on { background: #ffd95e; color: #2b2350; }
 
 /* ---------- SVG room scenes ---------- */
 html[data-time="day"] .sk0 { stop-color: #4fa6ea; }
@@ -154,4 +159,4 @@ html[data-time="day"] .calltile { background: rgba(255, 250, 238, .96); color: v
 
 /* ---------- gentle fade when switching ---------- */
 .scene, .intro, .album-pg .desk, .hub3d { transition: filter .5s; }
-@media (prefers-reduced-motion: reduce) { #timeToggle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #timeToggle .opt { transition: none; } }
