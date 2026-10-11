@@ -8,6 +8,7 @@ import { ROOT, TYPES, loadDoc, readMedia, storage, loadMaterials, withMaterials,
 import { upgradeMatching } from './faces.js';
 import { logEvents, insights, snowflakeOn } from './snowflake.js';
 import { loadJournal, addEntry, removeEntry } from './journal.js';
+import { speakLine, ttsReady } from './tts.js';
 
 const PORT = Number(process.env.PORT) || 8787;
 const MAX_BODY = 40 * 1024 * 1024;
@@ -88,6 +89,7 @@ const routes = {
   'GET /api/insights': () => insights(),
   'GET /api/journal': () => loadJournal(),
   'POST /api/journal': (body) => addEntry(body),
+  'POST /api/tts': (body) => speakLine(body),
   'GET /api/game': async () => {
     const cfg = await loadDoc('game', null);
     if (!cfg) throw Object.assign(new Error('no game built yet'), { status: 404 });
@@ -158,15 +160,23 @@ http.createServer(async (req, res) => {
     if (!file) return send(res, 404, 'not found', 'text/plain');
     return serveFile(res, file);
   } catch (err) {
-    const status = err.status && err.status < 600 ? err.status : 500;
-    if (status >= 500) console.error(err);
-    send(res, status, { error: status === 500 ? 'Something went wrong on the server.' : err.message });
+    // the album store (TigerData) being unreachable is worth saying plainly: try again soon
+    const offline = !err.status && /Connection terminated|timeout|ECONNREFUSED|EHOSTUNREACH|ENOTFOUND|ETIMEDOUT|ECONNRESET/i.test(err.message + ' ' + (err.code || ''));
+    const status = offline ? 503 : err.status && err.status < 600 ? err.status : 500;
+    if (status >= 500 && !err.quiet) console.error(offline ? 'Album store unreachable: ' + err.message : err);
+    send(res, status, {
+      error: offline
+        ? "The album can't be reached right now. Wait a minute and try again."
+        : status === 500 ? 'Something went wrong on the server.' : err.message
+    });
   }
 }).listen(PORT, () => {
   console.log(`Home Again on http://localhost:${PORT}  (family: /family)`);
   console.log(`Album stored in ${storage.documents}; photos and voices in ${storage.files}`);
+  console.log(ttsReady() ? 'Spoken lines without a recording use ElevenLabs' : 'ElevenLabs not set up (ELEVENLABS_API_KEY); the game falls back to the browser voice');
   console.log(`Play events go to ${snowflakeOn ? 'Snowflake' : 'data/events.jsonl (Snowflake not configured)'}`);
 });
 
 // re-check existing face guesses whenever the matching rules change
-withMaterials(mat => { if (upgradeMatching(mat)) console.log('Face guesses re-checked with the current matching rules.'); });
+withMaterials(mat => { if (upgradeMatching(mat)) console.log('Face guesses re-checked with the current matching rules.'); })
+  .catch(err => console.warn('Could not re-check face guesses yet (album store unreachable):', err.message));

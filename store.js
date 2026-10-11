@@ -87,6 +87,15 @@ export async function saveMedia(dataUrl, prefix) {
   await media.put(name, Buffer.from(m[2], 'base64'));
   return '/media/' + name;
 }
+// A file stored under a name of the caller's choosing (spoken lines cached by their text),
+// and whether one is already there.
+export async function putNamedMedia(name, bytes) {
+  await media.put(path.basename(name), bytes);
+  return '/media/' + path.basename(name);
+}
+export async function hasMedia(name) {
+  try { await media.get(path.basename(name)); return true; } catch { return false; }
+}
 export async function dropMedia(url) {
   if (url?.startsWith('/media/')) await media.remove(path.basename(url)).catch(err => console.warn('Could not delete', url, err.message));
 }
@@ -109,6 +118,7 @@ export async function removeMaterial(mat, id) {
     if (item.url) await dropMedia(item.url);
     if (item.backUrl) await dropMedia(item.backUrl);
     if (list === 'photos') mat.people.forEach(f => { if (f.photoId === id) f.photoId = null; });
+    if (list === 'voices') mat.photos.forEach(ph => { if (ph.voiceId === id) delete ph.voiceId; });
     if (list === 'people') for (const ph of mat.photos) {
       if (!ph.faces?.some(f => f.personId === id)) continue;
       ph.faces.forEach(f => { if (f.personId === id) Object.assign(f, { personId: null, status: 'unknown' }); });

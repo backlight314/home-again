@@ -23,10 +23,16 @@ export async function addPhoto(body) {
   return result;
 }
 
-// body: any of { who, caption, year }
+// body: any of { who, caption, year, voiceId } (voiceId: a voice message read out as the
+// photo's caption in the game, or '' to take it off)
 export const updatePhoto = (id, body) => withMaterials(mat => {
   const ph = findPhoto(mat, id);
   for (const k of ['who', 'caption', 'year']) if (k in body) ph[k] = clean(body[k]);
+  if ('voiceId' in body) {
+    const v = clean(body.voiceId);
+    if (v && !mat.voices.some(x => x.id === v)) throw gone('voice message');
+    if (v) ph.voiceId = v; else delete ph.voiceId;
+  }
   // typing names by hand wins over face tags; clearing the field hands it back to them
   if ('who' in body) { ph.whoSource = ph.who ? 'manual' : 'faces'; syncWho(ph, mat); }
   return { photo: ph };

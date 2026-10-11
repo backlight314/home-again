@@ -3,7 +3,10 @@
   // every activity that keeps a memory: this week's five rooms, Today, Childhood, then Work
   const weekKeys = ['kitchen', 'radio', 'porch', 'attic', 'walk'];
   const workKeys = ['desk', 'phone', 'break', 'files'];
-  const keys = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', 'toybox', 'recipe', ...workKeys];
+  const keys = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', 'toybox', 'recipe', ...workKeys, 'yesterday'];
+  // the rooms of the house: four of the week's letter rooms and Yesterday in the hall
+  // (Wednesday's walk has no door in the house; Yesterday took the hall)
+  const houseKeys = ['kitchen', 'radio', 'porch', 'attic', 'yesterday'];
   const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden', 'sc-walk'];
   // The Childhood yard and the Today room are 3D places like the house. Each place has spots to go into.
   const placeRooms = { childhood: { treehouse: 'toybox', cottage: 'recipe' }, today: { letter: 'today', desk: 'journal' } };
@@ -16,7 +19,7 @@
     3: [[8, 10, -2, 34], [58, 8, 1.6, 34], [33, 52, 0.8, 34]],
     4: [[8, 9, -2, 34], [58, 8, 1.6, 34], [6, 50, 1.2, 34], [56, 50, -1.6, 34]]
   };
-  const slipSpots = ['t1', 't4', 't2', 't5'];
+  const slipSpots = ['t1', 't4', 't2', 't5', 't3'];
 
   let pack = null;
   let letter = [];
@@ -28,6 +31,7 @@
   let currentBook = 'week';
   let pendingPlace = null;
   let viewing = null;
+  let viewingVoice = null; // the voice caption of the memory on screen, if it has one
   let timers = [];
   let rereading = false;
   let round = 0;
@@ -47,9 +51,9 @@
   let officeFailed = false;
   let officeInside = false;
   let officeMoving = false;
-  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'walk' };
+  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'yesterday' };
   const officeRooms = { desk: 'desk', break: 'break', phone: 'phone', files: 'files' };
-  const weekFound = () => weekKeys.filter((k) => found[keys.indexOf(k)]).length;
+  const weekFound = () => houseKeys.filter((k) => found[keys.indexOf(k)]).length;
   const workFound = () => workKeys.filter((k) => found[keys.indexOf(k)]).length;
 
   // Play events for the family's insights page, sent to the server in small batches.
@@ -91,8 +95,10 @@
   };
   const chapter = (id) => chapters.find((c) => c.id === id);
   const memory = (id) => chapters.flatMap((c) => c.memories).find((m) => m.id === id);
-  const done = (c) => c.memories.filter((m) => m.activity && found[keys.indexOf(m.activity)]).length;
-  const complete = (c) => c.memories.filter((m) => m.activity).length > 0 && done(c) === c.memories.filter((m) => m.activity).length;
+  // a book counts its rooms, not its photos: Yesterday's four pictures are one memory
+  const bookRooms = (c) => [...new Set(c.memories.filter((m) => m.activity).map((m) => m.activity))];
+  const done = (c) => bookRooms(c).filter((a) => found[keys.indexOf(a)]).length;
+  const complete = (c) => bookRooms(c).length > 0 && done(c) === bookRooms(c).length;
   const memPrint = (m) => {
     const many = (m.photos || []).length > 1;
     if (many) return '<span class="collage" style="--n:' + m.photos.length + '">' + m.photos.map((u) => '<img src="' + u + '" alt="">').join('') + '</span>';
@@ -134,6 +140,7 @@
   }
 
   function hush() {
+    sayToken++; // a line still being fetched will not start
     if (familyAudio) {
       familyAudio.pause();
       familyAudio = null;
@@ -182,14 +189,15 @@
         photos,
         caption: mem.title || line.room,
         line: line.line,
-        by: line.by
+        by: line.by,
+        voice: line.voice || null // the family member's recording of this piece, when the build found one
       };
     });
     chapters = [
       { id: 'childhood', title: 'Childhood', color: '#b8893a', memories: childMemories() },
       { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
       { id: 'work', title: 'Work', color: '#44607d', memories: workMemories() },
-      { id: 'week', title: 'This week', color: '#9c3b2e', memories },
+      { id: 'week', title: 'This week', color: '#9c3b2e', memories: [...memories.filter((m) => houseKeys.includes(m.activity)), ...yesterdayMemories()] },
       { id: 'today', title: 'Today', color: '#6d5262', memories: todayMemories() }
     ];
     currentBook = 'week';
@@ -348,7 +356,7 @@
       const b = document.createElement('button');
       const playable = c.memories.some((m) => m.activity);
       const n = playable ? done(c) : 0;
-      const m = c.memories.length;
+      const m = playable ? bookRooms(c).length : c.memories.length;
       b.className = 'book b' + (i + 1) + (playable && complete(c) ? ' full' : '');
       b.style.setProperty('--bk', c.color);
       b.innerHTML =
@@ -424,7 +432,7 @@
     fly.style.cssText += ';left:0px;top:0px;width:' + scr.width + 'px;height:' + scr.height + 'px';
     fly.innerHTML =
       '<span class="plate">' + book.title + '</span><span class="prog">' +
-      (complete(book) ? S.bookComplete : S.bookProgress(done(book), book.memories.length)) + '</span>';
+      (complete(book) ? S.bookComplete : S.bookProgress(done(book), bookRooms(book).length)) + '</span>';
     $('screen').appendChild(fly);
     void fly.offsetWidth;
     fly.style.transition = '';
@@ -478,7 +486,7 @@
     sheet.innerHTML = '';
     pageNow = pages.length ? pageItems(book, pages[at]) : [];
     const first = pageNow[0] && pageNow[0].m;
-    const roomName = first ? (book.memories.filter((m) => m.activity === pages[at]).length > 1 ? book.title : first.title) : '';
+    const roomName = first ? first.roomTitle || (book.memories.filter((m) => m.activity === pages[at]).length > 1 ? book.title : first.title) : '';
     sheet.dataset.title = book.title.toUpperCase() + (roomName && roomName !== book.title ? ' · ' + roomName.toUpperCase() : '');
     if (!pages.length) {
       const empty = document.createElement('div');
@@ -500,7 +508,7 @@
       slot.querySelector('.print').onclick = () => {
         if (!slot.classList.contains('filled')) return;
         rereading = true;
-        openMemory(it.m.id);
+        openMemory(it.m.id, it.src);
       };
       sheet.appendChild(slot);
     });
@@ -561,7 +569,7 @@
     const pages = bookPages(book);
     rooms.forEach((activity, i) => {
       const mems = book.memories.filter((m) => m.activity === activity);
-      const title = mems.length > 1 ? book.title : mems[0].title;
+      const title = mems[0].roomTitle || (mems.length > 1 ? book.title : mems[0].title);
       const isDone = found[keys.indexOf(activity)] && !placing.some((k) => k.startsWith('p-' + activity + '-'));
       const b = document.createElement('button');
       b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (isDone ? ' done' : ' open');
@@ -594,7 +602,7 @@
             if (--left > 0) return;
             const book = chapter(currentBook);
             toast(complete(book) ? S.bookFull : S.placed);
-            if (currentBook === 'week' && weekFound() === weekKeys.length) later(() => show('ending'), 1600);
+            if (currentBook === 'week' && weekFound() === houseKeys.length) later(() => show('ending'), 1600);
             // stay on the album page; the player taps BACK TO THE HOUSE when ready
           }),
         i * 700
@@ -669,13 +677,13 @@
     el.innerHTML =
       (n === 0
         ? 'What happened this week?'
-        : n < weekKeys.length
+        : n < houseKeys.length
           ? 'What else do you remember from this week?'
           : 'The week is coming together') +
       '<span class="sub">' +
       (hub ? 'TAP A ROOM TO GO IN · ' : '') +
       n +
-      ' OF ' + weekKeys.length + ' WINDOWS LIT</span>';
+      ' OF ' + houseKeys.length + ' WINDOWS LIT</span>';
   }
 
   function officeCaption() {
@@ -733,12 +741,13 @@
       return;
     }
     box.innerHTML = '';
-    weekKeys.forEach((k, i) => {
+    houseKeys.forEach((k) => {
+      const i = keys.indexOf(k);
       const b = document.createElement('button');
       b.className = 'roomrow door-' + k + (found[i] ? ' found' : '');
       b.innerHTML =
         '<span class="n">' +
-        (letter[i] ? letter[i].room : k) +
+        (k === 'yesterday' ? 'Yesterday' : letter[i] ? letter[i].room : k) +
         '</span><span class="s">' +
         (found[i] ? 'in the album' : 'tap to go there') +
         '</span>';
@@ -760,7 +769,7 @@
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=todaybook');
+      const { createHub } = await import('./hub3d.js?v=yesterday');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -792,7 +801,7 @@
     }
     introLoading = true;
     try {
-      const { createHub } = await import('./hub3d.js?v=todaybook');
+      const { createHub } = await import('./hub3d.js?v=yesterday');
       introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
       ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
       introHub.setActive($('s-intro').classList.contains('on'));
@@ -1035,7 +1044,7 @@
   }
 
   // inside a room, the top-left button goes back to the house instead of leaving
-  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', ...workKeys];
+  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', ...workKeys, 'yesterday'];
   let current = 'intro';
   const inRoom = () => ROOMS.includes(current) || !!placeOf[current];
   function back() {
@@ -1097,7 +1106,7 @@
       });
       buildRooms();
       const n = weekFound();
-      speak(n === 0 ? 'What happened this week?' : n < weekKeys.length ? 'What else do you remember from this week?' : 'The week is coming together');
+      speak(n === 0 ? 'What happened this week?' : n < houseKeys.length ? 'What else do you remember from this week?' : 'The week is coming together');
     }
     if (name === 'office') {
       ensureOffice().then(() => {
@@ -1164,6 +1173,7 @@
     if (name === 'phone') initPhone();
     if (name === 'break') initBreak();
     if (name === 'files') initFiles();
+    if (name === 'yesterday') initYesterday();
     if (name === 'ending') initEnding();
   }
 
@@ -1173,20 +1183,12 @@
       if (w) w.classList.remove('on');
       if (done) done();
     };
-    $('mWave').classList.add('on');
-    hush();
-    const url = pack.voice && pack.voice.audioDataUrl;
+    if ($('mWave')) $('mWave').classList.add('on'); // gone while the button reads STOP
+    // beginRead has already hushed everything; hushing again would reset its stop button.
+    // The photo's voice caption, else the letter piece's own recording, else an ElevenLabs reading
     const m = memory(viewing);
-    const line = m && m.line;
-    if (url) {
-      familyAudio = new Audio(url);
-      familyAudio.onended = finish;
-      familyAudio.play().catch(() => {
-        speak(line, 'letter', m && m.by).then(finish);
-      });
-      return;
-    }
-    speak(line, 'letter', m && m.by).then(finish);
+    const line = (viewingVoice && viewingVoice.text) || (m && m.line);
+    sayAloud(line, { recording: (viewingVoice && viewingVoice.audio) || (m && m.voice), role: 'letter', by: m && m.by }).then(finish);
   }
 
   // where a memory was opened from, so closing it goes back there (the album page, a place, or the house)
@@ -1200,22 +1202,74 @@
   }
   const homeLabel = (kind) => (kind === 'childhood' ? 'BACK TO CHILDHOOD' : kind === 'today' ? 'BACK TO TODAY' : 'BACK TO THE HOUSE');
 
-  function openMemory(id) {
+  // Says a line in the best voice there is: the family's own recording when there is one,
+  // else the line in an ElevenLabs voice (made once on the server, then kept), else the
+  // browser's voice. A newer line, or hush(), cuts an older one off.
+  let sayToken = 0;
+  const ttsCache = new Map();
+  function ttsUrl(text) {
+    if (!ttsCache.has(text)) {
+      ttsCache.set(
+        text,
+        fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }), signal: AbortSignal.timeout(25000) })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => (j && j.url) || null)
+          .catch(() => null)
+      );
+    }
+    return ttsCache.get(text);
+  }
+  async function sayAloud(text, { recording, role, by } = {}) {
+    const token = ++sayToken;
+    if (familyAudio) {
+      familyAudio.pause();
+      familyAudio = null;
+    }
+    if (window.HomeAgainVoice) HomeAgainVoice.stop();
+    const play = (url) =>
+      new Promise((resolve) => {
+        if (token !== sayToken) return resolve(true);
+        familyAudio = new Audio(url);
+        familyAudio.onended = () => resolve(true);
+        familyAudio.onerror = () => resolve(false);
+        familyAudio.play().catch(() => resolve(false));
+      });
+    if (recording && (await play(recording))) return;
+    if (!text || token !== sayToken) return;
+    const url = await ttsUrl(text);
+    if (token !== sayToken) return;
+    if (url && (await play(url))) return;
+    if (token === sayToken) await speak(text, role, by);
+  }
+
+  // a voice message the family chose as a photo's caption (pack.voiceCaptions, by photo
+  // address): the photo tapped on an album page, or else the first of the memory's photos
+  function voiceCaption(m, src) {
+    const caps = pack.voiceCaptions || {};
+    const urls = src ? [src] : [...((m && m.photos) || []), m && m.photoDataUrl];
+    for (const u of urls) if (u && caps[u]) return caps[u];
+    return null;
+  }
+
+  function openMemory(id, src) {
     hush();
     const m = memory(id);
     viewing = id;
     memoryFrom = current;
+    viewingVoice = voiceCaption(m, src);
+    const said = (viewingVoice && viewingVoice.text) || m.line;
+    const by = (viewingVoice && viewingVoice.from) || m.by;
     $('mPrint').querySelector('.sepia').innerHTML = memPrint(m);
     $('mCap').textContent = m.caption || m.title;
-    $('mLine').textContent = '“' + m.line + '”';
-    $('mBy').textContent = 'recorded by ' + m.by;
-    $('mWave').classList.remove('on');
+    $('mLine').textContent = '“' + said + '”';
+    $('mBy').textContent = 'recorded by ' + by;
+    if ($('mWave')) $('mWave').classList.remove('on');
     $('mDone').textContent = rereading ? (memoryFrom === 'album' ? S.closeMemory : homeLabel(placeOf[id] || placeHere())) : S.putIn;
     const pr = $('mPrint');
     pr.classList.remove('developed');
     $('reveal').classList.add('on');
     later(() => pr.classList.add('developed'), 300);
-    beginRead($('mPlay'), (done) => speak(m.line, 'letter', m.by).then(done));
+    beginRead($('mPlay'), (done) => playFamilyVoice(done));
   }
 
   function setSeat(el, state, who) {
@@ -1430,6 +1484,128 @@
     later(() => {
       if (talking) finishPorch();
     }, 12000);
+  }
+
+  // Yesterday, in the hall: the album photos dated the day before hang a little crooked.
+  // Each tap sets one straight, brings it into colour and reads its caption. Any order,
+  // nothing to get wrong. With no photos from yesterday, the family's portraits hang there.
+  const tilts = [-9, 7, -5, 8];
+  let straightened = [];
+
+  function yesterdayPhotos() {
+    return ((pack.rooms && pack.rooms.yesterday && pack.rooms.yesterday.photos) || []).filter((p) => p.photoDataUrl);
+  }
+
+  const sentence = (t) => t.charAt(0).toUpperCase() + t.slice(1).replace(/[.!]*$/, '.');
+
+  // the Yesterday pages of the week's album: one per photo, so each keeps its own caption
+  function yesterdayMemories() {
+    const y = (pack.rooms && pack.rooms.yesterday) || {};
+    const base = { activity: 'yesterday', roomTitle: 'Yesterday', scene: 'sc-table', by: y.by || 'the family' };
+    const photos = yesterdayPhotos();
+    if (!photos.length) {
+      const first = (pack.people || []).find((p) => p.photoDataUrl);
+      return [{ ...base, id: 'yesterday', title: 'Yesterday', caption: 'The hall, yesterday', photoDataUrl: (first && first.photoDataUrl) || null, line: y.line || 'Everyone was with you yesterday.' }];
+    }
+    return photos.map((p, i) => ({ ...base, id: i ? 'yesterday-' + i : 'yesterday', title: p.caption, caption: p.caption, photoDataUrl: p.photoDataUrl, line: sentence(p.caption) }));
+  }
+
+  function helloFor(name) {
+    const r = kitchenPlan().find((x) => x.who === name);
+    if (r && r.hello) return r.hello;
+    const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
+    return name + ': "Hi' + (call ? ' ' + call : '') + ', it is me."';
+  }
+
+  function relationOf(name) {
+    const rel = ((personByName(name) || {}).relation || '').trim();
+    return !rel || /^your\b/i.test(rel) ? rel : 'your ' + rel;
+  }
+
+  // what hangs in the hall: yesterday's photos, each read out by its caption, or else the
+  // family's portraits, each saying hello
+  function yesterdayItems() {
+    const photos = yesterdayPhotos();
+    if (photos.length) {
+      return photos.map((p, i) => {
+        const vc = (pack.voiceCaptions || {})[p.photoDataUrl]; // a voice message chosen as this photo's caption
+        return { key: 'photo' + i, label: p.caption, pic: '<img src="' + p.photoDataUrl + '" alt="">', say: (vc && vc.text) || sentence(p.caption), recording: vc && vc.audio, role: 'warm' };
+      });
+    }
+    return kitchenFaces().map((n) => ({ key: n, label: n, small: relationOf(n), pic: face(n), say: helloFor(n), role: 'person' }));
+  }
+
+  function setYesterdayCap(text) {
+    const d = gameDay();
+    d.setDate(d.getDate() - 1);
+    $('yCap').innerHTML = text + '<span class="sub">YESTERDAY · ' + d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() + '</span>';
+  }
+
+  function drawYesterdayFrames() {
+    const box = $('yFrames');
+    box.innerHTML = '';
+    const items = yesterdayItems();
+    box.classList.toggle('many', items.length > 3);
+    items.forEach((it, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hframe';
+      b.style.setProperty('--tilt', tilts[i % tilts.length] + 'deg');
+      b.setAttribute('aria-label', 'Straighten the picture of ' + it.label);
+      b.innerHTML =
+        '<svg class="wire" viewBox="0 0 100 30" aria-hidden="true"><path d="M10 30L50 3L90 30"/><circle cx="50" cy="3" r="3"/></svg>' +
+        '<span class="sway"><span class="pic">' + it.pic + '</span></span>';
+      // captions come from the family, so they go in as text
+      const who = document.createElement('span');
+      who.className = 'who' + (it.small === undefined ? ' cap' : '');
+      who.textContent = it.label;
+      if (it.small) {
+        const sm = document.createElement('small');
+        sm.textContent = it.small;
+        who.appendChild(sm);
+      }
+      b.appendChild(who);
+      b.onclick = () => straighten(it, b);
+      box.appendChild(b);
+    });
+  }
+
+  function yesterdaySaid(it) {
+    $('ySaidText').textContent = it.say;
+    $('ySaid').hidden = false;
+    sayAloud(it.say, { recording: it.recording, role: it.role || 'person' });
+  }
+
+  function straighten(it, btn) {
+    if (straightened.includes(it.key)) return yesterdaySaid(it); // a straight picture just says it again
+    straightened.push(it.key);
+    btn.classList.add('straight');
+    yesterdaySaid(it);
+    track('picture_straightened', 'yesterday', { person: it.role === 'person' ? it.key : null, ms: since(stepT0) });
+    stepT0 = performance.now();
+    const left = yesterdayItems().length - straightened.length;
+    if (left > 0) {
+      setYesterdayCap(left === 1 ? 'Just one more' : 'That one looks better');
+      return;
+    }
+    setYesterdayCap(yesterdayPhotos().length ? 'The pictures are straight again' : 'Everyone was here yesterday');
+    later(() => $('yesterdayTake').classList.remove('hide'), 1200);
+  }
+
+  function initYesterday() {
+    straightened = [];
+    $('ySaid').hidden = true;
+    $('yesterdayTake').classList.add('hide');
+    drawYesterdayFrames();
+    const y = (pack.rooms && pack.rooms.yesterday) || {};
+    if (!yesterdayItems().length) {
+      setYesterdayCap('The hall is quiet');
+      later(() => $('yesterdayTake').classList.remove('hide'), 900);
+      return;
+    }
+    const prompt = y.prompt || 'The pictures from yesterday are a little crooked';
+    setYesterdayCap(prompt);
+    speak(prompt);
   }
 
   // the day the game treats as today: the pack's asOf (YYYY-MM-DD), or the real date
@@ -2118,6 +2294,7 @@
     $('phoneTake').onclick = () => keepMemory('phone');
     $('breakTake').onclick = () => keepMemory('break');
     $('filesTake').onclick = () => keepMemory('files');
+    $('yesterdayTake').onclick = () => keepMemory('yesterday');
     $('hearToday').onclick = () =>
       toggleRead($('hearToday'), (done) => hearTodayLetter().then(done), () => {
         document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
@@ -2189,6 +2366,7 @@
       ['radio', 'Car'],
       ['porch', 'Garden'],
       ['attic', 'Photos'],
+      ['yesterday', 'Yesterday'],
       ['today', 'Today'],
       ['office', 'Work'],
       ['desk', 'Desk'],
