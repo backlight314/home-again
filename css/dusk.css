@@ -156,7 +156,7 @@
 }
 /* no WebGL: fall back to the flat house */
 .intro .housewrap { display: none; }
-.intro:not(.is3d) .housewrap { display: block; right: 8cqw; top: 14cqw; width: 34%; z-index: 2; }
+.intro.no3d .housewrap { display: block; right: 8cqw; top: 14cqw; width: 34%; z-index: 2; }  /* only when WebGL is unavailable */
 
 .intro .fly {
   position: absolute; z-index: 4; width: 7px; height: 7px; border-radius: 50%;
@@ -487,3 +487,10 @@
   color: #fff !important;
   box-shadow: 0 0 0 .25cqw rgba(255, 160, 140, .55), 0 8px 24px rgba(10, 6, 30, .5), 0 0 30px rgba(232, 112, 90, .45) !important;
 }
+
+
+/* ---------- no flash of the old flat screens while the 3D houses load ---------- */
+.hub:not(.no3d) .list { display: none; }          /* the flat door list is only a no-WebGL fallback */
+.intro3d canvas, .hub3d canvas { opacity: 0; transition: opacity .8s ease; }
+.intro.is3d .intro3d canvas, .hub.is3d .hub3d canvas { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .intro3d canvas, .hub3d canvas { transition: none; } }
