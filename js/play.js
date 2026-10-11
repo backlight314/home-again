@@ -158,12 +158,13 @@
     const t = (pack.rooms && pack.rooms.today) || {};
     const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
     const first = personByName(todayFaces()[0]);
+    const hung = hallPhotos()[0];
     return {
       id: 'today',
       title: 'Today',
       activity: 'today',
       scene: 'sc-table',
-      photoDataUrl: (first && first.photoDataUrl) || null,
+      photoDataUrl: (hung && hung.photoDataUrl) || (first && first.photoDataUrl) || null,
       caption: t.caption || 'The hall, today',
       line: t.line || 'Everyone is with you today' + (call ? ', ' + call : '') + '.',
       by: t.by || 'the family'
@@ -894,6 +895,27 @@
     return kitchenFaces();
   }
 
+  // album photos the pack hangs in the hall (pack.rooms.today.photos), when the album has them
+  function hallPhotos() {
+    return ((pack.rooms && pack.rooms.today && pack.rooms.today.photos) || []).filter((p) => p.photoDataUrl);
+  }
+
+  // What hangs in the hall: those photos, each read out by its caption, or else the
+  // family's portraits, each saying hello.
+  function todayItems() {
+    const photos = hallPhotos();
+    if (photos.length) {
+      return photos.map((p, i) => ({
+        key: 'photo' + i,
+        label: p.caption,
+        pic: '<img src="' + p.photoDataUrl + '" alt="">',
+        say: p.caption.charAt(0).toUpperCase() + p.caption.slice(1).replace(/[.!]*$/, '.'),
+        role: 'warm'
+      }));
+    }
+    return todayFaces().map((n) => ({ key: n, label: n, small: relationOf(n), pic: face(n), say: helloFor(n), role: 'person' }));
+  }
+
   function setTodayCap(text) {
     const day = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
     $('tCap').innerHTML = text + '<span class="sub">TODAY · ' + day + '</span>';
@@ -914,40 +936,48 @@
   function drawFrames() {
     const box = $('tFrames');
     box.innerHTML = '';
-    todayFaces().forEach((n, i) => {
-      const rel = relationOf(n);
+    todayItems().forEach((it, i) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'hframe';
       b.style.setProperty('--tilt', tilts[i % tilts.length] + 'deg');
-      b.setAttribute('aria-label', 'Straighten the picture of ' + n);
+      b.setAttribute('aria-label', 'Straighten the picture of ' + it.label);
       b.innerHTML =
         '<svg class="wire" viewBox="0 0 100 30" aria-hidden="true"><path d="M10 30L50 3L90 30"/><circle cx="50" cy="3" r="3"/></svg>' +
-        '<span class="sway"><span class="pic">' + face(n) + '</span></span>' +
-        '<span class="who">' + n + (rel ? '<small>' + rel + '</small>' : '') + '</span>';
-      b.onclick = () => straighten(n, b);
+        '<span class="sway"><span class="pic">' + it.pic + '</span></span>';
+      // captions come from the family, so they go in as text
+      const who = document.createElement('span');
+      who.className = 'who' + (it.small === undefined ? ' cap' : '');
+      who.textContent = it.label;
+      if (it.small) {
+        const s = document.createElement('small');
+        s.textContent = it.small;
+        who.appendChild(s);
+      }
+      b.appendChild(who);
+      b.onclick = () => straighten(it, b);
       box.appendChild(b);
     });
   }
 
-  function todaySaid(t) {
+  function todaySaid(t, role) {
     $('tSaidText').textContent = t;
     $('tSaid').hidden = false;
-    speak(t, 'person');
+    speak(t, role || 'person');
   }
 
-  function straighten(n, btn) {
-    todaySaid(helloFor(n)); // tapping a straight picture again just says hello again
-    if (straightened.includes(n)) return;
-    straightened.push(n);
+  function straighten(it, btn) {
+    todaySaid(it.say, it.role); // tapping a straight picture again just says it again
+    if (straightened.includes(it.key)) return;
+    straightened.push(it.key);
     btn.classList.add('straight');
-    btn.setAttribute('aria-label', 'Picture of ' + n);
-    const left = todayFaces().length - straightened.length;
+    btn.setAttribute('aria-label', 'Picture of ' + it.label);
+    const left = todayItems().length - straightened.length;
     if (left > 0) {
       setTodayCap(left === 1 ? 'Just one more' : 'That one looks better');
       return;
     }
-    setTodayCap('Everyone is here today');
+    setTodayCap(hallPhotos().length ? 'The pictures are straight again' : 'Everyone is here today');
     later(() => $('todayTake').classList.remove('hide'), 1200);
   }
 
@@ -957,7 +987,7 @@
     $('todayTake').classList.add('hide');
     drawFrames();
     const t = (pack.rooms && pack.rooms.today) || {};
-    if (!todayFaces().length) {
+    if (!todayItems().length) {
       setTodayCap('The hall is quiet today');
       later(() => $('todayTake').classList.remove('hide'), 900);
       return;

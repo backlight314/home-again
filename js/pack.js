@@ -14,7 +14,8 @@
  *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }] },
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
- *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] }
+ *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] },
+ *     today: { prompt?, caption?, line?, by?, photos?: [{ caption, photoDataUrl? }] }
  *   },
  *   ending: { callName }
  * }
@@ -125,6 +126,14 @@
           prompt: 'Tell me about tea in the garden yesterday',
           storyText: 'We sat outside. A bee landed on the saucer and Mom laughed. Alina took a picture.',
           svgId: 'sc-garden'
+        },
+        today: {
+          // album photos hung in the hall, named by caption and filled in from the album at Play
+          photos: [
+            { caption: 'you helped with cooking dinner' },
+            { caption: "we celebrated chris's birthday" },
+            { caption: 'we went on a city walk' }
+          ]
         },
         attic: {
           prompt: 'Which photo came first this week?',
