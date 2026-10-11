@@ -37,6 +37,28 @@
   let hubMoving = false;
   const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'today' };
 
+  // Play events for the family's insights page, sent to the server in small batches.
+  // Only what happened and how long it took; never what the player said.
+  let session = '';
+  let outbox = [];
+  let flushTimer = null;
+  let roomT0 = 0;
+  let stepT0 = 0;
+  const since = (t0) => Math.round(performance.now() - t0);
+  function track(event, room, extra) {
+    outbox.push({ session, ts: new Date().toISOString(), hour: new Date().getHours(), event, room, ...extra });
+    clearTimeout(flushTimer);
+    flushTimer = setTimeout(flush, 4000);
+  }
+  function flush() {
+    if (!outbox.length) return;
+    const body = JSON.stringify({ events: outbox.splice(0) });
+    if (!(navigator.sendBeacon && navigator.sendBeacon('/api/events', body))) {
+      fetch('/api/events', { method: 'POST', body, keepalive: true }).catch(() => {});
+    }
+  }
+  global.addEventListener('pagehide', flush);
+
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const clearAll = () => {
     timers.forEach(clearTimeout);
@@ -505,6 +527,10 @@
     if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach((f) => f.remove());
     document.querySelectorAll('#screen .flyer').forEach((f) => f.remove());
     document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === 's-' + name));
+    if (keys.includes(name)) {
+      roomT0 = stepT0 = performance.now();
+      track('room_enter', name);
+    }
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
     hub?.setActive(name === 'hub');
     introHub?.setActive(name === 'intro');
@@ -643,12 +669,14 @@
     const plan = kitchenPlan();
     const p = plan[round];
     if (!p) return;
+    track('face_tap', 'kitchen', { person: p.who, chosen: n, correct: n === p.who, ms: since(stepT0) });
     if (n !== p.who) {
       btn.classList.add('marked');
       said((p.hints && p.hints[n]) || 'Try another face.');
       return;
     }
     setSeat($(p.seat), 'filled', n);
+    stepT0 = performance.now(); // the next chair's clock starts now
     said(p.hello);
     drawFaces(list.filter((x) => x !== n));
     round++;
@@ -733,6 +761,7 @@
       porchStop = null;
       heard = heard || last;
     }
+    if (talking) track('story_told', 'porch', { ms: since(stepT0), words: heard ? heard.trim().split(/\s+/).length : 0 });
     talking = false;
     $('mic').classList.remove('live');
     const story = (pack.rooms.porch && pack.rooms.porch.storyText) || '';
@@ -751,6 +780,7 @@
       return;
     }
     talking = true;
+    stepT0 = performance.now();
     $('mic').classList.add('live');
     $('pCap').innerHTML = 'I am listening. Tap again when you are done.<span class="sub">YESTERDAY · GARDEN</span>';
     $('pHeard').textContent = 'listening…';
@@ -815,6 +845,7 @@
       b.onclick = () => {
         if (atticSet.length < 3 && !atticSet.includes(p.id)) {
           atticSet.push(p.id);
+          if (atticSet.length === 3) track('photos_ordered', 'attic', { ms: since(roomT0) });
           drawAttic();
         }
       };
@@ -890,6 +921,8 @@
     todaySaid(helloFor(n)); // tapping a straight picture again just says hello again
     if (straightened.includes(n)) return;
     straightened.push(n);
+    track('picture_straightened', 'today', { person: n, ms: since(stepT0) });
+    stepT0 = performance.now();
     btn.classList.add('straight');
     btn.setAttribute('aria-label', 'Picture of ' + n);
     const left = todayFaces().length - straightened.length;
@@ -938,6 +971,7 @@
 
   function keepMemory(activity) {
     rereading = false;
+    track('memory_kept', activity, { ms: since(roomT0) });
     found[keys.indexOf(activity)] = true; // counted now, so leaving mid-animation loses nothing
     paintHouseWindows();
     openMemory(activity);
@@ -948,7 +982,10 @@
     started = true;
 
     document.querySelectorAll('#view-play [data-go]').forEach((b) => {
+      const room = (b.closest('.scr') || {}).id?.slice(2);
+      const skips = b.dataset.go === 'hub' && keys.includes(room) && /skip/.test(b.textContent);
       b.onclick = () => {
+        if (skips) track('skip', room, { ms: since(roomT0) });
         if (b.dataset.go === 'hub') leaveHouse();
         else if (b.dataset.go === 'shelf' && !$('s-intro').classList.contains('on')) closeBook();
         else show(b.dataset.go);
@@ -967,7 +1004,10 @@
       currentBook = (chapters.find((c) => c.memories.some((m) => m.id === viewing)) || chapter('week')).id;
       show('album');
     };
-    $('restBtn').onclick = () => $('rest').classList.add('on');
+    $('restBtn').onclick = () => {
+      track('rest', (document.querySelector('#screen .scr.on') || {}).id?.slice(2));
+      $('rest').classList.add('on');
+    };
     $('restKeep').onclick = () => $('rest').classList.remove('on');
     $('restHome').onclick = () => {
       $('rest').classList.remove('on');
@@ -1057,6 +1097,8 @@
       });
     }
     found = keys.map(() => false);
+    session = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    track('session_start', 'intro');
     rereading = false;
     pendingPlace = null;
     viewing = null;
