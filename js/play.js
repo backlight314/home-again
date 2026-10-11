@@ -1,6 +1,7 @@
 (function (global) {
   const $ = (id) => document.getElementById(id);
-  const keys = ['kitchen', 'radio', 'porch', 'attic'];
+  const keys = ['kitchen', 'radio', 'porch', 'attic', 'today'];
+  const weekKeys = keys.slice(0, 4); // the four rooms that hold this week's letter pieces
   const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden'];
   const layout = {
     1: [[33, 32, 0.8]],
@@ -26,6 +27,7 @@
   let deg = 0;
   let talking = false;
   let atticSet = [];
+  let straightened = [];
   let started = false;
   let familyAudio = null;
   let porchStop = null;
@@ -33,7 +35,7 @@
   let hubFailed = false;
   let hubInside = false;
   let hubMoving = false;
-  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic' };
+  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'today' };
 
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const clearAll = () => {
@@ -127,7 +129,7 @@
 
   function buildChapters() {
     const who = (pack.profile && pack.profile.preferredName) || 'home';
-    memories = keys.map((activity, i) => {
+    memories = weekKeys.map((activity, i) => {
       const line = letter[i] || { room: activity, line: 'We love you.', by: 'Family' };
       const mem = (pack.memories && pack.memories[i]) || {};
       return {
@@ -146,9 +148,26 @@
       { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
       { id: 'work', title: 'Work', color: '#44607d', memories: [{ id: 'job', title: 'The job' }] },
       { id: 'week', title: 'This week', color: '#9c3b2e', memories },
-      { id: 'today', title: 'Today', color: '#6d5262', memories: [{ id: 'call', title: 'Say hello' }] }
+      { id: 'today', title: 'Today', color: '#6d5262', memories: [todayMemory()] }
     ];
     currentBook = 'week';
+  }
+
+  // The hall's page. pack.rooms.today { prompt, caption, line, by } can override any of it.
+  function todayMemory() {
+    const t = (pack.rooms && pack.rooms.today) || {};
+    const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
+    const first = personByName(todayFaces()[0]);
+    return {
+      id: 'today',
+      title: 'Today',
+      activity: 'today',
+      scene: 'sc-table',
+      photoDataUrl: (first && first.photoDataUrl) || null,
+      caption: t.caption || 'The hall, today',
+      line: t.line || 'Everyone is with you today' + (call ? ', ' + call : '') + '.',
+      by: t.by || 'the family'
+    };
   }
 
   function toast(msg) {
@@ -343,14 +362,14 @@
       fly.remove();
       const book = chapter(currentBook);
       toast(complete(book) ? S.bookFull : S.placed);
-      if (complete(book)) later(() => show('ending'), 1600);
+      if (found.every(Boolean)) later(() => show('ending'), 1600);
       // stay on the album page; the player taps BACK TO THE HOUSE when ready
     }, 2100);
   }
 
   function paintHouseWindows() {
     if (!hub) return;
-    keys.forEach((k, i) => hub.setLit(k, found[i]));
+    Object.entries(houseRooms).forEach(([room, activity]) => hub.setLit(room, found[keys.indexOf(activity)]));
   }
 
   function hubCaption() {
@@ -360,13 +379,13 @@
     el.innerHTML =
       (n === 0
         ? 'What happened this week?'
-        : n < 4
+        : n < keys.length
           ? 'What else do you remember from this week?'
           : 'The week is coming together') +
       '<span class="sub">' +
       (hub ? 'TAP A ROOM TO GO IN · ' : '') +
       n +
-      ' OF 4 WINDOWS LIT</span>';
+      ' OF ' + keys.length + ' WINDOWS LIT</span>';
   }
 
   function buildRooms() {
@@ -378,12 +397,12 @@
       return;
     }
     box.innerHTML = '';
-    letter.forEach((p, i) => {
+    keys.forEach((k, i) => {
       const b = document.createElement('button');
-      b.className = 'roomrow door-' + keys[i] + (found[i] ? ' found' : '');
+      b.className = 'roomrow door-' + k + (found[i] ? ' found' : '');
       b.innerHTML =
         '<span class="n">' +
-        p.room +
+        (letter[i] ? letter[i].room : 'Today') +
         '</span><span class="s">' +
         (found[i] ? 'in the album' : 'tap to go there') +
         '</span>';
@@ -445,10 +464,6 @@
 
   async function enterHouseRoom(name) {
     if (hubMoving) return;
-    if (name === 'hall') {
-      toast(S.comingSoon);
-      return;
-    }
     const activity = houseRooms[name];
     if (!activity) return;
     const idx = keys.indexOf(activity);
@@ -507,7 +522,7 @@
       });
       buildRooms();
       const n = found.filter(Boolean).length;
-      speak(n === 0 ? 'What happened this week?' : n < 4 ? 'What else do you remember from this week?' : 'The week is coming together');
+      speak(n === 0 ? 'What happened this week?' : n < keys.length ? 'What else do you remember from this week?' : 'The week is coming together');
     }
     if (name === 'album') {
       placingId = pendingPlace;
@@ -526,6 +541,7 @@
     if (name === 'radio') initRadio();
     if (name === 'porch') initPorch();
     if (name === 'attic') initAttic();
+    if (name === 'today') initToday();
     if (name === 'ending') initEnding();
   }
 
@@ -820,6 +836,86 @@
     speak((pack.rooms.attic && pack.rooms.attic.prompt) || 'Which one came first?');
   }
 
+  // Today, in the hall: the family's pictures hang a little crooked. Each tap sets one
+  // straight, brings it into colour, and that person says hello. Any order, nothing to get wrong.
+  const tilts = [-9, 7, -5];
+
+  function todayFaces() {
+    return kitchenFaces();
+  }
+
+  function setTodayCap(text) {
+    const day = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    $('tCap').innerHTML = text + '<span class="sub">TODAY · ' + day + '</span>';
+  }
+
+  function helloFor(name) {
+    const r = kitchenPlan().find((x) => x.who === name);
+    if (r && r.hello) return r.hello;
+    const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
+    return name + ': "Hi' + (call ? ' ' + call : '') + ', it is me."';
+  }
+
+  function relationOf(name) {
+    const rel = ((personByName(name) || {}).relation || '').trim();
+    return !rel || /^your\b/i.test(rel) ? rel : 'your ' + rel;
+  }
+
+  function drawFrames() {
+    const box = $('tFrames');
+    box.innerHTML = '';
+    todayFaces().forEach((n, i) => {
+      const rel = relationOf(n);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hframe';
+      b.style.setProperty('--tilt', tilts[i % tilts.length] + 'deg');
+      b.setAttribute('aria-label', 'Straighten the picture of ' + n);
+      b.innerHTML =
+        '<svg class="wire" viewBox="0 0 100 30" aria-hidden="true"><path d="M10 30L50 3L90 30"/><circle cx="50" cy="3" r="3"/></svg>' +
+        '<span class="sway"><span class="pic">' + face(n) + '</span></span>' +
+        '<span class="who">' + n + (rel ? '<small>' + rel + '</small>' : '') + '</span>';
+      b.onclick = () => straighten(n, b);
+      box.appendChild(b);
+    });
+  }
+
+  function todaySaid(t) {
+    $('tSaidText').textContent = t;
+    $('tSaid').hidden = false;
+    speak(t, 'person');
+  }
+
+  function straighten(n, btn) {
+    todaySaid(helloFor(n)); // tapping a straight picture again just says hello again
+    if (straightened.includes(n)) return;
+    straightened.push(n);
+    btn.classList.add('straight');
+    btn.setAttribute('aria-label', 'Picture of ' + n);
+    const left = todayFaces().length - straightened.length;
+    if (left > 0) {
+      setTodayCap(left === 1 ? 'Just one more' : 'That one looks better');
+      return;
+    }
+    setTodayCap('Everyone is here today');
+    later(() => $('todayTake').classList.remove('hide'), 1200);
+  }
+
+  function initToday() {
+    straightened = [];
+    $('tSaid').hidden = true;
+    $('todayTake').classList.add('hide');
+    drawFrames();
+    const t = (pack.rooms && pack.rooms.today) || {};
+    if (!todayFaces().length) {
+      setTodayCap('The hall is quiet today');
+      later(() => $('todayTake').classList.remove('hide'), 900);
+      return;
+    }
+    setTodayCap(t.prompt || 'The pictures are a little crooked');
+    speak((t.prompt || 'The pictures in the hall are a little crooked.') + ' Tap one to set it straight.');
+  }
+
   function initEnding() {
     $('sheet').innerHTML = letter
       .map(
@@ -868,7 +964,7 @@
         return;
       }
       pendingPlace = viewing;
-      currentBook = 'week';
+      currentBook = (chapters.find((c) => c.memories.some((m) => m.id === viewing)) || chapter('week')).id;
       show('album');
     };
     $('restBtn').onclick = () => $('rest').classList.add('on');
@@ -884,6 +980,7 @@
     $('mic').onclick = porchTalk;
     $('porchTake').onclick = () => keepMemory('porch');
     $('atticTake').onclick = () => keepMemory('attic');
+    $('todayTake').onclick = () => keepMemory('today');
     $('hearLetter').onclick = () =>
       toggleRead(
         $('hearLetter'),
@@ -925,6 +1022,7 @@
       ['radio', 'Car'],
       ['porch', 'Garden'],
       ['attic', 'Photos'],
+      ['today', 'Today'],
       ['ending', 'Ending']
     ].forEach(([k, label]) => {
       const b = document.createElement('button');
@@ -958,7 +1056,7 @@
         by: (pack.people && pack.people[0] && pack.people[0].name) || 'Family'
       });
     }
-    found = [false, false, false, false];
+    found = keys.map(() => false);
     rereading = false;
     pendingPlace = null;
     viewing = null;
