@@ -76,14 +76,14 @@ html[data-time="day"] .nightonly { opacity: 0; }
 /* ---------- text and buttons that sit on a scene: dark ink in daylight ---------- */
 html[data-time="day"] .hub.is3d .caption,
 html[data-time="day"] .kitchen .caption, html[data-time="day"] .radio-pg .caption, html[data-time="day"] .porch .caption,
-html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .today-book .caption, html[data-time="day"] .ending .caption,
 html[data-time="day"] .shelf-pg .shelfcap {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
 }
 html[data-time="day"] .hub.is3d .caption .sub,
 html[data-time="day"] .kitchen .caption .sub, html[data-time="day"] .radio-pg .caption .sub, html[data-time="day"] .porch .caption .sub,
-html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .today-book .caption .sub, html[data-time="day"] .ending .caption .sub,
 html[data-time="day"] .shelf-pg .shelfcap .sub {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
@@ -136,6 +136,8 @@ html[data-time="day"] .book:hover, html[data-time="day"] .book:focus-visible { b
 html[data-time="day"] .book { box-shadow: .4cqw .9cqw 1.8cqw rgba(80, 50, 20, .4), inset 0 0 0 .25cqw rgba(0, 0, 0, .12); }
 html[data-time="day"] .slip-tag { box-shadow: .3cqw .7cqw 1.2cqw rgba(80, 50, 20, .35); }
 html[data-time="day"] .album-pg .sheetpg { box-shadow: 0 1.4cqw 3.4cqw rgba(80, 50, 20, .4); }
+html[data-time="day"] .today-book .today-letter { background: #fffaf0; }
+html[data-time="day"] .today-book .today-letter .ln { color: #1a1428; }
 
 /* ---------- the cover ---------- */
 html[data-time="day"] .intro { background: linear-gradient(180deg, #4fa6ea 0%, #8ccdf2 46%, #d8eef9 72%, #fdf1cf 100%); }

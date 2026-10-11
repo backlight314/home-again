@@ -27,7 +27,6 @@
   let deg = 0;
   let talking = false;
   let atticSet = [];
-  let straightened = [];
   let started = false;
   let familyAudio = null;
   let porchStop = null;
@@ -35,7 +34,8 @@
   let hubFailed = false;
   let hubInside = false;
   let hubMoving = false;
-  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'today' };
+  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic' };
+  const weekFound = () => weekKeys.filter((k) => found[keys.indexOf(k)]).length;
 
   // Play events for the family's insights page, sent to the server in small batches.
   // Only what happened and how long it took; never what the player said.
@@ -100,13 +100,13 @@
     hush();
     const id = ++readId;
     const idle = btn.innerHTML;
-    run(() => {
-      if (reader && reader.id === id) clearReader();
-    });
     reader = { btn, idle, cleanup, id };
     btn.classList.add('reading');
     btn.setAttribute('aria-pressed', 'true');
     btn.innerHTML = '<span class="stopico" aria-hidden="true"></span>' + (btn.classList.contains('hearbtn') ? 'stop' : 'STOP');
+    run(() => {
+      if (reader && reader.id === id) clearReader();
+    });
   }
   function toggleRead(btn, run, cleanup) {
     if (reader && reader.btn === btn) {
@@ -175,38 +175,49 @@
     currentBook = 'week';
   }
 
-  // The hall's page. pack.rooms.today { prompt, caption, line, by } can override any of it.
-  function todayMemory() {
+  function todayLetter() {
     const t = (pack.rooms && pack.rooms.today) || {};
-    const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
-    const first = personByName(todayFaces()[0]);
-    const hung = hallPhotos()[0];
+    const by = t.by || ((pack.people || [])[0] && pack.people[0].name) || 'the family';
+    const call = (pack.profile && (pack.profile.addressAs || pack.profile.preferredName)) || 'you';
+    const fallback =
+      window.HomeAgainPack && HomeAgainPack.todayLines
+        ? HomeAgainPack.todayLines(call, pack.people)
+        : [
+            `Hi ${call}.`,
+            'This morning you were already in your chair. The light was on your hands.',
+            'You let the tea sit until it was kind. You always wait like that.',
+            'Nothing loud happened. You were gentle with us anyway.',
+            'That kindness is yours. It is still in the room.',
+            'I am glad this day found you. I am glad I did too.'
+          ];
+    const stale = t.lines && t.lines[0] === 'Morning came in quiet.';
+    const lines = !stale && t.lines && t.lines.length ? t.lines : fallback;
+    return {
+      prompt: stale || !t.prompt ? 'From this morning' : t.prompt,
+      caption: t.caption || 'Today',
+      by,
+      lines,
+      line: t.line || lines.join(' ')
+    };
+  }
+
+  function todayMemory() {
+    const L = todayLetter();
+    const first = personByName(L.by) || (pack.people || [])[0];
     return {
       id: 'today',
       title: 'Today',
       activity: 'today',
       scene: 'sc-table',
-      photoDataUrl: (hung && hung.photoDataUrl) || (first && first.photoDataUrl) || null,
-      caption: t.caption || 'The hall, today',
-      line: t.line || 'Everyone is with you today' + (call ? ', ' + call : '') + '.',
-      by: t.by || 'the family'
+      photoDataUrl: (first && first.photoDataUrl) || null,
+      caption: L.caption,
+      line: L.line,
+      by: L.by
     };
   }
 
-  // The Today album's pages: one for each photo hung in the hall, each with its own
-  // caption, or a single page of the family when no photos are hung.
   function todayMemories() {
-    const photos = hallPhotos();
-    if (!photos.length) return [todayMemory()];
-    const base = todayMemory();
-    return photos.map((p, i) => ({
-      ...base,
-      id: i ? 'today-' + i : 'today',
-      title: p.caption,
-      photoDataUrl: p.photoDataUrl,
-      caption: p.caption,
-      line: p.caption.charAt(0).toUpperCase() + p.caption.slice(1).replace(/[.!]*$/, '.')
-    }));
+    return [todayMemory()];
   }
 
   function toast(msg) {
@@ -272,8 +283,11 @@
     }, 30);
     setTimeout(() => {
       hubInside = false;
-      show('hub', true);
-      hub?.reset();
+      if (id === 'today') show('today', true);
+      else {
+        show('hub', true);
+        hub?.reset();
+      }
       fly.classList.add('opening');
     }, 1000);
     setTimeout(() => fly.remove(), 2100);
@@ -394,7 +408,7 @@
             if (--left > 0) return;
             const book = chapter(currentBook);
             toast(complete(book) ? S.bookFull : S.placed);
-            if (found.every(Boolean)) later(() => show('ending'), 1600);
+            if (weekFound() === weekKeys.length) later(() => show('ending'), 1600);
             // stay on the album page; the player taps BACK TO THE HOUSE when ready
           }),
         i * 700
@@ -457,19 +471,19 @@
   }
 
   function hubCaption() {
-    const n = found.filter(Boolean).length;
+    const n = weekFound();
     const el = $('hubCaption');
     if (!el) return;
     el.innerHTML =
       (n === 0
         ? 'What happened this week?'
-        : n < keys.length
+        : n < weekKeys.length
           ? 'What else do you remember from this week?'
           : 'The week is coming together') +
       '<span class="sub">' +
       (hub ? 'TAP A ROOM TO GO IN · ' : '') +
       n +
-      ' OF ' + keys.length + ' WINDOWS LIT</span>';
+      ' OF ' + weekKeys.length + ' WINDOWS LIT</span>';
   }
 
   function buildRooms() {
@@ -481,20 +495,20 @@
       return;
     }
     box.innerHTML = '';
-    keys.forEach((k, i) => {
+    weekKeys.forEach((k, i) => {
       const b = document.createElement('button');
       b.className = 'roomrow door-' + k + (found[i] ? ' found' : '');
       b.innerHTML =
         '<span class="n">' +
-        (letter[i] ? letter[i].room : 'Today') +
+        (letter[i] ? letter[i].room : k) +
         '</span><span class="s">' +
         (found[i] ? 'in the album' : 'tap to go there') +
         '</span>';
       b.onclick = () => {
         if (found[i]) {
           rereading = true;
-          openMemory(keys[i]);
-        } else show(keys[i]);
+          openMemory(k);
+        } else show(k);
       };
       box.appendChild(b);
     });
@@ -508,7 +522,7 @@
       return null;
     }
     try {
-      const { createHub } = await import('./hub3d.js?v=merge4');
+      const { createHub } = await import('./hub3d.js?v=todaybook');
       hub = createHub({
         mount: $('hub3d'),
         kitchenBtn: $('kitchenBtn'),
@@ -540,7 +554,7 @@
     }
     introLoading = true;
     try {
-      const { createHub } = await import('./hub3d.js?v=merge4');
+      const { createHub } = await import('./hub3d.js?v=todaybook');
       introHub = createHub({ mount: $('intro3d'), kitchenBtn: document.createElement('button'), onRoom() {}, shift: 0.2 });
       ['kitchen', 'porch', 'radio', 'attic', 'hall'].forEach((k) => introHub.setLit(k, true));
       introHub.setActive($('s-intro').classList.contains('on'));
@@ -601,14 +615,18 @@
     $('reveal').classList.remove('on');
     closeDayLog();
     rereading = false;
-    leaveHouse();
+    if (current === 'today') closeBook();
+    else leaveHouse();
     return true;
   }
 
   function show(name, keepFly) {
     current = name;
     const backBtn = document.getElementById('globalBack');
-    if (backBtn) backBtn.textContent = inRoom() ? '← Back to the house' : '← Leave';
+    if (backBtn) {
+      backBtn.textContent =
+        current === 'today' ? '← The albums' : inRoom() ? '← Back to the house' : '← Leave';
+    }
     if (name !== 'today') closeDayLog();
     placing = [];
     hush();
@@ -636,10 +654,20 @@
         paintHouseWindows();
       });
       buildRooms();
-      const n = found.filter(Boolean).length;
-      speak(n === 0 ? 'What happened this week?' : n < keys.length ? 'What else do you remember from this week?' : 'The week is coming together');
+      const n = weekFound();
+      speak(n === 0 ? 'What happened this week?' : n < weekKeys.length ? 'What else do you remember from this week?' : 'The week is coming together');
     }
     if (name === 'album') {
+      const albumBack = $('albumBack');
+      if (albumBack) {
+        if (currentBook === 'today') {
+          albumBack.dataset.go = 'shelf';
+          albumBack.textContent = 'CLOSE THE BOOK';
+        } else {
+          albumBack.dataset.go = 'hub';
+          albumBack.textContent = 'BACK TO THE HOUSE';
+        }
+      }
       // the kept memory, then any other pages from the same room
       const kept = pendingPlace && memory(pendingPlace);
       const book = chapter(currentBook);
@@ -649,7 +677,7 @@
         pendingPlace = null;
         placeMemories(placing.slice());
       } else {
-        speak('These are this week’s pages.');
+        speak(currentBook === 'today' ? 'From this morning.' : 'These are this week’s pages.');
       }
     }
     if (name === 'intro') ensureIntroHub();
@@ -1019,122 +1047,63 @@
     speak((pack.rooms.attic && pack.rooms.attic.prompt) || 'Which one came first?');
   }
 
-  // Today, in the hall: the family's pictures hang a little crooked. Each tap sets one
-  // straight, brings it into colour, and that person says hello. Any order, nothing to get wrong.
-  const tilts = [-9, 7, -5, 8];
-
-  function todayFaces() {
-    return kitchenFaces();
-  }
-
-  // album photos the pack hangs in the hall (pack.rooms.today.photos), when the album has them
-  function hallPhotos() {
-    return ((pack.rooms && pack.rooms.today && pack.rooms.today.photos) || []).filter((p) => p.photoDataUrl);
-  }
-
-  // What hangs in the hall: those photos, each read out by its caption, or else the
-  // family's portraits, each saying hello.
-  function todayItems() {
-    const photos = hallPhotos();
-    if (photos.length) {
-      return photos.map((p, i) => ({
-        key: 'photo' + i,
-        label: p.caption,
-        pic: '<img src="' + p.photoDataUrl + '" alt="">',
-        say: p.caption.charAt(0).toUpperCase() + p.caption.slice(1).replace(/[.!]*$/, '.'),
-        role: 'warm'
-      }));
-    }
-    return todayFaces().map((n) => ({ key: n, label: n, small: relationOf(n), pic: face(n), say: helloFor(n), role: 'person' }));
-  }
-
   function setTodayCap(text) {
     const day = gameDay().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
     $('tCap').innerHTML = text + '<span class="sub">TODAY · ' + day + '</span>';
   }
 
-  function helloFor(name) {
-    const r = kitchenPlan().find((x) => x.who === name);
-    if (r && r.hello) return r.hello;
-    const call = pack.profile && (pack.profile.addressAs || pack.profile.preferredName);
-    return name + ': "Hi' + (call ? ' ' + call : '') + ', it is me."';
-  }
-
-  function relationOf(name) {
-    const rel = ((personByName(name) || {}).relation || '').trim();
-    return !rel || /^your\b/i.test(rel) ? rel : 'your ' + rel;
-  }
-
-  function drawFrames() {
-    const box = $('tFrames');
+  function paintTodayLetter() {
+    const L = todayLetter();
+    const box = $('todayLetter');
     box.innerHTML = '';
-    box.classList.toggle('many', todayItems().length > 3);
-    todayItems().forEach((it, i) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'hframe';
-      b.style.setProperty('--tilt', tilts[i % tilts.length] + 'deg');
-      b.setAttribute('aria-label', 'Straighten the picture of ' + it.label);
-      b.innerHTML =
-        '<svg class="wire" viewBox="0 0 100 30" aria-hidden="true"><path d="M10 30L50 3L90 30"/><circle cx="50" cy="3" r="3"/></svg>' +
-        '<span class="sway"><span class="pic">' + it.pic + '</span></span>';
-      // captions come from the family, so they go in as text
-      const who = document.createElement('span');
-      who.className = 'who' + (it.small === undefined ? ' cap' : '');
-      who.textContent = it.label;
-      if (it.small) {
-        const s = document.createElement('small');
-        s.textContent = it.small;
-        who.appendChild(s);
-      }
-      b.appendChild(who);
-      b.onclick = () => straighten(it, b);
-      box.appendChild(b);
+    L.lines.forEach((line, i) => {
+      const d = document.createElement('div');
+      d.className = 'ln';
+      d.id = 'tdln' + i;
+      d.textContent = line;
+      box.appendChild(d);
     });
+    const from = document.createElement('div');
+    from.className = 'ln';
+    const who = document.createElement('span');
+    who.textContent = L.by;
+    from.appendChild(who);
+    box.appendChild(from);
   }
 
-  function todaySaid(t, role) {
-    $('tSaidText').textContent = t;
-    $('tSaid').hidden = false;
-    speak(t, role || 'person');
-  }
-
-  function straighten(it, btn) {
-    todaySaid(it.say, it.role); // tapping a straight picture again just says it again
-    if (straightened.includes(it.key)) return;
-    straightened.push(it.key);
-    // a person's name when the picture is of family; never a photo's caption
-    track('picture_straightened', 'today', { person: it.role === 'person' ? it.key : null, ms: since(stepT0) });
-    stepT0 = performance.now();
-    btn.classList.add('straight');
-    btn.setAttribute('aria-label', 'Picture of ' + it.label);
-    const left = todayItems().length - straightened.length;
-    if (left > 0) {
-      setTodayCap(left === 1 ? 'Just one more' : 'That one looks better');
-      return;
-    }
-    setTodayCap(hallPhotos().length ? 'The pictures are straight again' : 'Everyone is here today');
-    later(() => $('todayTake').classList.remove('hide'), 1200);
+  function hearTodayLetter() {
+    const L = todayLetter();
+    const lines = L.lines;
+    const id = reader && reader.id;
+    return (async () => {
+      for (let i = 0; i < lines.length; i++) {
+        if (!reader || reader.id !== id) return;
+        document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
+        const el = $('tdln' + i);
+        if (el) el.classList.add('say');
+        await speak(lines[i], 'letter', L.by);
+      }
+      if (!reader || reader.id !== id) return;
+      document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
+      $('todayTake').classList.remove('hide');
+    })();
   }
 
   function initToday() {
-    straightened = [];
-    $('tSaid').hidden = true;
     $('todayTake').classList.add('hide');
-    drawFrames();
-    const t = (pack.rooms && pack.rooms.today) || {};
-    if (!todayItems().length) {
-      setTodayCap('The hall is quiet today');
-      later(() => $('todayTake').classList.remove('hide'), 900);
-      return;
-    }
-    setTodayCap(t.prompt || 'The pictures are a little crooked');
-    speak((t.prompt || 'The pictures in the hall are a little crooked.') + ' Tap one to set it straight.');
+    paintTodayLetter();
+    const L = todayLetter();
+    setTodayCap(L.prompt);
+    later(() => {
+      toggleRead($('hearToday'), (done) => hearTodayLetter().then(done), () => {
+        document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
+      });
+    }, 500);
   }
 
   // The day log, opened from the hall: the player's own note of what they did today,
   // said, tapped or typed, kept with the album so the family can read it. It opens
-  // over the hall, so closing it leaves the pictures as they were.
+  // over the hall, so closing it leaves the letter as it was.
   const DAY_CHIPS = ['I went for a walk', 'I had a good meal', 'I talked with family', 'I listened to music', 'I rested', 'I saw a friend'];
   let dayEntries = [];
   let dayStop = null;
@@ -1285,7 +1254,7 @@
 
     document.querySelectorAll('#view-play [data-go]').forEach((b) => {
       const room = (b.closest('.scr') || {}).id?.slice(2);
-      const skips = b.dataset.go === 'hub' && keys.includes(room) && /skip/.test(b.textContent);
+      const skips = keys.includes(room) && /skip/.test(b.textContent);
       b.onclick = () => {
         if (skips) track('skip', room, { ms: since(roomT0) });
         if (b.dataset.go === 'hub') leaveHouse();
@@ -1299,7 +1268,8 @@
       $('reveal').classList.remove('on');
       if (rereading) {
         rereading = false;
-        leaveHouse();
+        if (currentBook === 'today') closeBook();
+        else leaveHouse();
         return;
       }
       pendingPlace = viewing;
@@ -1313,7 +1283,8 @@
     $('restKeep').onclick = () => $('rest').classList.remove('on');
     $('restHome').onclick = () => {
       $('rest').classList.remove('on');
-      leaveHouse();
+      if (current === 'today' || currentBook === 'today') closeBook();
+      else leaveHouse();
     };
     $('kNext').onclick = () => keepMemory('kitchen');
     $('tuneL').onclick = () => tune(-1);
@@ -1323,6 +1294,10 @@
     $('porchTake').onclick = () => keepMemory('porch');
     $('atticTake').onclick = () => keepMemory('attic');
     $('todayTake').onclick = () => keepMemory('today');
+    $('hearToday').onclick = () =>
+      toggleRead($('hearToday'), (done) => hearTodayLetter().then(done), () => {
+        document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
+      });
     $('dayLogBtn').onclick = openDayLog;
     $('dayClose').onclick = closeDayLog;
     DAY_CHIPS.forEach((t) => {

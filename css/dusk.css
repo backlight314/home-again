@@ -261,7 +261,7 @@
 .memcard .print .pname { color: #2b2350; }
 
 /* ---------- the four rooms (kitchen, radio, porch, attic) ---------- */
-.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption {
+.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption, .today-book .caption {
   left: 4cqw;
   top: 4.4cqw;
   max-width: 30cqw;
@@ -272,7 +272,7 @@
   color: #fff;
   text-shadow: 0 2px 14px rgba(10, 8, 36, .7), 0 0 28px rgba(255, 255, 255, .2);
 }
-.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub {
+.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub, .today-book .caption .sub {
   margin-top: 1.2cqw;
   font-family: var(--hand);
   font-size: clamp(24px, 2.3cqw, 32px);
@@ -283,7 +283,7 @@
 }
 
 /* buttons: same cream pills as the cover */
-.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn {
+.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn, .today-book .pressbtn {
   min-height: 64px;
   font-family: var(--hand);
   font-weight: 400;
@@ -296,9 +296,9 @@
   color: #2b2350;
   box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 34px rgba(255, 200, 120, .28);
 }
-.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red { background: #ffd9a0; color: #2b2350; }
-.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active { transform: translateY(2px); }
-.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn {
+.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red, .today-book .pressbtn.red { background: #ffd9a0; color: #2b2350; }
+.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active, .today-book .pressbtn:active { transform: translateY(2px); }
+.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn, .today-book .quietbtn {
   font-family: var(--hand);
   font-weight: 400;
   font-size: clamp(24px, 2.4cqw, 32px);
@@ -417,7 +417,85 @@
 .hframe .who small { display: block; font-size: .78em; color: #ffe2a0; }
 .hframe .who.cap { font-size: clamp(18px, 1.8cqw, 24px); line-height: 1.15; }
 .hframe.straight .who { opacity: 1; }
-.hall .said { bottom: 26%; }
+.today-book.scr.on {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2.4cqw 4cqw 2cqw;
+  box-sizing: border-box;
+}
+.today-book .caption {
+  position: relative;
+  left: auto;
+  top: auto;
+  max-width: 42%;
+  margin: 0 0 1.2cqw;
+  flex: 0 0 auto;
+  z-index: 6;
+  color: #fff8ec;
+  text-shadow: 0 2px 0 rgba(20, 10, 30, .5), 0 3px 18px rgba(10, 8, 36, .9);
+}
+.today-book .caption .sub {
+  color: #ffe9b8;
+  text-shadow: 0 2px 0 rgba(20, 10, 30, .45), 0 2px 12px rgba(10, 8, 36, .85);
+}
+.today-book .today-letter {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: min(84cqw, 92%);
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 1.8cqw 2.8cqw 2cqw;
+  transform: rotate(-0.3deg);
+  background: #fff8e6;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.today-book .today-letter .ln {
+  color: #1a1428;
+  font-size: clamp(20px, 2.05cqw, 28px);
+  line-height: 1.25;
+  padding: .2cqw .6cqw .25cqw;
+  flex: 0 0 auto;
+}
+.today-book .today-letter .ln span { color: #7a3228; font-size: clamp(22px, 2.1cqw, 28px); }
+.today-book .today-row {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 7;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1cqw 1.5cqw;
+  margin-top: 1.6cqw;
+  flex: 0 0 auto;
+}
+.today-book .today-row .pressbtn,
+.today-book .today-row .quietbtn {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  top: auto;
+}
+.today-book .today-row .pressbtn {
+  font-size: clamp(22px, 2.2cqw, 30px);
+  min-height: 56px;
+  padding: .28em 1.15em .32em;
+}
 @keyframes hsway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
 @media (prefers-reduced-motion: reduce) {
   .hframe { transition-duration: .2s; }

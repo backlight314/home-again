@@ -16,7 +16,7 @@
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
  *     attic: { prompt, photos: [{ id, label, date?, svgId?, photoDataUrl? }] },
- *     today: { prompt?, caption?, line?, by?, photos?: [{ caption, photoDataUrl? }] }
+ *     today: { prompt?, caption?, line?, by?, lines?: string[] }
  *   },
  *   ending: { callName }
  * }
@@ -32,6 +32,30 @@
 
   function uid(prefix) {
     return prefix + '_' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function shortName(name) {
+    const n = String(name || '').trim();
+    if (/christopher/i.test(n)) return 'Chris';
+    return n.split(/\s+/)[0] || n;
+  }
+
+  function todayLines(addressAs, people) {
+    const call = addressAs || 'you';
+    const p1 = people && people[1];
+    const p2 = people && people[2];
+    const who1 = p1 ? shortName(p1.name) : 'your boy';
+    const who2 = p2 ? shortName(p2.name) : 'the family';
+    return [
+      `Hi ${call}.`,
+      'This morning you were already in your chair. The light was on your hands.',
+      'You let the tea sit until it was kind. You always wait like that.',
+      `${who1} rang. You asked after them, the way you always do.`,
+      `${who2} left this week’s pictures on the table, in case you want them.`,
+      'Nothing loud happened. You were gentle with us anyway.',
+      'That kindness is yours. It is still in the room.',
+      'I am glad this day found you. I am glad I did too.'
+    ];
   }
 
   function demoPack() {
@@ -131,11 +155,18 @@
           svgId: 'sc-garden'
         },
         today: {
-          // album photos hung in the hall, named by caption and filled in from the album at Play
-          photos: [
-            { caption: 'you helped with cooking dinner' },
-            { caption: "we celebrated chris's birthday" },
-            { caption: 'we went on a city walk' }
+          prompt: 'From this morning',
+          caption: 'Today',
+          by: 'Alina',
+          lines: [
+            'Hi Mom.',
+            'This morning you were already in your chair. The light was on your hands.',
+            'You let the tea sit until it was kind. You always wait like that.',
+            'Chris rang from the car. You asked if that song was still on.',
+            'Eason left this week’s pictures on the table, in case you want them.',
+            'Nothing loud happened. You were gentle with us anyway.',
+            'That kindness is yours. It is still in the room.',
+            'I am glad this day found you. I am glad I did too.'
           ]
         },
         attic: {
@@ -420,6 +451,12 @@
           photoDataUrl: m2.photoDataUrl || null,
           svgId: m2.photoDataUrl ? null : 'sc-snow'
         },
+        today: {
+          prompt: 'From this morning',
+          caption: 'Today',
+          by: p0.name,
+          lines: todayLines(addressAs, people)
+        },
         attic: {
           prompt: 'Which photo came first this week?',
           photos: memories.slice(0, 3).map((m, i) => ({
@@ -470,6 +507,7 @@
     activePack,
     exportPack,
     generateFromFamily,
+    todayLines,
     packSummary,
     personPalette
   };

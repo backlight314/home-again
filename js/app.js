@@ -83,18 +83,6 @@
       }
       const tea = (pack.memories || [])[2];
       if (tea && !tea.photoDataUrl && porch && porch.photoDataUrl) tea.photoDataUrl = porch.photoDataUrl;
-      // the hall hangs the album photos dated today, in the order they were added,
-      // or else the ones the pack names by caption
-      const hall = pack.rooms && pack.rooms.today;
-      const ofToday = dated().filter((x) => x.at === today);
-      if (hall && ofToday.length && !(hall.photos || []).some((p) => p.photoDataUrl)) {
-        hall.photos = ofToday.map(({ ph }) => ({ caption: ph.caption || 'a photo from today', photoDataUrl: ph.url }));
-      }
-      ((hall && hall.photos) || []).forEach((p) => {
-        if (p.photoDataUrl || !p.caption) return;
-        const ph = mat.photos.find((x) => !x.croppedFrom && (x.caption || '').toLowerCase() === p.caption.toLowerCase());
-        if (ph) p.photoDataUrl = ph.url;
-      });
       // the photo room gets the three most recent dated photos before today that no other
       // room shows, oldest first, so they can be put back in the order they happened
       const attic = pack.rooms && pack.rooms.attic;
