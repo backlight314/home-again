@@ -1,8 +1,9 @@
 (function (global) {
   const $ = (id) => document.getElementById(id);
-  // every activity that keeps a memory: this week's five rooms, then Today's letter, then Childhood's two
-  const keys = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', 'toybox', 'recipe'];
-  const weekKeys = keys.slice(0, 5); // the rooms of the house, each holding a piece of this week
+  // every activity that keeps a memory: this week's five rooms, Today, Childhood, then Work
+  const weekKeys = ['kitchen', 'radio', 'porch', 'attic', 'walk'];
+  const workKeys = ['desk', 'phone', 'break', 'files'];
+  const keys = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', 'toybox', 'recipe', ...workKeys];
   const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden', 'sc-walk'];
   // The Childhood yard and the Today room are 3D places like the house. Each place has spots to go into.
   const placeRooms = { childhood: { treehouse: 'toybox', cottage: 'recipe' }, today: { letter: 'today', desk: 'journal' } };
@@ -34,6 +35,7 @@
   let deg = 0;
   let talking = false;
   let atticSet = [];
+  let phoneSeq = [];
   let started = false;
   let familyAudio = null;
   let porchStop = null;
@@ -41,8 +43,14 @@
   let hubFailed = false;
   let hubInside = false;
   let hubMoving = false;
+  let office = null;
+  let officeFailed = false;
+  let officeInside = false;
+  let officeMoving = false;
   const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'walk' };
+  const officeRooms = { desk: 'desk', break: 'break', phone: 'phone', files: 'files' };
   const weekFound = () => weekKeys.filter((k) => found[keys.indexOf(k)]).length;
+  const workFound = () => workKeys.filter((k) => found[keys.indexOf(k)]).length;
 
   // Play events for the family's insights page, sent to the server in small batches.
   // Only what happened and how long it took; never what the player said.
@@ -180,7 +188,7 @@
     chapters = [
       { id: 'childhood', title: 'Childhood', color: '#b8893a', memories: childMemories() },
       { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
-      { id: 'work', title: 'Work', color: '#44607d', memories: [{ id: 'job', title: 'The job' }] },
+      { id: 'work', title: 'Work', color: '#44607d', memories: workMemories() },
       { id: 'week', title: 'This week', color: '#9c3b2e', memories },
       { id: 'today', title: 'Today', color: '#6d5262', memories: todayMemories() }
     ];
@@ -291,6 +299,39 @@
     return [todayMemory()];
   }
 
+  function workLetter() {
+    const people = pack.people || [];
+    const p0 = (people[0] && people[0].name) || 'Alina';
+    const p1 = (people[1] && people[1].name) || 'Christopher';
+    const p2 = (people[2] && people[2].name) || 'Eason';
+    const fallback = [
+      { room: 'Your desk', line: 'Your badge still hangs by the lamp. ' + p1 + ' left it there so you would see it first.', by: p1 },
+      { room: 'The phone', line: 'You called home at lunch. ' + p0 + ' picked up before the second ring.', by: p0 },
+      { room: 'Break room', line: 'Your mug is the blue one. It has always been the blue one.', by: p0 },
+      { room: 'The files', line: p2 + ' said today’s report goes in the out tray. You still remember that.', by: p2 }
+    ];
+    const custom = pack.workLetter;
+    return workKeys.map((activity, i) => Object.assign({ activity }, fallback[i], (custom && custom[i]) || {}));
+  }
+
+  function workMemories() {
+    const letter = workLetter();
+    return workKeys.map((activity, i) => {
+      const line = letter[i];
+      const room = (pack.rooms && pack.rooms[activity]) || {};
+      return {
+        id: activity,
+        title: line.room || room.title || activity,
+        activity,
+        scene: room.svgId || scenes[i],
+        photoDataUrl: room.photoDataUrl || null,
+        caption: room.caption || line.room,
+        line: room.line || line.line,
+        by: line.by
+      };
+    });
+  }
+
   function toast(msg) {
     const el = $('toast');
     if (!el) return;
@@ -326,6 +367,7 @@
   }
 
   function openBook(id, el) {
+    hush();
     currentBook = id;
     const scr = $('screen').getBoundingClientRect();
     const r = el.getBoundingClientRect();
@@ -354,10 +396,14 @@
     }, 30);
     setTimeout(() => {
       hubInside = false;
+      officeInside = false;
       if (id === 'childhood' || id === 'today') {
         places[id]?.reset();
         placeInside[id] = false;
         show(placeScreen[id], true);
+      } else if (id === 'work') {
+        show('office', true);
+        office?.reset();
       } else {
         show('hub', true);
         hub?.reset();
@@ -385,6 +431,7 @@
     fly.classList.remove('opening'); // swings shut
     setTimeout(() => {
       hubInside = false;
+      officeInside = false;
       show('shelf', true);
       const el = [...$('books').children].find((b) => b.getAttribute('aria-label') === book.title);
       const r = el && el.getBoundingClientRect();
@@ -547,7 +594,7 @@
             if (--left > 0) return;
             const book = chapter(currentBook);
             toast(complete(book) ? S.bookFull : S.placed);
-            if (weekFound() === weekKeys.length) later(() => show('ending'), 1600);
+            if (currentBook === 'week' && weekFound() === weekKeys.length) later(() => show('ending'), 1600);
             // stay on the album page; the player taps BACK TO THE HOUSE when ready
           }),
         i * 700
@@ -610,6 +657,11 @@
     Object.entries(houseRooms).forEach(([room, activity]) => hub.setLit(room, found[keys.indexOf(activity)]));
   }
 
+  function paintOfficeWindows() {
+    if (!office) return;
+    Object.entries(officeRooms).forEach(([room, activity]) => office.setLit(room, found[keys.indexOf(activity)]));
+  }
+
   function hubCaption() {
     const n = weekFound();
     const el = $('hubCaption');
@@ -624,6 +676,52 @@
       (hub ? 'TAP A ROOM TO GO IN · ' : '') +
       n +
       ' OF ' + weekKeys.length + ' WINDOWS LIT</span>';
+  }
+
+  function officeCaption() {
+    const n = workFound();
+    const el = $('officeCaption');
+    if (!el) return;
+    el.innerHTML =
+      (n === 0
+        ? 'The office is still here'
+        : n < workKeys.length
+          ? 'What else do you remember from work?'
+          : 'The office is coming together') +
+      '<span class="sub">' +
+      (office ? 'TAP A ROOM TO GO IN · ' : '') +
+      n +
+      ' OF ' + workKeys.length + ' WINDOWS LIT</span>';
+  }
+
+  function buildOfficeRooms() {
+    officeCaption();
+    paintOfficeWindows();
+    const box = $('officeRooms');
+    if (!box || (office && $('s-office').classList.contains('is3d'))) {
+      box && (box.innerHTML = '');
+      return;
+    }
+    box.innerHTML = '';
+    workKeys.forEach((k) => {
+      const i = keys.indexOf(k);
+      const m = memory(k);
+      const b = document.createElement('button');
+      b.className = 'roomrow door-' + k + (found[i] ? ' found' : '');
+      b.innerHTML =
+        '<span class="n">' +
+        (m ? m.title : k) +
+        '</span><span class="s">' +
+        (found[i] ? 'in the album' : 'tap to go there') +
+        '</span>';
+      b.onclick = () => {
+        if (found[i]) {
+          rereading = true;
+          openMemory(k);
+        } else show(k);
+      };
+      box.appendChild(b);
+    });
   }
 
   function buildRooms() {
@@ -823,6 +921,39 @@
     }
   }
 
+  async function ensureOffice() {
+    if (office || officeFailed) return office;
+    if (new URLSearchParams(location.search).has('flat')) {
+      officeFailed = true;
+      $('s-office').classList.add('no3d');
+      return null;
+    }
+    try {
+      const { createOffice } = await import('./office3d.js?v=album2');
+      office = createOffice({
+        mount: $('office3d'),
+        deskBtn: $('deskBtn'),
+        onRoom: (name) => enterOfficeRoom(name),
+        onAlbum: () => {
+          currentBook = 'work';
+          show('album');
+        }
+      });
+      $('s-office').classList.add('is3d');
+      $('office3d').onpointermove = (e) => {
+        const r = $('office3d').getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        office.pointer(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * -2);
+      };
+      paintOfficeWindows();
+    } catch (err) {
+      console.warn('3D office unavailable', err);
+      officeFailed = true;
+      $('s-office').classList.add('no3d');
+    }
+    return office;
+  }
+
   async function enterHouseRoom(name) {
     if (hubMoving) return;
     const activity = houseRooms[name];
@@ -859,8 +990,52 @@
     }
   }
 
+  async function enterOfficeRoom(name) {
+    if (officeMoving) return;
+    const activity = officeRooms[name];
+    if (!activity) return;
+    const idx = keys.indexOf(activity);
+    if (found[idx]) {
+      rereading = true;
+      openMemory(activity);
+      return;
+    }
+    hush();
+    officeMoving = true;
+    try {
+      if (office) {
+        officeInside = true;
+        await office.glideIn(name);
+      }
+      show(activity);
+    } finally {
+      officeMoving = false;
+    }
+  }
+
+  async function leaveOffice() {
+    show('office');
+    if (office && officeInside) {
+      officeMoving = true;
+      office.setActive(true);
+      try {
+        await office.glideOut();
+      } finally {
+        officeInside = false;
+        officeMoving = false;
+      }
+    }
+  }
+
+  function leaveAlbumHub() {
+    if (currentBook === 'work') leaveOffice();
+    else if (currentBook === 'childhood') leavePlace('childhood');
+    else if (currentBook === 'today') leavePlace('today');
+    else leaveHouse();
+  }
+
   // inside a room, the top-left button goes back to the house instead of leaving
-  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'walk'];
+  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', ...workKeys];
   let current = 'intro';
   const inRoom = () => ROOMS.includes(current) || !!placeOf[current];
   function back() {
@@ -869,6 +1044,7 @@
     closeDayLog();
     rereading = false;
     if (placeOf[current]) leavePlace(placeOf[current]);
+    else if (workKeys.includes(current)) leaveOffice();
     else leaveHouse();
     return true;
   }
@@ -877,9 +1053,11 @@
     current = name;
     const backBtn = document.getElementById('globalBack');
     if (backBtn) {
-      backBtn.textContent = placeOf[current]
-        ? placeOf[current] === 'childhood' ? '← Back to childhood' : '← Back to today'
-        : inRoom() ? '← Back to the house' : '← Leave';
+      backBtn.textContent = workKeys.includes(current)
+        ? '← Back to the office'
+        : placeOf[current]
+          ? placeOf[current] === 'childhood' ? '← Back to childhood' : '← Back to today'
+          : inRoom() ? '← Back to the house' : '← Leave';
     }
     if (name !== 'journal') closeDayLog();
     placing = [];
@@ -894,6 +1072,7 @@
     }
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
     hub?.setActive(name === 'hub');
+    office?.setActive(name === 'office');
     introHub?.setActive(name === 'intro');
     places.childhood?.setActive(name === 'childhub');
     places.today?.setActive(name === 'todayhub');
@@ -920,6 +1099,15 @@
       const n = weekFound();
       speak(n === 0 ? 'What happened this week?' : n < weekKeys.length ? 'What else do you remember from this week?' : 'The week is coming together');
     }
+    if (name === 'office') {
+      ensureOffice().then(() => {
+        buildOfficeRooms();
+        paintOfficeWindows();
+      });
+      buildOfficeRooms();
+      const n = workFound();
+      speak(n === 0 ? 'The office is still here.' : n < workKeys.length ? 'What else do you remember from work?' : 'The office is coming together');
+    }
     if (name === 'album') {
       const albumBack = $('albumBack');
       if (albumBack) {
@@ -929,6 +1117,9 @@
         } else if (currentBook === 'childhood') {
           albumBack.dataset.go = 'childhub';
           albumBack.textContent = 'BACK TO CHILDHOOD';
+        } else if (currentBook === 'work') {
+          albumBack.dataset.go = 'office';
+          albumBack.textContent = 'BACK TO THE OFFICE';
         } else {
           albumBack.dataset.go = 'hub';
           albumBack.textContent = 'BACK TO THE HOUSE';
@@ -947,7 +1138,15 @@
         pendingPlace = null;
         placeMemories(placing.slice());
       } else {
-        speak(currentBook === 'today' ? 'From this morning.' : currentBook === 'childhood' ? 'These are your childhood pages.' : 'These are this week’s pages.');
+        speak(
+          currentBook === 'today'
+            ? 'From this morning.'
+            : currentBook === 'childhood'
+              ? 'These are your childhood pages.'
+              : currentBook === 'work'
+                ? 'These are the work pages.'
+                : 'These are this week’s pages.'
+        );
       }
     }
     if (name === 'intro') ensureIntroHub();
@@ -961,6 +1160,10 @@
     if (name === 'toybox') initToybox();
     if (name === 'recipe') initRecipe();
     if (name === 'walk') initWalk();
+    if (name === 'desk') initDesk();
+    if (name === 'phone') initPhone();
+    if (name === 'break') initBreak();
+    if (name === 'files') initFiles();
     if (name === 'ending') initEnding();
   }
 
@@ -1666,6 +1869,162 @@
     later(openDayLog, 450);
   }
 
+  function sayWork(saidId, textId, text) {
+    const box = $(saidId);
+    const el = $(textId);
+    if (box && el) {
+      el.textContent = text;
+      box.hidden = false;
+    }
+    speak(text);
+  }
+
+  function whoName(i, fallback) {
+    return ((pack.people || [])[i] && pack.people[i].name) || fallback;
+  }
+
+  function initDesk() {
+    $('deskTake').classList.add('hide');
+    $('dSaid').hidden = true;
+    const you = (pack.profile && (pack.profile.addressAs || pack.profile.preferredName)) || 'you';
+    const badges = (pack.rooms && pack.rooms.desk && pack.rooms.desk.badges) || [
+      { id: 'other1', label: whoName(1, 'Chris'), mine: false, say: 'That is ' + whoName(1, 'Chris') + '’s badge.' },
+      { id: 'mine', label: you, mine: true, say: 'That is yours. Hang it on the hook.' },
+      { id: 'other2', label: whoName(0, 'Alina'), mine: false, say: 'That is ' + whoName(0, 'Alina') + '’s. Yours is the other one.' }
+    ];
+    const box = $('deskBadges');
+    box.innerHTML = '';
+    badges.forEach((item) => {
+      const b = document.createElement('button');
+      b.className = 'wcard';
+      b.type = 'button';
+      b.innerHTML = '<small>ID</small><span>' + item.label + '</span>';
+      b.onclick = () => {
+        box.querySelectorAll('.wcard').forEach((el) => el.classList.remove('found', 'clear'));
+        b.classList.add(item.mine ? 'clear' : 'found');
+        sayWork('dSaid', 'dSaidText', item.say);
+        if (item.mine) {
+          track('badge_found', 'desk', { ms: since(roomT0) });
+          $('deskTake').classList.remove('hide');
+        }
+      };
+      box.appendChild(b);
+    });
+    const prompt = (pack.rooms && pack.rooms.desk && pack.rooms.desk.prompt) || 'Find your badge and hang it up';
+    $('dCap').innerHTML = prompt + '<span class="sub">WORK · THE DESK</span>';
+    speak(prompt);
+  }
+
+  function paintDialed(code) {
+    const el = $('phoneDialed');
+    el.textContent = phoneSeq.map((n) => n).join(' · ') || '—';
+    el.classList.toggle('ok', phoneSeq.length === code.length && phoneSeq.every((n, i) => n === code[i]));
+  }
+
+  function initPhone() {
+    phoneSeq = [];
+    $('phoneTake').classList.add('hide');
+    $('phSaid').hidden = true;
+    const code = (pack.rooms && pack.rooms.phone && pack.rooms.phone.code) || [3, 1, 2];
+    $('dialNote').textContent = 'Home is ' + code.join(', then ');
+    const prompt = (pack.rooms && pack.rooms.phone && pack.rooms.phone.prompt) || 'Call home. The number is on the note';
+    $('phCap').innerHTML = prompt + '<span class="sub">WORK · THE PHONE</span>';
+    const box = $('phoneDial');
+    box.innerHTML = '';
+    [1, 2, 3, 4].forEach((n) => {
+      const b = document.createElement('button');
+      b.className = 'wdial-key';
+      b.type = 'button';
+      b.textContent = String(n);
+      b.onclick = () => {
+        const next = code[phoneSeq.length];
+        if (n !== next) {
+          phoneSeq = [];
+          paintDialed(code);
+          $('phoneTake').classList.add('hide');
+          sayWork('phSaid', 'phSaidText', 'Not that one. Start again from the note.');
+          return;
+        }
+        phoneSeq.push(n);
+        paintDialed(code);
+        if (phoneSeq.length === code.length) {
+          sayWork('phSaid', 'phSaidText', 'That is home. They will hear you.');
+          track('dialed_home', 'phone', { ms: since(roomT0) });
+          $('phoneTake').classList.remove('hide');
+        } else {
+          sayWork('phSaid', 'phSaidText', 'Yes. The next number is on the note.');
+        }
+      };
+      box.appendChild(b);
+    });
+    paintDialed(code);
+    speak(prompt);
+  }
+
+  function initBreak() {
+    $('breakTake').classList.add('hide');
+    $('bSaid').hidden = true;
+    const mugs = (pack.rooms && pack.rooms.break && pack.rooms.break.mugs) || [
+      { id: 'white', label: 'the white mug', mine: false, say: 'That one is for visitors.' },
+      { id: 'blue', label: 'the blue mug', mine: true, say: 'The blue one. That has always been yours.' },
+      { id: 'red', label: 'the red mug', mine: false, say: 'That is the office mug. Yours is blue.' }
+    ];
+    const box = $('breakMugs');
+    box.innerHTML = '';
+    mugs.forEach((mug) => {
+      const b = document.createElement('button');
+      b.className = 'wmug ' + mug.id;
+      b.type = 'button';
+      b.textContent = mug.label;
+      b.onclick = () => {
+        box.querySelectorAll('.wmug').forEach((el) => el.classList.remove('found', 'clear'));
+        b.classList.add(mug.mine ? 'clear' : 'found');
+        sayWork('bSaid', 'bSaidText', mug.say);
+        if (mug.mine) {
+          track('mug_found', 'break', { ms: since(roomT0) });
+          $('breakTake').classList.remove('hide');
+        }
+      };
+      box.appendChild(b);
+    });
+    const prompt = (pack.rooms && pack.rooms.break && pack.rooms.break.prompt) || 'Which mug is yours?';
+    $('bCap').innerHTML = prompt + '<span class="sub">WORK · BREAK ROOM</span>';
+    speak(prompt);
+  }
+
+  function initFiles() {
+    $('filesTake').classList.add('hide');
+    const trays = [
+      { id: 'in', label: 'IN', say: 'That tray is for mail coming in.' },
+      { id: 'hold', label: 'HOLD', say: 'Hold is for later. Today’s report goes out.' },
+      { id: 'out', label: 'OUT', say: 'Yes. Out. That is where today’s report goes.' }
+    ];
+    const box = $('fileTrays');
+    box.innerHTML = '';
+    trays.forEach((tray) => {
+      const b = document.createElement('button');
+      b.className = 'wtray';
+      b.type = 'button';
+      b.textContent = tray.label;
+      b.onclick = () => {
+        box.querySelectorAll('.wtray').forEach((el) => el.classList.remove('found', 'clear'));
+        b.classList.add(tray.id === 'out' ? 'clear' : 'found');
+        $('fCap').innerHTML = tray.say + '<span class="sub">WORK · THE FILES</span>';
+        speak(tray.say);
+        if (tray.id === 'out') {
+          $('workReport').classList.add('sent');
+          track('report_out', 'files', { ms: since(roomT0) });
+          $('filesTake').classList.remove('hide');
+        }
+      };
+      box.appendChild(b);
+    });
+    $('workReport').classList.remove('sent');
+    const prompt = (pack.rooms && pack.rooms.files && pack.rooms.files.prompt) || 'Today’s report goes in the out tray';
+    $('fCap').innerHTML = prompt + '<span class="sub">WORK · THE FILES</span>';
+    speak(prompt);
+  }
+
   function keepMemory(activity) {
     rereading = false;
     track('memory_kept', activity, { ms: since(roomT0) });
@@ -1674,6 +2033,7 @@
     saveKept();
     paintHouseWindows();
     if (placeOf[activity]) paintPlaceLights(placeOf[activity]);
+    paintOfficeWindows();
     openMemory(activity);
   }
 
@@ -1701,6 +2061,7 @@
         if (b.dataset.go === 'hub') leaveHouse();
         else if (b.dataset.go === 'childhub') leavePlace('childhood');
         else if (b.dataset.go === 'todayhub') leavePlace('today');
+        else if (b.dataset.go === 'office') leaveOffice();
         else if (b.dataset.go === 'shelf' && !$('s-intro').classList.contains('on')) closeBook();
         else show(b.dataset.go);
       };
@@ -1712,7 +2073,7 @@
       if (rereading) {
         rereading = false;
         if (currentBook === 'today') closeBook();
-        else leaveHouse();
+        else leaveAlbumHub();
         return;
       }
       pendingPlace = viewing;
@@ -1727,7 +2088,7 @@
     $('restHome').onclick = () => {
       $('rest').classList.remove('on');
       if (current === 'today' || currentBook === 'today') closeBook();
-      else leaveHouse();
+      else leaveAlbumHub();
     };
     $('kNext').onclick = () => keepMemory('kitchen');
     $('tuneL').onclick = () => tune(-1);
@@ -1737,6 +2098,10 @@
     $('porchTake').onclick = () => keepMemory('porch');
     $('atticTake').onclick = () => keepMemory('attic');
     $('todayTake').onclick = () => keepMemory('today');
+    $('deskTake').onclick = () => keepMemory('desk');
+    $('phoneTake').onclick = () => keepMemory('phone');
+    $('breakTake').onclick = () => keepMemory('break');
+    $('filesTake').onclick = () => keepMemory('files');
     $('hearToday').onclick = () =>
       toggleRead($('hearToday'), (done) => hearTodayLetter().then(done), () => {
         document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
@@ -1809,6 +2174,11 @@
       ['porch', 'Garden'],
       ['attic', 'Photos'],
       ['today', 'Today'],
+      ['office', 'Work'],
+      ['desk', 'Desk'],
+      ['phone', 'Phone'],
+      ['break', 'Break'],
+      ['files', 'Files'],
       ['ending', 'Ending']
     ].forEach(([k, label]) => {
       const b = document.createElement('button');
@@ -1889,7 +2259,9 @@
     pendingPlace = null;
     viewing = null;
     hubInside = false;
+    officeInside = false;
     hub?.reset();
+    office?.reset();
     Object.keys(places).forEach((k) => {
       placeInside[k] = false;
       places[k]?.reset();
@@ -1911,6 +2283,7 @@
     wireOnce();
     ensureIntroHub(); // load both 3D houses now, so nothing flat flashes the first time they appear
     ensureHub();
+    ensureOffice();
     show('intro');
   }
 

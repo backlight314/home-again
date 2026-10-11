@@ -11,10 +11,10 @@
 <link rel="stylesheet" href="css/tokens.css?v=merge32">
 <link rel="stylesheet" href="css/theme.css?v=merge32">
 <link rel="stylesheet" href="css/family.css?v=merge32">
-<link rel="stylesheet" href="css/play.css?v=merge32">
+<link rel="stylesheet" href="css/play.css?v=office1">
 <link rel="stylesheet" href="css/album.css?v=merge32">
-<link rel="stylesheet" href="css/dusk.css?v=merge32">
-<link rel="stylesheet" href="css/time.css?v=merge32">
+<link rel="stylesheet" href="css/dusk.css?v=office1">
+<link rel="stylesheet" href="css/time.css?v=office1">
 <script src="js/theme.js?v=merge32"></script>
 </head>
 <body data-mode="home">
@@ -363,6 +363,102 @@
         <div class="list" id="rooms"></div>
         <button class="quietbtn" data-go="album" type="button" style="left:4%;bottom:4%">the album</button>
         <button class="quietbtn closebtn" data-go="shelf" type="button">close the book</button>
+      </section>
+
+      <section class="scr hub office" id="s-office" aria-label="Work">
+        <div class="hub3d" id="office3d"></div>
+        <button class="roombtn" id="deskBtn" type="button" aria-label="Go to your desk"></button>
+        <div class="caption hcap" id="officeCaption">The office is still here<span class="sub">TAP A ROOM TO GO IN</span></div>
+        <div class="list" id="officeRooms"></div>
+        <button class="quietbtn" data-go="album" type="button" style="left:4%;bottom:4%">the album</button>
+        <button class="quietbtn closebtn" data-go="shelf" type="button">close the book</button>
+      </section>
+
+      <section class="scr work-desk" id="s-desk" aria-label="Your desk">
+        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="owall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4860"/><stop offset="1" stop-color="#6a7388"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#2a303c"/>
+          <rect width="1600" height="540" fill="url(#owall)"/>
+          <rect x="520" y="90" width="560" height="300" fill="#9bb7d0"/>
+          <rect x="520" y="90" width="560" height="300" fill="none" stroke="#2c3340" stroke-width="14"/>
+          <path d="M800 90V390M520 240H1080" stroke="#2c3340" stroke-width="8"/>
+          <rect y="540" width="1600" height="20" fill="#2c3340"/>
+          <rect y="560" width="1600" height="340" fill="#6d7584"/>
+          <rect x="220" y="430" width="1160" height="28" fill="#8a96a4"/>
+          <rect x="240" y="458" width="1120" height="16" fill="#5c6572"/>
+          <rect x="260" y="474" width="28" height="90" fill="#5c6572"/>
+          <rect x="1312" y="474" width="28" height="90" fill="#5c6572"/>
+        </svg>
+        <div class="caption" id="dCap">Find your badge and hang it up<span class="sub">WORK · THE DESK</span></div>
+        <div class="wrow" id="deskBadges"></div>
+        <div class="said" id="dSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="dSaidText"></span></div>
+        <button class="pressbtn red hide" id="deskTake" type="button" style="position:absolute;right:3cqw;top:9cqw;z-index:8">KEEP THIS MEMORY</button>
+        <button class="quietbtn" data-go="office" type="button" style="right:4%;bottom:4%">skip this one</button>
+      </section>
+
+      <section class="scr work-phone" id="s-phone" aria-label="The office phone">
+        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="pwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d3a58"/><stop offset="1" stop-color="#6a6480"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#2a2434"/>
+          <rect width="1600" height="540" fill="url(#pwall)"/>
+          <rect y="540" width="1600" height="20" fill="#2c3340"/>
+          <rect y="560" width="1600" height="340" fill="#5e566c"/>
+          <rect x="430" y="250" width="740" height="280" rx="18" fill="#3c3326"/>
+          <rect x="460" y="280" width="680" height="160" rx="8" fill="#2a241c"/>
+          <circle cx="800" cy="480" r="36" fill="#9c3b2e"/>
+        </svg>
+        <div class="caption" id="phCap">Call home. The number is on the note<span class="sub">WORK · THE PHONE</span></div>
+        <div class="wdial-note" id="dialNote">Home is 3, then 1, then 2</div>
+        <div class="wdialed" id="phoneDialed"></div>
+        <div class="wrow wdial" id="phoneDial"></div>
+        <div class="said" id="phSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="phSaidText"></span></div>
+        <button class="pressbtn red hide" id="phoneTake" type="button" style="position:absolute;right:3cqw;top:9cqw;z-index:8">KEEP THIS MEMORY</button>
+        <button class="quietbtn" data-go="office" type="button" style="right:4%;bottom:4%">skip this one</button>
+      </section>
+
+      <section class="scr work-break" id="s-break" aria-label="Break room">
+        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="bwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a5040"/><stop offset="1" stop-color="#6a7a62"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#243028"/>
+          <rect width="1600" height="540" fill="url(#bwall)"/>
+          <rect x="560" y="80" width="480" height="300" fill="#b7cce0"/>
+          <rect x="560" y="80" width="480" height="300" fill="none" stroke="#2c3340" stroke-width="14"/>
+          <rect y="540" width="1600" height="20" fill="#3c3326"/>
+          <rect y="560" width="1600" height="340" fill="#6b6354"/>
+          <rect x="500" y="430" width="600" height="24" fill="#c4b49a"/>
+          <rect x="520" y="454" width="24" height="80" fill="#8a6440"/>
+          <rect x="1056" y="454" width="24" height="80" fill="#8a6440"/>
+        </svg>
+        <div class="caption" id="bCap">Which mug is yours?<span class="sub">WORK · BREAK ROOM</span></div>
+        <div class="wrow" id="breakMugs"></div>
+        <div class="said" id="bSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="bSaidText"></span></div>
+        <button class="pressbtn red hide" id="breakTake" type="button" style="position:absolute;right:3cqw;top:9cqw;z-index:8">KEEP THIS MEMORY</button>
+        <button class="quietbtn" data-go="office" type="button" style="right:4%;bottom:4%">skip this one</button>
+      </section>
+
+      <section class="scr work-files" id="s-files" aria-label="The files">
+        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="fwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3e32"/><stop offset="1" stop-color="#7a6a58"/></linearGradient>
+          </defs>
+          <rect width="1600" height="900" fill="#2a241c"/>
+          <rect width="1600" height="540" fill="url(#fwall)"/>
+          <rect y="540" width="1600" height="20" fill="#3c3326"/>
+          <rect y="560" width="1600" height="340" fill="#5e4e40"/>
+          <rect x="180" y="160" width="1240" height="18" fill="#8a6440"/>
+          <rect x="180" y="178" width="1240" height="10" fill="#5a4130"/>
+        </svg>
+        <div class="caption" id="fCap">Today’s report goes in the out tray<span class="sub">WORK · THE FILES</span></div>
+        <div class="wletter" id="workReport">today’s report</div>
+        <div class="wrow wtrays" id="fileTrays"></div>
+        <button class="pressbtn red hide" id="filesTake" type="button" style="position:absolute;right:3cqw;top:9cqw;z-index:8">KEEP THIS MEMORY</button>
+        <button class="quietbtn" data-go="office" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
       <section class="scr kitchen" id="s-kitchen" aria-label="Kitchen">
@@ -853,11 +949,11 @@
 </section>
 
 <script src="js/strings.js?v=merge32"></script>
-<script src="js/pack.js?v=merge32"></script>
+<script src="js/pack.js?v=office1"></script>
 <script src="js/voicebank.js?v=merge32"></script>
-<script src="js/voice.js?v=merge32"></script>
+<script src="js/voice.js?v=office1"></script>
 <script src="js/family.js?v=merge32"></script>
-<script src="js/play.js?v=merge32"></script>
+<script src="js/play.js?v=office1"></script>
 <script src="js/app.js?v=merge32"></script>
 </body>
 </html>
