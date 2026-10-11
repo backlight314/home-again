@@ -13,8 +13,8 @@
 <link rel="stylesheet" href="css/family.css?v=merge3">
 <link rel="stylesheet" href="css/play.css?v=merge3">
 <link rel="stylesheet" href="css/album.css?v=merge3">
-<link rel="stylesheet" href="css/dusk.css?v=merge3">
-<link rel="stylesheet" href="css/time.css?v=merge3">
+<link rel="stylesheet" href="css/dusk.css?v=today1">
+<link rel="stylesheet" href="css/time.css?v=today1">
 <script src="js/theme.js?v=merge3"></script>
 </head>
 <body data-mode="home">
@@ -483,6 +483,51 @@
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
+      <section class="scr hall" id="s-today" aria-label="Today">
+        <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="hwall" x1="0" y1="0" x2="0" y2="1"><stop class="wall0" offset="0" stop-color="#2a2a58"/><stop class="wall1" offset=".6" stop-color="#46396a"/><stop class="wall2" offset="1" stop-color="#634664"/></linearGradient>
+    <radialGradient id="glwh"><stop class="glw" offset="0" stop-color="rgba(255,214,140,.5)"/><stop offset="1" stop-color="rgba(255,214,140,0)"/></radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="#2a2018"/>
+  <rect y="0" width="1600" height="560" fill="url(#hwall)"/>
+  <polygon points="0,0 560,0 260,320" fill="#fff" opacity="0.04"/>
+  <polygon points="1100,0 1600,0 1600,340 1340,200" fill="#000" opacity="0.07"/>
+  <rect y="400" width="1600" height="146" fill="#000" opacity=".14"/>
+  <rect y="392" width="1600" height="10" fill="#6b4a30"/>
+  <g fill="none" stroke="#000" stroke-opacity=".16" stroke-width="4"><rect x="40" y="424" width="280" height="100"/><rect x="360" y="424" width="280" height="100"/><rect x="680" y="424" width="280" height="100"/><rect x="1000" y="424" width="280" height="100"/></g>
+  <rect x="70" y="300" width="300" height="16" fill="#6b4a30"/>
+  <g fill="#3c3326"><circle cx="130" cy="322" r="7"/><circle cx="220" cy="322" r="7"/><circle cx="310" cy="322" r="7"/></g>
+  <polygon points="108,326 152,326 176,520 86,520" fill="#3f5a7a"/><polygon points="108,326 152,326 146,360 114,360" fill="#2f455e"/>
+  <rect x="210" y="326" width="20" height="170" fill="#d8a53a"/>
+  <path d="M310 330c-26 0-36 20-36 40h72c0-20-10-40-36-40z" fill="#9c3b2e"/><rect x="270" y="366" width="80" height="8" fill="#7a2c22"/>
+  <rect x="620" y="452" width="420" height="16" fill="#8a6440"/><rect x="620" y="468" width="420" height="6" fill="#5a4130"/>
+  <rect x="646" y="474" width="12" height="72" fill="#5a4130"/><rect x="1002" y="474" width="12" height="72" fill="#5a4130"/>
+  <polygon points="902,452 938,452 932,424 908,424" fill="#3f5a7a"/>
+  <g><path d="M912 424l-8-20M920 424v-26M928 424l8-18" stroke="#697a5c" stroke-width="4"/><circle cx="904" cy="404" r="9" fill="#9c3b2e"/><circle cx="920" cy="396" r="9" fill="#d8a53a"/><circle cx="936" cy="406" r="8" fill="#efe6cf"/></g>
+  <rect x="700" y="436" width="90" height="16" rx="3" fill="#efe6cf"/><rect x="706" y="428" width="78" height="8" rx="2" fill="#d9ceb4"/>
+  <rect x="1384" y="150" width="130" height="396" fill="#6b4a30"/>
+  <rect x="1374" y="138" width="150" height="20" fill="#5a3d28"/>
+  <circle cx="1449" cy="226" r="48" fill="#f4eee0" stroke="#3c3326" stroke-width="6"/>
+  <path d="M1449 226V196M1449 226l20 12" stroke="#3c3326" stroke-width="6" stroke-linecap="round"/>
+  <rect x="1414" y="296" width="70" height="210" fill="#3c3326"/>
+  <g class="pendulum"><path d="M1449 300V450" stroke="#c9b07a" stroke-width="4"/><circle cx="1449" cy="456" r="18" fill="#d8a53a"/></g>
+  <rect class="base" y="546" width="1600" height="20" fill="#3c3326"/>
+  <rect class="floor" y="566" width="1600" height="334" fill="#5e422c"/>
+  <g class="floorline" stroke="#3c2a1c" stroke-width="4" opacity=".55"><path d="M0 640H1600M0 726H1600M0 820H1600"/><path d="M200 566L40 900M520 566L420 900M800 566V900M1080 566L1180 900M1400 566L1560 900"/></g>
+  <polygon points="560,600 1040,600 1180,900 420,900" fill="#9c3b2e" opacity=".9"/>
+  <polygon points="590,612 1010,612 1140,890 460,890" fill="none" stroke="#d8a53a" stroke-width="5" opacity=".6"/>
+  <path d="M820 0V60" stroke="#3c3326" stroke-width="4"/>
+  <polygon points="772,104 868,104 846,60 794,60" fill="#3f5a7a"/><ellipse cx="820" cy="106" rx="24" ry="7" fill="#fff3d6"/>
+  <ellipse cx="820" cy="300" rx="560" ry="320" fill="url(#glwh)"/>
+</svg>
+        <div class="caption" id="tCap">The pictures are a little crooked<span class="sub">TODAY</span></div>
+        <div class="hframes" id="tFrames"></div>
+        <div class="said" id="tSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="tSaidText"></span></div>
+        <button class="pressbtn red hide" id="todayTake" type="button" style="position:absolute;right:20%;bottom:7%">KEEP THIS MEMORY</button>
+        <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
+      </section>
+
       <section class="scr ending" id="s-ending" aria-label="The letter">
         <div class="box3d" aria-hidden="true"><div class="space"><i class="b-ceil"></i><i class="b-back"></i><i class="b-left"></i><i class="b-right"></i><i class="b-floor"></i><i class="b-glow"></i><i class="b-win"></i></div></div>
         <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -556,7 +601,7 @@
 <script src="js/voicebank.js?v=merge3"></script>
 <script src="js/voice.js?v=merge3"></script>
 <script src="js/family.js?v=merge3"></script>
-<script src="js/play.js?v=merge3"></script>
+<script src="js/play.js?v=today1"></script>
 <script src="js/app.js?v=merge3"></script>
 </body>
 </html>
