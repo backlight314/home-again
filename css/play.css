@@ -641,6 +641,7 @@
   gap: 12px;
   z-index: 6;
 }
+.dialrow .pressbtn { white-space: nowrap; }   /* "◀ TUNE" and "TUNE ▶" stay on one line */
 
 /* porch */
 .swing {

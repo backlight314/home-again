@@ -11,7 +11,7 @@
  *   voice: { transcript, audioDataUrl?, durationMs? },
  *   letter: [{ room, line, by }],
  *   rooms: {
- *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }] },
+ *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }], photoCaption?, photoDataUrl? },
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
  *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] },
@@ -87,6 +87,7 @@
       rooms: {
         kitchen: {
           prompt: 'Who sat with you at lunch last Sunday?',
+          photoCaption: 'the soup we drank', // the album photo laid on the table once everyone is seated
           rounds: [
             {
               seat: 'seatC',
