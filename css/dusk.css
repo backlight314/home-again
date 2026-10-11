@@ -261,7 +261,7 @@
 .memcard .print .pname { color: #2b2350; }
 
 /* ---------- the four rooms (kitchen, radio, porch, attic) ---------- */
-.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption {
+.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption {
   left: 4cqw;
   top: 4.4cqw;
   max-width: 30cqw;
@@ -272,7 +272,7 @@
   color: #fff;
   text-shadow: 0 2px 14px rgba(10, 8, 36, .7), 0 0 28px rgba(255, 255, 255, .2);
 }
-.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub {
+.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub {
   margin-top: 1.2cqw;
   font-family: var(--hand);
   font-size: clamp(24px, 2.3cqw, 32px);
@@ -283,7 +283,7 @@
 }
 
 /* buttons: same cream pills as the cover */
-.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn {
+.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn {
   min-height: 64px;
   font-family: var(--hand);
   font-weight: 400;
@@ -296,9 +296,9 @@
   color: #2b2350;
   box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 34px rgba(255, 200, 120, .28);
 }
-.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red { background: #ffd9a0; color: #2b2350; }
-.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active { transform: translateY(2px); }
-.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn {
+.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red { background: #ffd9a0; color: #2b2350; }
+.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active { transform: translateY(2px); }
+.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn {
   font-family: var(--hand);
   font-weight: 400;
   font-size: clamp(24px, 2.4cqw, 32px);
@@ -368,6 +368,58 @@
 .mount .num { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.3cqw, 30px); color: #ffe2a0; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); top: -34px; }
 .boxlbl { font-family: var(--hand); font-weight: 400; font-size: clamp(24px, 2.4cqw, 32px); letter-spacing: .04em; color: #fff; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); }
 .boxrow .pick { border: 0; border-radius: 4px; background: #fff1d4; box-shadow: 0 8px 20px rgba(8, 6, 28, .55), 0 0 0 1px rgba(255, 255, 255, .2); }
+
+/* today (the hall): crooked pictures that swing straight when tapped */
+.hframes { position: absolute; left: 33%; right: 15%; top: 15%; display: flex; justify-content: space-around; align-items: flex-start; }
+.hframe {
+  position: relative;
+  width: 13.5cqw;
+  min-width: 96px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 50% -2.6cqw;   /* swings from its nail */
+  transform: rotate(var(--tilt));
+  transition: transform 1.4s cubic-bezier(.3, 1.5, .5, 1);
+}
+.hframe.straight { transform: rotate(0deg); cursor: default; }
+.hframe .wire { position: absolute; left: 50%; top: -2.6cqw; width: 70%; height: 2.6cqw; transform: translateX(-50%); overflow: visible; }
+.hframe .wire path { fill: none; stroke: rgba(255, 236, 200, .75); stroke-width: 2; }
+.hframe .wire circle { fill: #3c3326; }
+.hframe .sway { display: block; transform-origin: 50% -2.6cqw; animation: hsway 3.4s ease-in-out infinite alternate; }
+.hframe.straight .sway { animation: none; }
+.hframe .pic {
+  display: block;
+  padding: .7cqw;
+  background: #fff1d4;
+  border: .9cqw solid #6b5236;
+  border-radius: 3px;
+  box-shadow: 0 10px 26px rgba(8, 6, 28, .55), 0 0 0 1px rgba(255, 255, 255, .2);
+}
+.hframe .pic img, .hframe .pic svg { display: block; width: 100%; aspect-ratio: 5 / 4; object-fit: cover; filter: sepia(1) saturate(.5) brightness(.8); transition: filter 1.8s ease; }
+.hframe.straight .pic img, .hframe.straight .pic svg { filter: none; }
+.hframe:not(.straight):hover .pic, .hframe:not(.straight):focus-visible .pic { box-shadow: 0 10px 26px rgba(8, 6, 28, .55), 0 0 0 .3cqw #ffe2a0, 0 0 30px rgba(255, 210, 120, .5); }
+.hframe .who {
+  display: block;
+  margin-top: 1cqw;
+  font-family: var(--hand);
+  font-size: clamp(24px, 2.4cqw, 32px);
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(10, 8, 36, .9);
+  opacity: 0;
+  transition: opacity .8s ease .6s;
+}
+.hframe .who small { display: block; font-size: .78em; color: #ffe2a0; }
+.hframe .who.cap { font-size: clamp(18px, 1.8cqw, 24px); line-height: 1.15; }
+.hframe.straight .who { opacity: 1; }
+.hall .said { bottom: 26%; }
+@keyframes hsway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .hframe { transition-duration: .2s; }
+  .hframe .sway { animation: none; }
+}
 
 /* kitchen: keep the speech bubble clear of the face cards */
 .kitchen .said { bottom: 35%; }

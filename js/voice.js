@@ -5,7 +5,7 @@
   let speaking = false;
   let queueToken = 0;
   let clipAudio = null;
-  const roster = { narrator: null, mei: null, daniel: null, rose: null, warm: null };
+  const roster = { narrator: null, mei: null, daniel: null, rose: null, eason: null, warm: null };
 
   function allVoices() {
     return synth ? synth.getVoices() || [] : [];
@@ -23,6 +23,7 @@
     if (kind === 'mei' && /ava|allison|zoe|nicky|samantha/i.test(n)) s += 10;
     if (kind === 'daniel' && /andrew|daniel|alex|guy|matthew|tom/i.test(n)) s += 10;
     if (kind === 'rose' && /emma|moira|karen|sonia|susan/i.test(n)) s += 10;
+    if (kind === 'eason' && /aaron|gordon|rishi|guy|alex|tom/i.test(n)) s += 10;
     if (kind === 'warm' && /aria|samantha|ava/i.test(n)) s += 8;
     if (v.localService) s += 6;
     if (/google us english$/i.test(n)) s -= 6;
@@ -41,7 +42,7 @@
   function warm() {
     if (!synth) return;
     const used = new Set();
-    ['narrator', 'mei', 'daniel', 'rose', 'warm'].forEach((kind) => {
+    ['narrator', 'mei', 'daniel', 'rose', 'eason', 'warm'].forEach((kind) => {
       roster[kind] = best(kind, used);
       if (roster[kind]) used.add(roster[kind].name);
     });
@@ -91,8 +92,9 @@
       .replace(/^aunt\s+/, '')
       .trim();
     if (!n) return '';
-    if (/mei/.test(n)) return 'mei';
-    if (/daniel/.test(n)) return 'daniel';
+    if (/mei|alina/.test(n)) return 'mei';
+    if (/daniel|chris/.test(n)) return 'daniel';
+    if (/eason/.test(n)) return 'eason';
     if (/rose/.test(n)) return 'rose';
     if (/warm|mom/.test(n)) return 'warm';
     if (/narrat|family/.test(n)) return 'narrator';
@@ -146,6 +148,7 @@
     if (who === 'mei') return { rate: 0.92, pitch: 1.04 };
     if (who === 'daniel') return { rate: 0.9, pitch: 0.96 };
     if (who === 'rose') return { rate: 0.88, pitch: 0.94 };
+    if (who === 'eason') return { rate: 0.9, pitch: 0.9 };
     if (who === 'warm') return { rate: 0.9, pitch: 1.02 };
     return { rate: 0.9, pitch: 1.0 };
   }
