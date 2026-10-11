@@ -261,7 +261,8 @@
 .memcard .print .pname { color: #2b2350; }
 
 /* ---------- the four rooms (kitchen, radio, porch, attic) ---------- */
-.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption, .today-book .caption {
+.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption, .today-book .caption,
+.work-desk .caption, .work-phone .caption, .work-break .caption, .work-files .caption {
   left: 4cqw;
   top: 4.4cqw;
   max-width: 30cqw;
@@ -272,7 +273,8 @@
   color: #fff;
   text-shadow: 0 2px 14px rgba(10, 8, 36, .7), 0 0 28px rgba(255, 255, 255, .2);
 }
-.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub, .today-book .caption .sub {
+.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub, .today-book .caption .sub,
+.work-desk .caption .sub, .work-phone .caption .sub, .work-break .caption .sub, .work-files .caption .sub {
   margin-top: 1.2cqw;
   font-family: var(--hand);
   font-size: clamp(24px, 2.3cqw, 32px);
@@ -283,7 +285,8 @@
 }
 
 /* buttons: same cream pills as the cover */
-.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn, .today-book .pressbtn {
+.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn, .today-book .pressbtn,
+.work-desk .pressbtn, .work-phone .pressbtn, .work-break .pressbtn, .work-files .pressbtn {
   min-height: 64px;
   font-family: var(--hand);
   font-weight: 400;
@@ -296,9 +299,12 @@
   color: #2b2350;
   box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 34px rgba(255, 200, 120, .28);
 }
-.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red, .today-book .pressbtn.red { background: #ffd9a0; color: #2b2350; }
-.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active, .today-book .pressbtn:active { transform: translateY(2px); }
-.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn, .today-book .quietbtn {
+.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red, .today-book .pressbtn.red,
+.work-desk .pressbtn.red, .work-phone .pressbtn.red, .work-break .pressbtn.red, .work-files .pressbtn.red { background: #ffd9a0; color: #2b2350; }
+.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active, .today-book .pressbtn:active,
+.work-desk .pressbtn:active, .work-phone .pressbtn:active, .work-break .pressbtn:active, .work-files .pressbtn:active { transform: translateY(2px); }
+.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn, .today-book .quietbtn,
+.work-desk .quietbtn, .work-phone .quietbtn, .work-break .quietbtn, .work-files .quietbtn {
   font-family: var(--hand);
   font-weight: 400;
   font-size: clamp(24px, 2.4cqw, 32px);

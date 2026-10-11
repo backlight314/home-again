@@ -16,8 +16,13 @@
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
  *     attic: { prompt, photos: [{ id, label, date?, svgId?, photoDataUrl? }] },
- *     today: { prompt?, caption?, line?, by?, lines?: string[] }
+ *     today: { prompt?, caption?, line?, by?, lines?: string[] },
+ *     desk: { prompt?, items?: [{ id, label, say }] },
+ *     phone: { prompt?, lines?: [{ t, say, clear }] },
+ *     break: { prompt? },
+ *     files: { prompt?, folders?: [{ id, label, svgId? }] }
  *   },
+ *   workLetter?: [{ room, line, by }],
  *   ending: { callName }
  * }
  */
@@ -176,8 +181,18 @@
             { id: 'a2', label: 'Tuesday car', svgId: 'sc-lake' },
             { id: 'a3', label: 'Yesterday tea', svgId: 'sc-snow' }
           ]
-        }
+        },
+        desk: { prompt: 'Find your badge and hang it up' },
+        phone: { prompt: 'Call home. The number is on the note', code: [3, 1, 2] },
+        break: { prompt: 'Which mug is yours?' },
+        files: { prompt: 'Today’s report goes in the out tray' }
       },
+      workLetter: [
+        { room: 'Your desk', line: 'Your badge still hangs by the lamp. Christopher left it there so you would see it first.', by: 'Christopher' },
+        { room: 'The phone', line: 'You called home at lunch. Alina picked up before the second ring.', by: 'Alina' },
+        { room: 'Break room', line: 'Your mug is the blue one. It has always been the blue one.', by: 'Alina' },
+        { room: 'The files', line: 'Eason said today’s report goes in the out tray. You still remember that.', by: 'Eason' }
+      ],
       voice: {
         transcript: 'Last Sunday we had soup. Tuesday the song was on in the car. Yesterday a bee landed on her tea. This week we took pictures so she can see we were here.'
       },
@@ -465,8 +480,18 @@
             photoDataUrl: m.photoDataUrl || null,
             svgId: m.photoDataUrl ? null : ['sc-garden', 'sc-lake', 'sc-snow'][i]
           }))
-        }
+        },
+        desk: { prompt: 'Find your badge and hang it up' },
+        phone: { prompt: 'Call home. The number is on the note', code: [3, 1, 2] },
+        break: { prompt: 'Which mug is yours?' },
+        files: { prompt: 'Today’s report goes in the out tray' }
       },
+      workLetter: [
+        { room: 'Your desk', line: `Your badge still hangs by the lamp. ${p1.name} left it there so you would see it first.`, by: p1.name },
+        { room: 'The phone', line: `You called home at lunch. ${p0.name} picked up before the second ring.`, by: p0.name },
+        { room: 'Break room', line: 'Your mug is the blue one. It has always been the blue one.', by: p0.name },
+        { room: 'The files', line: `${p2.name} said today’s report goes in the out tray. You still remember that.`, by: p2.name }
+      ],
       voice: draft.voice
         ? {
             transcript: talk,
