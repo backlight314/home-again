@@ -87,12 +87,6 @@
       }
       const tea = (pack.memories || [])[2];
       if (tea && !tea.photoDataUrl && porch && porch.photoDataUrl) tea.photoDataUrl = porch.photoDataUrl;
-      // the hall hangs the album photos the pack names by caption
-      ((pack.rooms && pack.rooms.today && pack.rooms.today.photos) || []).forEach((p) => {
-        if (p.photoDataUrl || !p.caption) return;
-        const ph = mat.photos.find((x) => !x.croppedFrom && (x.caption || '').toLowerCase() === p.caption.toLowerCase());
-        if (ph) p.photoDataUrl = ph.url;
-      });
       // a letter piece gets a photo from this week of the person who recorded it
       const shows = (ph, name) => {
         const ids = mat.people.filter((f) => same(f.name.toLowerCase(), name)).map((f) => f.id);
