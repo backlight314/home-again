@@ -1,5 +1,6 @@
 // TigerData (hosted PostgreSQL) storage for the family's documents: the album
-// ("materials"), the guide conversation, the built game and the game pack.
+// ("materials"), the guide conversation, the built game, the game pack and the
+// player's own log of their days ("journal").
 // Used when DATABASE_URL is set; store.js falls back to local files otherwise.
 //
 // One row per family. Each document is a jsonb column, and every album change
@@ -9,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
 
-const DOCS = ['materials', 'chat', 'game', 'pack'];
+const DOCS = ['materials', 'chat', 'game', 'pack', 'journal'];
 
 // TigerData signs its servers with its own certificate authority (ca.timescale.com),
 // which Node doesn't trust by default. Trust that authority explicitly instead of
@@ -35,7 +36,8 @@ export function createTigerStore({ url, familyId, root }) {
       game       jsonb,
       pack       jsonb,
       updated_at timestamptz not null default now()
-    )`).catch(err => { ready = null; throw err; });
+    );
+    alter table family_data add column if not exists journal jsonb`).catch(err => { ready = null; throw err; });
 
   const column = name => {
     if (!DOCS.includes(name)) throw new Error('unknown document ' + name);

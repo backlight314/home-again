@@ -62,6 +62,9 @@
 .memcard .print { width: 100%; transform: rotate(-1.4deg); }
 .memcard .sepia { filter: sepia(1) saturate(.6) brightness(.95); transition: filter 1.8s ease; }
 .memcard .print.developed .sepia { filter: none; }
+/* family photos come in any shape; show them square, faces kept near the top */
+.memcard .sepia img { aspect-ratio: 1; object-fit: cover; object-position: center 20%; }
+.slot .print img { aspect-ratio: 3 / 2; object-fit: cover; object-position: center 15%; }
 .memcard .line { font-family: var(--display); font-style: italic; font-size: clamp(28px, 3.2cqw, 40px); color: var(--print); text-align: left; line-height: 1.2; }
 .memcard .by { font-family: var(--type); font-size: var(--fs-label-min); color: var(--print); }
 .memrow { display: flex; gap: 2.4cqw; align-items: center; flex-wrap: wrap; }
@@ -94,3 +97,24 @@
 .bookfly.opening { transform: perspective(1800px) rotateY(-168deg); opacity: .0; transition: transform 1s ease-in-out, opacity 1s ease-in; }
 
 @media (prefers-reduced-motion: reduce) { .slip-tag.open { animation: none; } .flyer { transition: none; } .bookfly { transition: none; } .memcard .sepia { transition: none; } }
+
+/* today: the player's own log of the day, said, tapped or typed */
+.today-pg .todaysheet { left: 5cqw; top: 4.5cqw; width: 50cqw; height: 47cqw; overflow-y: auto; padding: 6.5cqw 3.4cqw 2cqw; box-sizing: border-box; }
+.daylog { list-style: none; margin: 0; padding: 0; display: grid; gap: 1cqw; }
+.daylog li { display: flex; align-items: baseline; gap: 1.4cqw; padding-bottom: .7cqw; border-bottom: 2px dashed rgba(43, 35, 80, .2);
+  font-family: var(--hand); font-size: clamp(24px, 2.6cqw, 36px); color: var(--ink); line-height: 1.15; }
+.daylog time { flex: none; min-width: 7cqw; font-size: .72em; color: #8a4a3a; }
+.daylog .x { margin-left: auto; flex: none; background: none; border: 0; cursor: pointer; font-family: var(--hand); font-size: .62em; color: var(--ink-soft); text-decoration: underline; }
+.dayempty { font-family: var(--hand); font-size: clamp(24px, 2.4cqw, 32px); color: var(--ink-soft); margin: 0; }
+.daypanel { position: absolute; left: 59cqw; right: 4cqw; top: 4.5cqw; display: grid; gap: 1.5cqw; z-index: 5; }
+.dayask { font-family: var(--hand); font-size: clamp(32px, 3.6cqw, 52px); line-height: 1.1; color: #fff; text-shadow: 0 2px 12px rgba(10, 8, 36, .7); }
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqw; }
+.chip { min-height: 64px; padding: .8cqw 1cqw; border: 0; border-radius: 10px; background: #fff1d4; color: #2b2350; cursor: pointer;
+  font-family: var(--hand); font-size: clamp(20px, 2cqw, 28px); box-shadow: 0 6px 14px rgba(8, 6, 28, .45); }
+.chip:active { transform: translateY(2px); }
+.dayrow { display: flex; gap: 1cqw; align-items: stretch; }
+.daytype { flex: 1; min-width: 0; min-height: 56px; padding: .6cqw 1.2cqw; border: 0; border-radius: 10px; background: #fff;
+  font-family: var(--hand); font-size: clamp(20px, 2cqw, 28px); color: #2b2350; }
+.today-pg #tTalk { justify-self: start; }
+.today-pg #tTalk.live { box-shadow: 0 0 0 .35cqw rgba(255, 226, 160, .7), 0 0 40px rgba(255, 200, 120, .6); }
+
