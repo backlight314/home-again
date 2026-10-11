@@ -83,16 +83,33 @@
       }
       const tea = (pack.memories || [])[2];
       if (tea && !tea.photoDataUrl && porch && porch.photoDataUrl) tea.photoDataUrl = porch.photoDataUrl;
-      // the photo room gets the three most recent dated photos before today that no other
-      // room shows, oldest first, so they can be put back in the order they happened
+      // the hall in the house is yesterday: it hangs every album photo dated the day before
+      // today, in the order they were added
+      const yesterday = today - 864e5;
+      pack.rooms = pack.rooms || {};
+      const hall = (pack.rooms.yesterday = pack.rooms.yesterday || {});
+      if (!(hall.photos || []).some((p) => p.photoDataUrl)) {
+        hall.photos = dated()
+          .filter((x) => x.at === yesterday)
+          .map(({ ph }) => ({ caption: ph.caption || 'a photo from yesterday', photoDataUrl: ph.url }));
+      }
+      // the photo room gets the three most recent dated photos from before yesterday that no
+      // other room shows, oldest first, so they can be put back in the order they happened
       const attic = pack.rooms && pack.rooms.attic;
       if (attic && !(attic.photos || []).some((p) => p.photoDataUrl)) {
         const used = [kitchen && kitchen.photoDataUrl, porch && porch.photoDataUrl];
-        const before = dated().filter((x) => x.at < today && !used.includes(x.ph.url)).slice(-3);
+        const before = dated().filter((x) => x.at < yesterday && !used.includes(x.ph.url)).slice(-3);
         if (before.length === 3) {
           attic.photos = before.map(({ ph }, i) => ({ id: 'a' + (i + 1), label: ph.caption || 'a photo', date: ph.year, photoDataUrl: ph.url }));
         }
       }
+      // photos the family captioned with a voice message, by photo address: the game shows
+      // the words and plays the recording when that photo's memory opens
+      pack.voiceCaptions = {};
+      mat.photos.forEach((ph) => {
+        const v = ph.voiceId && mat.voices.find((x) => x.id === ph.voiceId);
+        if (v && v.url) pack.voiceCaptions[ph.url] = { audio: v.url, text: v.transcript || '', from: v.from || '' };
+      });
       // a letter piece gets a photo from this week of the person who recorded it
       const shows = (ph, name) => {
         const ids = mat.people.filter((f) => same(f.name.toLowerCase(), name)).map((f) => f.id);

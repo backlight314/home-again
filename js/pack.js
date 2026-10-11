@@ -20,7 +20,8 @@
  *     desk: { prompt?, items?: [{ id, label, say }] },
  *     phone: { prompt?, lines?: [{ t, say, clear }] },
  *     break: { prompt? },
- *     files: { prompt?, folders?: [{ id, label, svgId? }] }
+ *     files: { prompt?, folders?: [{ id, label, svgId? }] },
+ *     yesterday: { prompt?, line?, by?, photos?: [{ caption, photoDataUrl? }] }  // the hall; photos come from the album by date
  *   },
  *   workLetter?: [{ room, line, by }],
  *   ending: { callName }
@@ -66,7 +67,7 @@
   function demoPack() {
     return {
       version: 1,
-      asOf: '2026-10-10', // the demo's "today": the album photos dated this day hang in the hall
+      asOf: '2026-10-11', // the demo's "today": the album photos dated the day before hang in the hall (Yesterday)
       profile: {
         preferredName: 'Mom',
         addressAs: 'Mom',

@@ -24,7 +24,7 @@ function sslOptions(root) {
 export function createTigerStore({ url, familyId, root }) {
   const conn = new URL(url);
   conn.searchParams.delete('sslmode');  // TLS settings come from sslOptions
-  const pool = new pg.Pool({ connectionString: conn.toString(), ssl: sslOptions(root), max: 5, idleTimeoutMillis: 30_000 });
+  const pool = new pg.Pool({ connectionString: conn.toString(), ssl: sslOptions(root), max: 5, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 10_000 });
   pool.on('error', err => console.warn('TigerData connection dropped:', err.message));
 
   let ready = null;
@@ -62,6 +62,10 @@ export function createTigerStore({ url, familyId, root }) {
   async function withDoc(name, fallback, fn) {
     await schema();
     const db = await pool.connect();
+    // a connection that drops while checked out reports here instead of crashing the server
+    let broken = null;
+    const onError = err => { broken = err; console.warn('TigerData connection dropped:', err.message); };
+    db.on('error', onError);
     try {
       await db.query('begin');
       await db.query('insert into family_data (family_id) values ($1) on conflict (family_id) do nothing', [familyId]);
@@ -75,7 +79,8 @@ export function createTigerStore({ url, familyId, root }) {
       await db.query('rollback').catch(() => {});
       throw err;
     } finally {
-      db.release();
+      db.off('error', onError);
+      db.release(broken || undefined); // a broken connection is thrown away, not reused
     }
   }
 

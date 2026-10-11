@@ -132,6 +132,10 @@
   .album.dragging { outline: 3px dashed var(--accent); outline-offset: -8px; }
   .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
   .bar label, .field { display: grid; gap: 4px; font-family: var(--type); font-size: 12px; letter-spacing: .06em; color: var(--page-soft); }
+  select { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); min-width: 0; width: 100%; }
+  .voiceprev { display: grid; gap: 6px; margin: -4px 0 4px; }
+  .voiceprev audio { width: 100%; height: 36px; }
+  .voiceprev span { font-family: var(--sans); font-size: 14px; color: var(--page-soft); }
   input[type=text], input[type=date] { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); min-width: 0; width: 100%; }
   input[type=date] { cursor: pointer; color-scheme: dark; }
   html[data-time="day"] input[type=date] { color-scheme: light; }
@@ -238,7 +242,7 @@
   @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 </style>
 <link rel="stylesheet" href="css/time.css?v=merge4">
-<link rel="stylesheet" href="css/family-time.css?v=merge35">
+<link rel="stylesheet" href="css/family-time.css?v=merge36">
 </head>
 <body>
 <div class="app">
@@ -333,6 +337,7 @@
         <button class="tool" id="albumMic">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="lbl">Record a message</span>
         </button>
+        <button class="tool" id="albumRetry" hidden>Try saving again</button>
       </h3>
       <p class="hint">A short hello, a memory, or something you'd want them to hear. They will hear your real voice in the game.</p>
       <div class="voices" id="voices"></div>
@@ -353,6 +358,8 @@
       <label class="field">WHEN<input type="date" id="dYear" max="9999-12-31"><span class="was" id="dYearWas" hidden></span></label>
       <label class="field">THE STORY<textarea id="dCaption" placeholder="Where it was, what was happening"></textarea></label>
       <label class="field">ABOUT<select id="dTheme" aria-label="What this photo is about"><option value="">Not sure</option><option value="work">Where they worked</option><option value="childhood">Childhood</option><option value="family">Family</option><option value="week">This week</option><option value="other">Something else</option></select></label>
+      <label class="field">SPOKEN CAPTION<select id="dVoice"></select></label>
+      <div class="voiceprev" id="dVoicePrev" hidden><audio controls preload="none" id="dVoiceAudio"></audio><span id="dVoiceSaid"></span></div>
       <span class="by" id="dBy"></span>
       <button class="tool" id="dConfirm" hidden>Names look right</button>
       <div class="faceui" id="faceUi" hidden>
@@ -838,7 +845,7 @@
 
   function cardHtml(ph, ask) {
     const face = mat.people.find(f => f.photoId === ph.id);
-    const cap = [ph.who, ph.caption, ph.year].filter(Boolean).join(' · ');
+    const cap = [ph.who, ph.caption, ph.year, ph.voiceId && mat.voices.some(v => v.id === ph.voiceId) ? 'spoken caption' : ''].filter(Boolean).join(' · ');
     const badge = ask ? '' : face ? `<span class="badge face">${esc(face.name)}</span>` : guessed(ph) ? '<span class="badge check">check names</span>' : needsDetails(ph) ? '<span class="badge">tell us more</span>' : '';
     return `<div class="card">
       <button class="open" data-photo="${ph.id}">
@@ -959,14 +966,25 @@
   albumEl.addEventListener('dragleave', e => { if (!albumEl.contains(e.relatedTarget)) albumEl.classList.remove('dragging'); });
   albumEl.addEventListener('drop', e => { e.preventDefault(); albumEl.classList.remove('dragging'); uploadPhotos(e.dataTransfer.files); });
 
-  recorderButton($('albumMic'), async v => {
+  // a recording that could not be saved is kept, so it can be sent again instead of re-recorded
+  let unsavedVoice = null;
+  async function saveVoice(v) {
+    $('albumRetry').hidden = true;
     status('albumStatus', 'Saving your message…');
     try {
       await api('POST', '/api/voices', { audio: v.dataUrl, from: myName() });
+      unsavedVoice = null;
       useState(await api('GET', '/api/album'));
       status('albumStatus', 'Message saved.');
-    } catch (err) { status('albumStatus', err.message, true); }
-  }, msg => status('albumStatus', msg, true));
+    } catch (err) {
+      unsavedVoice = v;
+      $('albumRetry').hidden = false;
+      const why = err instanceof TypeError ? "Couldn't reach the server." : err.message;
+      status('albumStatus', why + ' Your recording is kept until it saves.', true);
+    }
+  }
+  recorderButton($('albumMic'), saveVoice, msg => status('albumStatus', msg, true));
+  $('albumRetry').onclick = () => unsavedVoice && saveVoice(unsavedVoice);
 
   $('copyShare').onclick = async () => {
     const link = location.origin + '/share';
@@ -987,11 +1005,33 @@
     $('dYearWas').hidden = full || !current.year;
     $('dYearWas').textContent = full ? '' : 'Written as "' + (current.year || '') + '". Pick a day to replace it.';
     $('dBy').textContent = current.uploadedBy ? 'Added by ' + current.uploadedBy : '';
+    fillVoicePick();
     $('backRow').innerHTML = current.backUrl ? `<img src="${esc(current.backUrl)}" alt="back of the photo"><span>Back of the print</span>` : '';
     stopCrop(); closeFace(); status('dStatus', '');
     $('detail').showModal();
     drawFaces();
   }
+  // a voice message from the album can be the photo's caption: the game shows its words
+  // and plays the recording when the photo's memory is opened
+  const shortSaid = (t, n) => (t && t.length > n ? t.slice(0, n - 1) + '…' : t || '');
+  function fillVoicePick() {
+    const pick = $('dVoice');
+    const opts = [`<option value="">${mat.voices.length ? 'None. The game reads the story aloud' : 'No voice messages yet. Record one in the album first'}</option>`]
+      .concat(mat.voices.slice().reverse().map(v => `<option value="${esc(v.id)}">${esc((v.from || 'Someone') + ': "' + shortSaid(v.transcript || 'not transcribed yet', 50) + '"')}</option>`));
+    pick.innerHTML = opts.join('');
+    pick.value = mat.voices.some(v => v.id === current.voiceId) ? current.voiceId : '';
+    pick.disabled = !mat.voices.length;
+    showVoicePick();
+  }
+  function showVoicePick() {
+    const v = mat.voices.find(x => x.id === $('dVoice').value);
+    $('dVoicePrev').hidden = !v;
+    if (!v) { $('dVoiceAudio').removeAttribute('src'); return; }
+    if ($('dVoiceAudio').getAttribute('src') !== v.url) $('dVoiceAudio').src = v.url;
+    $('dVoiceSaid').textContent = v.transcript ? '"' + v.transcript + '"' : 'Not transcribed yet. Type what they said under Voice messages.';
+  }
+  $('dVoice').onchange = showVoicePick;
+
   function refreshCurrent() {
     current = mat.photos.find(p => p.id === current?.id) || current;
     $('dWho').value = current.who || '';
@@ -1089,10 +1129,11 @@
   $('closeDetail').onclick = () => $('detail').close();
   // tapping anywhere on the date opens the little calendar, not just its icon
   $('dYear').addEventListener('click', (e) => { try { e.currentTarget.showPicker(); } catch {} });
-  $('detail').addEventListener('close', stopCrop);
+  $('detail').addEventListener('close', () => { stopCrop(); $('dVoiceAudio').pause(); });
   $('dSave').onclick = async () => {
     try {
       const patch = { caption: $('dCaption').value };
+      if ($('dVoice').value !== (current.voiceId || '')) patch.voiceId = $('dVoice').value;
       if ($('dYear').value || /^\d{4}-\d{2}-\d{2}$/.test(current.year || '')) patch.year = $('dYear').value;
       if ($('dWho').value.trim() !== (current.who || '')) patch.who = $('dWho').value;
       if ($('dTheme').value !== (current.theme || '')) patch.theme = $('dTheme').value;

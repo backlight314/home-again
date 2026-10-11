@@ -3,6 +3,7 @@
 //
 //   npm run seed-snowflake             add 6 weeks of sample history before this week
 //   npm run seed-snowflake -- --clear  remove all sample rows for FAMILY_ID
+//   npm run seed-snowflake -- --names="Alina,Eason,Chris"   choose who is at the table
 import { loadDoc, storage, FAMILY_ID } from '../store.js';
 import { insertSample, clearSample, snowflakeOn } from '../snowflake.js';
 
@@ -15,9 +16,10 @@ if (process.argv.includes('--clear')) {
   await done();
 }
 
-// the family's own names when a game has been built, otherwise the demo family
-const pack = await loadDoc('pack', null).catch(() => null);
-const names = (pack?.people || []).map(p => p.name).filter(Boolean);
+// names from --names "A,B,C", else the family's own when a game has been built, else the demo family
+const arg = process.argv.find(a => a.startsWith('--names='))?.slice(8);
+const pack = arg ? null : await loadDoc('pack', null).catch(() => null);
+const names = arg ? arg.split(',').map(n => n.trim()).filter(Boolean) : (pack?.people || []).map(p => p.name).filter(Boolean);
 while (names.length < 3) names.push(['Mei', 'Daniel', 'Aunt Rose'][names.length]);
 const [first, second, third] = names;
 

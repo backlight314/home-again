@@ -23,12 +23,19 @@ export async function addPhoto(body) {
   return result;
 }
 
-// body: any of { who, caption, year, theme }
+// body: any of { who, caption, year, theme, voiceId }
+// theme: what the photo is about (work, childhood, family, week, other), so each book can use it.
+// voiceId: a voice message read out as the photo's caption in the game, or '' to take it off.
 const THEMES = ['work', 'childhood', 'family', 'week', 'other'];
 export const updatePhoto = (id, body) => withMaterials(mat => {
   const ph = findPhoto(mat, id);
   for (const k of ['who', 'caption', 'year']) if (k in body) ph[k] = clean(body[k]);
-  if ('theme' in body) ph.theme = THEMES.includes(body.theme) ? body.theme : ''; // what the photo is about, so each book can use it
+  if ('theme' in body) ph.theme = THEMES.includes(body.theme) ? body.theme : '';
+  if ('voiceId' in body) {
+    const v = clean(body.voiceId);
+    if (v && !mat.voices.some(x => x.id === v)) throw gone('voice message');
+    if (v) ph.voiceId = v; else delete ph.voiceId;
+  }
   // typing names by hand wins over face tags; clearing the field hands it back to them
   if ('who' in body) { ph.whoSource = ph.who ? 'manual' : 'faces'; syncWho(ph, mat); }
   return { photo: ph };
