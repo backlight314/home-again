@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat+Brush&family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }</script>
-<link rel="stylesheet" href="css/tokens.css?v=merge3">
-<link rel="stylesheet" href="css/theme.css?v=merge3">
-<link rel="stylesheet" href="css/family.css?v=merge3">
-<link rel="stylesheet" href="css/play.css?v=merge3">
-<link rel="stylesheet" href="css/album.css?v=merge3">
-<link rel="stylesheet" href="css/dusk.css?v=today1">
-<link rel="stylesheet" href="css/time.css?v=today1">
-<script src="js/theme.js?v=merge3"></script>
+<link rel="stylesheet" href="css/tokens.css?v=merge15">
+<link rel="stylesheet" href="css/theme.css?v=merge15">
+<link rel="stylesheet" href="css/family.css?v=merge15">
+<link rel="stylesheet" href="css/play.css?v=merge15">
+<link rel="stylesheet" href="css/album.css?v=merge15">
+<link rel="stylesheet" href="css/dusk.css?v=merge15">
+<link rel="stylesheet" href="css/time.css?v=merge15">
+<script src="js/theme.js?v=merge15"></script>
 </head>
 <body data-mode="home">
 
@@ -327,6 +327,7 @@
           <div class="seat" id="seatL" style="left:-5%;top:-4%"></div>
           <div class="seat" id="seatC" style="left:44%;top:-26%"></div>
           <div class="seat" id="seatR" style="right:-5%;top:-4%"></div>
+          <div class="tablephoto" id="kPhoto" hidden></div>
         </div>
         <div class="said" id="kSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="kSaidText"></span></div>
         <div class="krow" id="kRow"></div>
@@ -525,6 +526,7 @@
         <div class="hframes" id="tFrames"></div>
         <div class="said" id="tSaid" hidden><span class="wave on"><i></i><i></i><i></i><i></i><i></i></span><span id="tSaidText"></span></div>
         <button class="pressbtn red hide" id="todayTake" type="button" style="position:absolute;right:20%;bottom:7%">KEEP THIS MEMORY</button>
+        <button class="pressbtn" id="dayLogBtn" type="button" style="position:absolute;left:5%;bottom:7%">WHAT DID YOU DO TODAY?</button>
         <button class="quietbtn" data-go="hub" type="button" style="right:4%;bottom:4%">skip this one</button>
       </section>
 
@@ -567,7 +569,7 @@
 
       <div class="ovl" id="reveal" role="dialog" aria-label="A memory for your album">
         <div class="memcard">
-          <div class="print" id="mPrint"><div class="sepia"><svg viewBox="0 0 120 80"><use id="mUse" href="#sc-table"/></svg></div><div class="pname" id="mCap"></div></div>
+          <div class="print" id="mPrint"><div class="sepia"><svg viewBox="0 0 120 80"><use href="#sc-table"/></svg></div><div class="pname" id="mCap"></div></div>
           <div class="side">
             <p class="line" id="mLine"></p>
             <div class="memrow">
@@ -577,6 +579,24 @@
             <button class="pressbtn" id="mDone" type="button">PUT IT IN THE ALBUM</button>
           </div>
         </div>
+      </div>
+
+      <div class="ovl album-pg today-pg" id="dayLogOvl" role="dialog" aria-label="What did you do today?">
+        <div class="desk"></div>
+        <div class="sheetpg todaysheet" id="todaySheet" data-title="TODAY">
+          <ul class="daylog" id="dayLog"></ul>
+          <p class="dayempty" id="dayEmpty">Nothing written yet.</p>
+        </div>
+        <div class="daypanel">
+          <div class="dayask">What did you do today?</div>
+          <div class="chips" id="tChips"></div>
+          <div class="dayrow">
+            <input class="daytype" id="tType" type="text" maxlength="300" placeholder="or write it here" aria-label="What you did today">
+            <button class="pressbtn" id="tAdd" type="button">ADD</button>
+          </div>
+          <button class="pressbtn red" id="tTalk" type="button">TAP AND TALK</button>
+        </div>
+        <button class="quietbtn closebtn" id="dayClose" type="button">back to the hall</button>
       </div>
 
       <div class="ovl" id="rest" role="dialog" aria-label="Rest">
@@ -596,12 +616,12 @@
   </div>
 </section>
 
-<script src="js/strings.js?v=merge3"></script>
-<script src="js/pack.js?v=merge3"></script>
-<script src="js/voicebank.js?v=merge3"></script>
-<script src="js/voice.js?v=merge3"></script>
-<script src="js/family.js?v=merge3"></script>
-<script src="js/play.js?v=today1"></script>
-<script src="js/app.js?v=merge3"></script>
+<script src="js/strings.js?v=merge15"></script>
+<script src="js/pack.js?v=merge15"></script>
+<script src="js/voicebank.js?v=merge15"></script>
+<script src="js/voice.js?v=merge15"></script>
+<script src="js/family.js?v=merge15"></script>
+<script src="js/play.js?v=merge15"></script>
+<script src="js/app.js?v=merge15"></script>
 </body>
 </html>

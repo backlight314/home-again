@@ -14,7 +14,8 @@
  *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }] },
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
- *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] }
+ *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] },
+ *     today: { prompt?, caption?, line?, by?, photos?: [{ caption, photoDataUrl? }] }
  *   },
  *   ending: { callName }
  * }
@@ -41,22 +42,22 @@
         eras: ['thisWeek']
       },
       people: [
-        { id: 'p_mei', name: 'Mei', relation: 'daughter', palette: PALETTES[0] },
-        { id: 'p_daniel', name: 'Daniel', relation: 'son', palette: PALETTES[1] },
-        { id: 'p_rose', name: 'Aunt Rose', relation: 'sister', palette: PALETTES[2] }
+        { id: 'p_alina', name: 'Alina', relation: 'daughter', palette: PALETTES[0] },
+        { id: 'p_christopher', name: 'Christopher', relation: 'son', palette: PALETTES[1] },
+        { id: 'p_eason', name: 'Eason', relation: 'son', palette: PALETTES[2] }
       ],
       memories: [
         {
           id: 'm1',
           title: 'Sunday lunch',
           placeYear: 'last Sunday',
-          text: 'Last Sunday Mei sat in your chair and poured the tea. The soup was too hot.'
+          text: 'Last Sunday Alina sat in your chair and poured the tea. The soup was too hot.'
         },
         {
           id: 'm2',
           title: 'In the car',
           placeYear: 'Tuesday',
-          text: 'Tuesday in the car Daniel had One More Dance on again. You hummed along.'
+          text: 'Tuesday in the car Christopher had One More Dance on again. You hummed along.'
         },
         {
           id: 'm3',
@@ -78,10 +79,10 @@
         { id: 's4', title: 'Heartbeat' }
       ],
       letter: [
-        { room: 'Sunday kitchen', line: 'Last Sunday you asked for a second cup. Mei is still laughing about the soup.', by: 'Mei' },
-        { room: 'Tuesday car', line: 'Tuesday you hummed that song in the car. Daniel kept it on the whole way home.', by: 'Daniel' },
-        { room: 'Garden', line: 'Yesterday the bee sat on your saucer. You said it wanted sugar too.', by: 'Mei' },
-        { room: 'Photographs', line: 'This week we took these pictures so you can see we were here. We are here.', by: 'Aunt Rose' }
+        { room: 'Sunday kitchen', line: 'Last Sunday you asked for a second cup. Alina is still laughing about the soup.', by: 'Alina' },
+        { room: 'Tuesday car', line: 'Tuesday you hummed that song in the car. Christopher kept it on the whole way home.', by: 'Christopher' },
+        { room: 'Garden', line: 'Yesterday the bee sat on your saucer. You said it wanted sugar too.', by: 'Alina' },
+        { room: 'Photographs', line: 'This week we took these pictures so you can see we were here. We are here.', by: 'Eason' }
       ],
       rooms: {
         kitchen: {
@@ -89,20 +90,26 @@
           rounds: [
             {
               seat: 'seatC',
-              who: 'Mei',
-              hello: 'Mei: "Hi Mom. It is Sunday again. I brought the soup."',
+              who: 'Alina',
+              hello: 'Alina: "Hi Mom. It is Sunday again. I brought the soup."',
               hints: {
-                Daniel: 'Daniel: "That is me. Mei sat across from you on Sunday."',
-                'Aunt Rose': 'Rose: "That is me. Look for Mei — she poured the tea."'
+                Christopher: 'Christopher: "That is me. Alina sat across from you on Sunday."',
+                Eason: 'Eason: "That is me. Look for Alina — she poured the tea."'
               }
             },
             {
               seat: 'seatL',
-              who: 'Daniel',
-              hello: 'Daniel: "Hi Mom. I came after work on Sunday."',
+              who: 'Christopher',
+              hello: 'Christopher: "Hi Mom. I came after work on Sunday."',
               hints: {
-                'Aunt Rose': 'Rose: "Daniel was on your left. I was late."'
+                Eason: 'Eason: "Christopher was on your left. I was late."'
               }
+            },
+            {
+              seat: 'seatR',
+              who: 'Eason',
+              hello: 'Eason: "Hi Mom. I was late, but I made it in time for the soup."',
+              hints: {}
             }
           ]
         },
@@ -117,8 +124,16 @@
         },
         porch: {
           prompt: 'Tell me about tea in the garden yesterday',
-          storyText: 'We sat outside. A bee landed on the saucer and Mom laughed. Mei took a picture.',
+          storyText: 'We sat outside. A bee landed on the saucer and Mom laughed. Alina took a picture.',
           svgId: 'sc-garden'
+        },
+        today: {
+          // album photos hung in the hall, named by caption and filled in from the album at Play
+          photos: [
+            { caption: 'you helped with cooking dinner' },
+            { caption: "we celebrated chris's birthday" },
+            { caption: 'we went on a city walk' }
+          ]
         },
         attic: {
           prompt: 'Which photo came first this week?',
@@ -132,7 +147,7 @@
       voice: {
         transcript: 'Last Sunday we had soup. Tuesday the song was on in the car. Yesterday a bee landed on her tea. This week we took pictures so she can see we were here.'
       },
-      ending: { callName: 'Mei' }
+      ending: { callName: 'Alina' }
     };
   }
 
@@ -248,7 +263,7 @@
     while (people.length < 2) {
       people.push({
         id: uid('p'),
-        name: people.length === 0 ? 'Mei' : 'Daniel',
+        name: people.length === 0 ? 'Alina' : 'Christopher',
         relation: 'family',
         photoDataUrl: null,
         palette: personPalette(people.length)
