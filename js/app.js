@@ -36,33 +36,29 @@
   // recorded it.
   async function withAlbumPhotos(pack) {
     try {
-      const res = await fetch('/api/album');
+      const res = await fetch('/api/album', { signal: AbortSignal.timeout(3000) });
       if (!res.ok) return pack;
       const mat = (await res.json()).materials;
       const portraits = mat.people
         .map((f) => ({ name: f.name.toLowerCase(), url: (mat.photos.find((ph) => ph.id === f.photoId) || {}).url }))
         .filter((f) => f.url);
-      // album photos (not cropped portraits) dated in the last seven days, oldest first
+      // "today" is the pack's asOf (YYYY-MM-DD) when it sets one, else the real date
       const day = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      const today = day(new Date());
-      const thisWeek = () =>
+      const today = day(pack.asOf ? new Date(pack.asOf + 'T00:00') : new Date());
+      // album photos (not cropped portraits) with a full date up to today, oldest first
+      // (photos from the same day keep the order they were added)
+      const dated = () =>
         mat.photos
           .filter((ph) => !ph.croppedFrom && /^\d{4}-\d{2}-\d{2}$/.test(ph.year || ''))
-          .map((ph) => ({ ph, at: day(new Date(ph.year + 'T00:00')) }))
-          .filter((x) => x.at <= today && today - x.at < 7 * 864e5)
-          .sort((a, b) => a.at - b.at);
+          .map((ph, i) => ({ ph, i, at: day(new Date(ph.year + 'T00:00')) }))
+          .filter((x) => x.at <= today)
+          .sort((a, b) => a.at - b.at || a.i - b.i);
+      const thisWeek = () => dated().filter((x) => today - x.at < 7 * 864e5);
       const same = (a, b) => a === b || (Math.min(a.length, b.length) >= 3 && (a.startsWith(b) || b.startsWith(a)));
       (pack.people || []).forEach((p) => {
         const hit = !p.photoDataUrl && portraits.find((f) => same(f.name, p.name.toLowerCase()));
         if (hit) p.photoDataUrl = hit.url;
       });
-      const attic = pack.rooms && pack.rooms.attic;
-      if (attic && !(attic.photos || []).some((p) => p.photoDataUrl)) {
-        const week = thisWeek().slice(-3);
-        if (week.length === 3) {
-          attic.photos = week.map(({ ph }, i) => ({ id: 'a' + (i + 1), label: ph.caption || 'a photo from this week', photoDataUrl: ph.url }));
-        }
-      }
       // the lunch table gets the album photo the pack names by caption ("the soup we drank"),
       // or else the newest photo of a meal
       const kitchen = pack.rooms && pack.rooms.kitchen;
@@ -87,12 +83,28 @@
       }
       const tea = (pack.memories || [])[2];
       if (tea && !tea.photoDataUrl && porch && porch.photoDataUrl) tea.photoDataUrl = porch.photoDataUrl;
-      // the hall hangs the album photos the pack names by caption
-      ((pack.rooms && pack.rooms.today && pack.rooms.today.photos) || []).forEach((p) => {
+      // the hall hangs the album photos dated today, in the order they were added,
+      // or else the ones the pack names by caption
+      const hall = pack.rooms && pack.rooms.today;
+      const ofToday = dated().filter((x) => x.at === today);
+      if (hall && ofToday.length && !(hall.photos || []).some((p) => p.photoDataUrl)) {
+        hall.photos = ofToday.map(({ ph }) => ({ caption: ph.caption || 'a photo from today', photoDataUrl: ph.url }));
+      }
+      ((hall && hall.photos) || []).forEach((p) => {
         if (p.photoDataUrl || !p.caption) return;
         const ph = mat.photos.find((x) => !x.croppedFrom && (x.caption || '').toLowerCase() === p.caption.toLowerCase());
         if (ph) p.photoDataUrl = ph.url;
       });
+      // the photo room gets the three most recent dated photos before today that no other
+      // room shows, oldest first, so they can be put back in the order they happened
+      const attic = pack.rooms && pack.rooms.attic;
+      if (attic && !(attic.photos || []).some((p) => p.photoDataUrl)) {
+        const used = [kitchen && kitchen.photoDataUrl, porch && porch.photoDataUrl];
+        const before = dated().filter((x) => x.at < today && !used.includes(x.ph.url)).slice(-3);
+        if (before.length === 3) {
+          attic.photos = before.map(({ ph }, i) => ({ id: 'a' + (i + 1), label: ph.caption || 'a photo', date: ph.year, photoDataUrl: ph.url }));
+        }
+      }
       // a letter piece gets a photo from this week of the person who recorded it
       const shows = (ph, name) => {
         const ids = mat.people.filter((f) => same(f.name.toLowerCase(), name)).map((f) => f.id);
@@ -111,7 +123,8 @@
 
   async function goPlay() {
     try {
-      const res = await fetch('/api/pack');
+      // a slow or unreachable album store must not keep Play from opening
+      const res = await fetch('/api/pack', { signal: AbortSignal.timeout(3000) });
       if (res.ok) HomeAgainPack.savePack(await res.json());
     } catch (_) {}
     showView('play');

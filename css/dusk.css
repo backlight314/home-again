@@ -384,6 +384,9 @@
   transition: transform 1.4s cubic-bezier(.3, 1.5, .5, 1);
 }
 .hframe.straight { transform: rotate(0deg); cursor: default; }
+/* four or more of today's photos: a wider wall and slightly smaller frames */
+.hframes.many { left: 30%; right: 12%; }
+.hframes.many .hframe { width: 11cqw; min-width: 80px; }
 .hframe .wire { position: absolute; left: 50%; top: -2.6cqw; width: 70%; height: 2.6cqw; transform: translateX(-50%); overflow: visible; }
 .hframe .wire path { fill: none; stroke: rgba(255, 236, 200, .75); stroke-width: 2; }
 .hframe .wire circle { fill: #3c3326; }

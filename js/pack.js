@@ -4,6 +4,7 @@
  *
  * GamePack: {
  *   version: 1,
+ *   asOf?: 'YYYY-MM-DD',  // the day the game treats as today (album dates are read against it)
  *   profile: { preferredName, addressAs, eras: string[] },
  *   people: [{ id, name, relation?, photoDataUrl?, palette? }],
  *   memories: [{ id, title, placeYear?, text, photoDataUrl? }],
@@ -14,7 +15,7 @@
  *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }], photoCaption?, photoDataUrl? },
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
- *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] },
+ *     attic: { prompt, photos: [{ id, label, date?, svgId?, photoDataUrl? }] },
  *     today: { prompt?, caption?, line?, by?, photos?: [{ caption, photoDataUrl? }] }
  *   },
  *   ending: { callName }
@@ -36,6 +37,7 @@
   function demoPack() {
     return {
       version: 1,
+      asOf: '2026-10-10', // the demo's "today": the album photos dated this day hang in the hall
       profile: {
         preferredName: 'Mom',
         addressAs: 'Mom',
@@ -87,7 +89,7 @@
       rooms: {
         kitchen: {
           prompt: 'Who sat with you at lunch last Sunday?',
-          photoCaption: 'the soup we drank', // the album photo laid on the table once everyone is seated
+          photoCaption: 'sunday lunch', // the album photo laid on the table once everyone is seated
           rounds: [
             {
               seat: 'seatC',
