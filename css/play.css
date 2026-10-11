@@ -771,6 +771,12 @@
 }
 .boxrow .pick svg, .boxrow .pick img { width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block; }
 .boxrow .pick.gone { visibility: hidden; }
+.mount .when { position: absolute; right: 0; top: -24px; text-align: right; font-family: var(--hand); font-size: clamp(16px, 1.6cqw, 22px); color: #ffe4b0; text-shadow: 0 1px 8px rgba(10, 8, 36, .9); white-space: nowrap; }
+html[data-time="day"] .mount .when { color: var(--ink-day); text-shadow: var(--halo-day); }
+/* a photo picked out of order shakes its head gently and stays in the box */
+.boxrow .pick.later { animation: later .5s ease; }
+@keyframes later { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+@media (prefers-reduced-motion: reduce) { .boxrow .pick.later { animation: none; opacity: .6; } }
 /* tall photos get tall frames, centred in each slot on the timeline */
 .attic.tall .shelfline { top: 37%; }
 .attic.tall .mount { width: 12.5%; height: 165px; margin-left: 4.75%; }
