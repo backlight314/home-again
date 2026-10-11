@@ -10,7 +10,7 @@
 <script src="js/theme.js?v=merge3"></script>
 <style>
   :root {
-    color-scheme: light dark;
+   
     --stamp: #9c3b2e;
     --sage: #697a5c;
     --display: "Petrona", "Iowan Old Style", Georgia, serif;
@@ -132,7 +132,10 @@
   .album.dragging { outline: 3px dashed var(--accent); outline-offset: -8px; }
   .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
   .bar label, .field { display: grid; gap: 4px; font-family: var(--type); font-size: 12px; letter-spacing: .06em; color: var(--page-soft); }
-  input[type=text] { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); min-width: 0; width: 100%; }
+  input[type=text], input[type=date] { background: var(--field); border: 1px solid var(--card-edge); padding: 9px 11px; font-family: var(--sans); font-size: 16px; color: var(--page-text); min-width: 0; width: 100%; }
+  input[type=date] { cursor: pointer; color-scheme: dark; }
+  html[data-time="day"] input[type=date] { color-scheme: light; }
+  .field .was { font-family: var(--sans); font-size: 13px; letter-spacing: 0; color: var(--page-soft); }
   .bar label { width: 200px; }
   .spacer { flex: 1; }
   .hint { color: var(--page-soft); font-size: 15px; }
@@ -235,7 +238,7 @@
   @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 </style>
 <link rel="stylesheet" href="css/time.css?v=merge3">
-<link rel="stylesheet" href="css/family-time.css?v=merge3">
+<link rel="stylesheet" href="css/family-time.css?v=merge4">
 </head>
 <body>
 <div class="app">
@@ -347,7 +350,7 @@
     </div>
     <div class="form">
       <label class="field">WHO IS IN IT<input type="text" id="dWho" placeholder="Mom and Aunt Rose"></label>
-      <label class="field">ROUGHLY WHEN<input type="text" id="dYear" placeholder="1970s, or around 1986"></label>
+      <label class="field">WHEN<input type="date" id="dYear" max="9999-12-31"><span class="was" id="dYearWas" hidden></span></label>
       <label class="field">THE STORY<textarea id="dCaption" placeholder="Where it was, what was happening"></textarea></label>
       <span class="by" id="dBy"></span>
       <button class="tool" id="dConfirm" hidden>Names look right</button>
@@ -976,7 +979,12 @@
     current = mat.photos.find(p => p.id === id);
     if (!current) return;
     $('dImg').src = current.url;
-    $('dWho').value = current.who || ''; $('dYear').value = current.year || ''; $('dCaption').value = current.caption || '';
+    $('dWho').value = current.who || ''; $('dCaption').value = current.caption || '';
+    // the date is picked from a calendar; an older rough date ("1970s") is shown until one is picked
+    const full = /^\d{4}-\d{2}-\d{2}$/.test(current.year || '');
+    $('dYear').value = full ? current.year : '';
+    $('dYearWas').hidden = full || !current.year;
+    $('dYearWas').textContent = full ? '' : 'Written as "' + (current.year || '') + '". Pick a day to replace it.';
     $('dBy').textContent = current.uploadedBy ? 'Added by ' + current.uploadedBy : '';
     $('backRow').innerHTML = current.backUrl ? `<img src="${esc(current.backUrl)}" alt="back of the photo"><span>Back of the print</span>` : '';
     stopCrop(); closeFace(); status('dStatus', '');
@@ -1078,10 +1086,13 @@
     } catch (err) { status('dStatus', err.message, true); }
   };
   $('closeDetail').onclick = () => $('detail').close();
+  // tapping anywhere on the date opens the little calendar, not just its icon
+  $('dYear').addEventListener('click', (e) => { try { e.currentTarget.showPicker(); } catch {} });
   $('detail').addEventListener('close', stopCrop);
   $('dSave').onclick = async () => {
     try {
-      const patch = { year: $('dYear').value, caption: $('dCaption').value };
+      const patch = { caption: $('dCaption').value };
+      if ($('dYear').value || /^\d{4}-\d{2}-\d{2}$/.test(current.year || '')) patch.year = $('dYear').value;
       if ($('dWho').value.trim() !== (current.who || '')) patch.who = $('dWho').value;
       await api('PATCH', '/api/photos/' + current.id, patch);
       useState(await api('GET', '/api/album'));
