@@ -6,6 +6,7 @@ import { buildGame } from './build.js';
 import { addPhoto, updatePhoto, addBack, addPortrait, addVoice, updateVoice, scanPhoto, nameFace, confirmFaces, setFaceRecognition } from './album.js';
 import { ROOT, TYPES, loadDoc, readMedia, storage, loadMaterials, withMaterials, removeMaterial, progress } from './store.js';
 import { upgradeMatching } from './faces.js';
+import { logEvents, insights, snowflakeOn } from './snowflake.js';
 
 const PORT = Number(process.env.PORT) || 8787;
 const MAX_BODY = 40 * 1024 * 1024;
@@ -82,6 +83,8 @@ const routes = {
     if (!pack) throw Object.assign(new Error('The album is not built yet.'), { status: 404 });
     return pack;
   },
+  'POST /api/events': (body) => logEvents(body),
+  'GET /api/insights': () => insights(),
   'GET /api/game': async () => {
     const cfg = await loadDoc('game', null);
     if (!cfg) throw Object.assign(new Error('no game built yet'), { status: 404 });
@@ -157,6 +160,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, () => {
   console.log(`Home Again on http://localhost:${PORT}  (family: /family)`);
   console.log(`Album stored in ${storage.documents}; photos and voices in ${storage.files}`);
+  console.log(`Play events go to ${snowflakeOn ? 'Snowflake' : 'data/events.jsonl (Snowflake not configured)'}`);
 });
 
 // re-check existing face guesses whenever the matching rules change
