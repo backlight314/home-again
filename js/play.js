@@ -824,7 +824,7 @@
       return null;
     }
     try {
-      const { createPlace } = await import('./place3d.js?v=merge32');
+      const { createPlace } = await import('./place3d.js?v=merge34');
       places[kind] = createPlace({ kind, mount: $(placeMount[kind]), onRoom: (name) => enterPlaceRoom(kind, name) });
       sec.classList.add('is3d');
       $(placeMount[kind]).onpointermove = (e) => {
@@ -1189,16 +1189,28 @@
     speak(line, 'letter', m && m.by).then(finish);
   }
 
+  // where a memory was opened from, so closing it goes back there (the album page, a place, or the house)
+  let memoryFrom = 'intro';
+  function placeHere() {
+    if (placeOf[current]) return placeOf[current];
+    if (current === 'childhub') return 'childhood';
+    if (current === 'todayhub') return 'today';
+    if (current === 'album' && (currentBook === 'childhood' || currentBook === 'today')) return currentBook;
+    return null;
+  }
+  const homeLabel = (kind) => (kind === 'childhood' ? 'BACK TO CHILDHOOD' : kind === 'today' ? 'BACK TO TODAY' : 'BACK TO THE HOUSE');
+
   function openMemory(id) {
     hush();
     const m = memory(id);
     viewing = id;
+    memoryFrom = current;
     $('mPrint').querySelector('.sepia').innerHTML = memPrint(m);
     $('mCap').textContent = m.caption || m.title;
     $('mLine').textContent = '“' + m.line + '”';
     $('mBy').textContent = 'recorded by ' + m.by;
     $('mWave').classList.remove('on');
-    $('mDone').textContent = rereading ? S.closeMemory : S.putIn;
+    $('mDone').textContent = rereading ? (memoryFrom === 'album' ? S.closeMemory : homeLabel(placeOf[id] || placeHere())) : S.putIn;
     const pr = $('mPrint');
     pr.classList.remove('developed');
     $('reveal').classList.add('on');
@@ -2072,7 +2084,9 @@
       $('reveal').classList.remove('on');
       if (rereading) {
         rereading = false;
-        if (currentBook === 'today') closeBook();
+        const kind = placeOf[viewing];
+        if (memoryFrom === 'album') show('album');
+        else if (kind) leavePlace(kind);
         else leaveAlbumHub();
         return;
       }
@@ -2082,12 +2096,14 @@
     };
     $('restBtn').onclick = () => {
       track('rest', (document.querySelector('#screen .scr.on') || {}).id?.slice(2));
+      $('restHome').textContent = homeLabel(placeHere());
       $('rest').classList.add('on');
     };
     $('restKeep').onclick = () => $('rest').classList.remove('on');
     $('restHome').onclick = () => {
       $('rest').classList.remove('on');
-      if (current === 'today' || currentBook === 'today') closeBook();
+      const kind = placeHere();
+      if (kind) leavePlace(kind);
       else leaveAlbumHub();
     };
     $('kNext').onclick = () => keepMemory('kitchen');
