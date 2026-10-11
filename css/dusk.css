@@ -412,6 +412,7 @@
   transition: opacity .8s ease .6s;
 }
 .hframe .who small { display: block; font-size: .78em; color: #ffe2a0; }
+.hframe .who.cap { font-size: clamp(18px, 1.8cqw, 24px); line-height: 1.15; }
 .hframe.straight .who { opacity: 1; }
 .hall .said { bottom: 26%; }
 @keyframes hsway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
