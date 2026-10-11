@@ -182,7 +182,8 @@
         photos,
         caption: mem.title || line.room,
         line: line.line,
-        by: line.by
+        by: line.by,
+        voice: line.voice || mem.voice || null
       };
     });
     chapters = [
@@ -242,8 +243,8 @@
     const toy = childCfg('toybox');
     const rec = childCfg('recipe');
     return [
-      { id: 'toybox', title: 'Toy box', activity: 'toybox', scene: 'sc-toys', photoDataUrl: toy.photoDataUrl || null, caption: toy.caption, line: toy.line, by: toy.by },
-      { id: 'recipe', title: 'Recipe', activity: 'recipe', scene: 'sc-cake', photoDataUrl: rec.photoDataUrl || null, caption: rec.caption, line: rec.line, by: rec.by }
+      { id: 'toybox', title: 'Toy box', activity: 'toybox', scene: 'sc-toys', photoDataUrl: toy.photoDataUrl || null, caption: toy.caption, line: toy.line, by: toy.by, voice: toy.voice || null },
+      { id: 'recipe', title: 'Recipe', activity: 'recipe', scene: 'sc-cake', photoDataUrl: rec.photoDataUrl || null, caption: rec.caption, line: rec.line, by: rec.by, voice: rec.voice || null }
     ];
   }
 
@@ -327,7 +328,8 @@
         photoDataUrl: room.photoDataUrl || null,
         caption: room.caption || line.room,
         line: room.line || line.line,
-        by: line.by
+        by: line.by,
+        voice: line.voice || room.voice || null
       };
     });
   }
@@ -1167,6 +1169,30 @@
     if (name === 'ending') initEnding();
   }
 
+  // A family member's recording from the Family Workshop, played exactly as they said it. Resolves when it
+  // ends (or cannot play, so the caller never waits forever).
+  function playRecording(url, fallback) {
+    return new Promise((resolve) => {
+      if (familyAudio) familyAudio.pause();
+      const a = new Audio(url);
+      familyAudio = a;
+      const end = () => {
+        if (familyAudio === a) familyAudio = null;
+        resolve();
+      };
+      a.onended = end;
+      a.onerror = () => (fallback ? fallback().then(end) : end());
+      a.play().catch(() => (fallback ? fallback().then(end) : end()));
+    });
+  }
+
+  // one memory's line, in the family member's real voice when they recorded it, else read aloud
+  function voiceLine(m) {
+    if (!m) return Promise.resolve();
+    const read = () => speak(m.line, 'letter', m.by);
+    return m.voice ? playRecording(m.voice, read) : read();
+  }
+
   function playFamilyVoice(done) {
     const finish = () => {
       const w = $('mWave');
@@ -1175,18 +1201,7 @@
     };
     $('mWave').classList.add('on');
     hush();
-    const url = pack.voice && pack.voice.audioDataUrl;
-    const m = memory(viewing);
-    const line = m && m.line;
-    if (url) {
-      familyAudio = new Audio(url);
-      familyAudio.onended = finish;
-      familyAudio.play().catch(() => {
-        speak(line, 'letter', m && m.by).then(finish);
-      });
-      return;
-    }
-    speak(line, 'letter', m && m.by).then(finish);
+    voiceLine(memory(viewing)).then(finish);
   }
 
   // where a memory was opened from, so closing it goes back there (the album page, a place, or the house)
@@ -1215,7 +1230,7 @@
     pr.classList.remove('developed');
     $('reveal').classList.add('on');
     later(() => pr.classList.add('developed'), 300);
-    beginRead($('mPlay'), (done) => speak(m.line, 'letter', m.by).then(done));
+    beginRead($('mPlay'), (done) => voiceLine(m).then(done));
   }
 
   function setSeat(el, state, who) {
@@ -1725,7 +1740,12 @@
       callName +
       ' is here now<button class="pressbtn red" id="sayHello" style="font-size:2.3cqw;padding:.9cqw 1.8cqw">SAY HELLO</button>';
     $('sayHello').onclick = () =>
-      toggleRead($('sayHello'), (done) => speak('Hello, ' + callName + '. We are here with you.', 'warm').then(done));
+      toggleRead($('sayHello'), (done) => {
+        const call = (pack.profile && (pack.profile.addressAs || pack.profile.preferredName)) || 'you';
+        const theirs = (pack.voices || []).find((v) => v.url && (v.from || '').trim().toLowerCase() === callName.trim().toLowerCase());
+        const greet = () => speak('Hi ' + call + ', it is ' + callName + '. I am here with you.', 'warm', callName);
+        (theirs ? playRecording(theirs.url, greet) : greet()).then(done);
+      });
     speak('This week is whole.');
   }
 
@@ -2152,25 +2172,23 @@
       toggleRead(
         $('hearLetter'),
         (done) => {
-          clearAll();
-          document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
-          letter.forEach((p, i) =>
-            later(() => {
-              document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+          const id = reader && reader.id;
+          const clear = () => document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+          clear();
+          (async () => {
+            for (let i = 0; i < letter.length; i++) {
+              if (!reader || reader.id !== id) return;
+              clear();
               const el = $('ln' + i);
               if (el) el.classList.add('say');
-              speak(p.line, 'letter', p.by);
-            }, i * 4200)
-          );
-          later(() => {
-            document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
+              await voiceLine(letter[i]);
+            }
+            if (!reader || reader.id !== id) return;
+            clear();
             done();
-          }, letter.length * 4200);
+          })();
         },
-        () => {
-          clearAll();
-          document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'));
-        }
+        () => document.querySelectorAll('.sheet .ln').forEach((l) => l.classList.remove('say'))
       );
 
     const debug = new URLSearchParams(location.search).has('debug');

@@ -136,7 +136,7 @@ export function describeMaterials(mat) {
   const lines = [];
   const p = mat.profile || {};
   lines.push('## The player');
-  for (const [k, label] of [['name', 'Name'], ['callName', 'The family calls them'], ['born', 'Born'], ['places', 'Places that matter'], ['music', 'Music they love'], ['loves', 'Things they love'], ['avoid', 'Please avoid']])
+  for (const [k, label] of [['name', 'Name'], ['callName', 'The family calls them'], ['born', 'Born'], ['places', 'Places that matter'], ['music', 'Music they love'], ['loves', 'Things they love'], ['workplace', 'Where they worked'], ['job', 'What they did there'], ['toy', 'A favourite childhood toy'], ['dish', 'A dish from the family kitchen'], ['avoid', 'Please avoid']])
     if (p[k]) lines.push(`${label}: ${p[k]}`);
 
   lines.push('', '## Family members');
@@ -149,6 +149,7 @@ export function describeMaterials(mat) {
       portraitOf[ph.id] ? `portrait of ${portraitOf[ph.id]}` : null,
       describeFaces(mat, ph),
       ph.who && (ph.whoSource !== 'faces' || !describeFaces(mat, ph)) ? `the family says it shows ${ph.who}` : null,
+      ph.theme ? `about: ${ph.theme}` : null,
       ph.caption || 'no story yet',
       ph.year ? `(${ph.year})` : 'no year yet',
       ph.backUrl ? 'has the back of the print too' : null,
@@ -170,6 +171,7 @@ export function progress(mat, built) {
   const p = mat.profile || {};
   const portraits = new Set(mat.people.map(f => f.photoId).filter(Boolean));
   const scenes = mat.photos.filter(ph => !portraits.has(ph.id));
+  const themed = (theme) => scenes.filter(ph => ph.theme === theme);
   const items = [
     { key: 'player', label: 'Who it is for', done: !!p.callName, need: 'their name and what the family calls them' },
     { key: 'story', label: 'Their life story', done: !!p.born && mat.notes.length >= 3, need: 'where and when they were born, and stories from their childhood, young adulthood and family life' },
@@ -177,6 +179,8 @@ export function progress(mat, built) {
     { key: 'portraits', label: 'Portraits', done: portraits.size >= 2, count: `${Math.min(portraits.size, 3)}/3`, need: 'a clear photo of each family member\'s face, for the kitchen table' },
     { key: 'song', label: 'A song', done: !!p.music, need: 'a song that means something to them' },
     { key: 'photos', label: 'Photos with stories', done: scenes.filter(ph => ph.caption && ph.year).length >= 3, count: `${Math.min(scenes.filter(ph => ph.caption && ph.year).length, 3)}/3`, need: 'three or more photos of places or moments, each with a short story and a rough year' },
+    { key: 'work', label: 'Where they worked', done: !!p.workplace && themed('work').length >= 4, count: `${Math.min(themed('work').length, 4)}/4`, need: 'where they worked and what they did there, plus four photos of that workplace (the building, their desk, colleagues, a favourite spot), each saved with the theme "work"' },
+    { key: 'childhood', label: 'Childhood', done: !!p.toy && !!p.dish && themed('childhood').length >= 1, count: `${Math.min(themed('childhood').length, 2)}/2`, need: 'a favourite childhood toy, a dish from the family kitchen, and a photo or two from childhood, each photo saved with the theme "childhood"' },
     { key: 'voices', label: 'Voice messages', done: mat.voices.length >= 2, count: `${Math.min(mat.voices.length, 4)}/4`, need: 'short recorded messages from family members, used as pieces of the letter' },
     { key: 'avoid', label: 'Things to avoid', done: !!p.avoid, need: 'anything that might upset them, or a clear "nothing"' }
   ];

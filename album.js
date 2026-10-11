@@ -23,10 +23,12 @@ export async function addPhoto(body) {
   return result;
 }
 
-// body: any of { who, caption, year }
+// body: any of { who, caption, year, theme }
+const THEMES = ['work', 'childhood', 'family', 'week', 'other'];
 export const updatePhoto = (id, body) => withMaterials(mat => {
   const ph = findPhoto(mat, id);
   for (const k of ['who', 'caption', 'year']) if (k in body) ph[k] = clean(body[k]);
+  if ('theme' in body) ph.theme = THEMES.includes(body.theme) ? body.theme : ''; // what the photo is about, so each book can use it
   // typing names by hand wins over face tags; clearing the field hands it back to them
   if ('who' in body) { ph.whoSource = ph.who ? 'manual' : 'faces'; syncWho(ph, mat); }
   return { photo: ph };

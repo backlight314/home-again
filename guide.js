@@ -19,6 +19,10 @@ If an answer doesn't fit the question you asked (they tell you their own name wh
 4. Young adulthood: work, moving out, meeting a partner, a wedding, the songs and music of those years.
 5. Building a family and a home: children, the houses they lived in, holidays, traditions, trips.
 6. Later years and today: who is close to them now, who visits, grandchildren, routines and things they still enjoy.
+Work and childhood each need to show up in the game, so ask about them directly and ask for photos:
+- Work: ask where they worked and what they did there, then ask for four photos of that workplace: the building outside, their desk or workspace, colleagues, and a favourite spot such as a break room or a view. Save the place with save_player_details (workplace, job) and each photo with describe_photo, theme "work".
+- Childhood: ask for one favourite toy, one dish from the family kitchen, and a photo or two from childhood. Save them with save_player_details (toy, dish) and describe_photo, theme "childhood".
+Every photo you save should get a theme: "work", "childhood", "family", "week" (recent days) or "other". Every chapter of the game is built from the family's real photos and recordings, so keep asking for them.
 Move on to the next chapter when the current one feels covered or they have little more to say. Gather what the game needs along the way, where it fits naturally: ask for a photo from each chapter, ask about music around their young adult years, and ask about the family members close to them now, with a photo of each face. Near the end, invite family members to record short voice messages for them.
 This game is built around this week at home, not a whole lifetime. After you know who it is for, gather recent days: who sat at lunch, a song in the car, tea outside, photos on the table. Older stories are welcome if they come up, but do not interview their whole life unless they want to tell it.
 Never talk about the game's rooms or mechanics in your questions (no "kitchen table", "attic" or "porch"). Ask about their week, the way a friend would.
@@ -78,7 +82,11 @@ const TOOLS = [{
           places: { ...s, description: 'Places that matter to them.' },
           music: { ...s, description: 'Songs or music they love.' },
           loves: { ...s, description: 'Things they love doing or talking about.' },
-          avoid: { ...s, description: 'Things to avoid, or "nothing in particular".' }
+          avoid: { ...s, description: 'Things to avoid, or "nothing in particular".' },
+          workplace: { ...s, description: 'Where they worked, e.g. "Harbor Street Library".' },
+          job: { ...s, description: 'What they did there, e.g. "children\'s librarian".' },
+          toy: { ...s, description: 'A favourite childhood toy, e.g. "a wooden train".' },
+          dish: { ...s, description: 'A dish from the family kitchen, e.g. "grandma\'s apple cake".' }
         }
       }
     },
@@ -105,7 +113,8 @@ const TOOLS = [{
           photoId: s,
           who: { ...s, description: 'Who is in it, by name, as the family said.' },
           caption: { ...s, description: 'Short description in the family\'s words: where, what was happening.' },
-          year: { ...s, description: 'Rough year or decade, e.g. "1986" or "1970s".' }
+          year: { ...s, description: 'Rough year or decade, e.g. "1986" or "1970s".' },
+          theme: { type: 'string', enum: ['work', 'childhood', 'family', 'week', 'other'], description: 'What the photo is about: their workplace, their childhood, family, recent days, or something else.' }
         },
         required: ['photoId', 'caption']
       }
@@ -177,6 +186,7 @@ async function applyTool(name, args, mat) {
       // face guesses stay guesses: only a person confirms them, in the album
       if (args.who) { ph.who = args.who; ph.whoSource = 'manual'; }
       if (args.year) ph.year = args.year;
+      if (args.theme) ph.theme = args.theme;
       return { saved: true };
     }
     case 'describe_voice_message': {

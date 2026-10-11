@@ -105,6 +105,30 @@
         const hit = thisWeek().filter(({ ph }) => shows(ph, piece.by.toLowerCase())).pop();
         if (hit) mem.photoDataUrl = hit.ph.url;
       });
+      // Every book shows something from the family's own life. The work rooms and the childhood pages take the
+      // photos saved with their theme; any room or page still without a photo borrows one the family uploaded
+      // (an unused one first), so each album page ends with a real photo.
+      const portraitIds = new Set((mat.people || []).map((f) => f.photoId).filter(Boolean));
+      const scenes = mat.photos.filter((ph) => !ph.croppedFrom && !portraitIds.has(ph.id));
+      if (scenes.length) {
+        pack.rooms = pack.rooms || {};
+        const room = (k) => (pack.rooms[k] = pack.rooms[k] || {});
+        const used = new Set(
+          [...(pack.memories || []).map((m) => m.photoDataUrl), ...Object.values(pack.rooms).map((r) => r && r.photoDataUrl), ...((pack.rooms.attic || {}).photos || []).map((p) => p.photoDataUrl)].filter(Boolean)
+        );
+        let spare = 0;
+        const next = (theme) => {
+          const ph = scenes.find((x) => x.theme === theme && !used.has(x.url)) || scenes.find((x) => !used.has(x.url)) || scenes[spare++ % scenes.length];
+          used.add(ph.url);
+          return ph.url;
+        };
+        [['desk', 'work'], ['phone', 'work'], ['break', 'work'], ['files', 'work'], ['toybox', 'childhood'], ['recipe', 'childhood'], ['walk', 'week']].forEach(([k, theme]) => {
+          if (!room(k).photoDataUrl) room(k).photoDataUrl = next(theme);
+        });
+        (pack.memories || []).forEach((m) => {
+          if (!m.photoDataUrl) m.photoDataUrl = next('week');
+        });
+      }
     } catch (_) {}
     return pack;
   }

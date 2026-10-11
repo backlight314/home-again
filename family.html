@@ -238,7 +238,7 @@
   @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 </style>
 <link rel="stylesheet" href="css/time.css?v=merge4">
-<link rel="stylesheet" href="css/family-time.css?v=merge4">
+<link rel="stylesheet" href="css/family-time.css?v=merge35">
 </head>
 <body>
 <div class="app">
@@ -352,6 +352,7 @@
       <label class="field">WHO IS IN IT<input type="text" id="dWho" placeholder="Mom and Aunt Rose"></label>
       <label class="field">WHEN<input type="date" id="dYear" max="9999-12-31"><span class="was" id="dYearWas" hidden></span></label>
       <label class="field">THE STORY<textarea id="dCaption" placeholder="Where it was, what was happening"></textarea></label>
+      <label class="field">ABOUT<select id="dTheme" aria-label="What this photo is about"><option value="">Not sure</option><option value="work">Where they worked</option><option value="childhood">Childhood</option><option value="family">Family</option><option value="week">This week</option><option value="other">Something else</option></select></label>
       <span class="by" id="dBy"></span>
       <button class="tool" id="dConfirm" hidden>Names look right</button>
       <div class="faceui" id="faceUi" hidden>
@@ -979,7 +980,7 @@
     current = mat.photos.find(p => p.id === id);
     if (!current) return;
     $('dImg').src = current.url;
-    $('dWho').value = current.who || ''; $('dCaption').value = current.caption || '';
+    $('dWho').value = current.who || ''; $('dCaption').value = current.caption || ''; $('dTheme').value = current.theme || '';
     // the date is picked from a calendar; an older rough date ("1970s") is shown until one is picked
     const full = /^\d{4}-\d{2}-\d{2}$/.test(current.year || '');
     $('dYear').value = full ? current.year : '';
@@ -1094,6 +1095,7 @@
       const patch = { caption: $('dCaption').value };
       if ($('dYear').value || /^\d{4}-\d{2}-\d{2}$/.test(current.year || '')) patch.year = $('dYear').value;
       if ($('dWho').value.trim() !== (current.who || '')) patch.who = $('dWho').value;
+      if ($('dTheme').value !== (current.theme || '')) patch.theme = $('dTheme').value;
       await api('PATCH', '/api/photos/' + current.id, patch);
       useState(await api('GET', '/api/album'));
       $('detail').close();

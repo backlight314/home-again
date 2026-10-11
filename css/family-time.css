@@ -84,3 +84,5 @@ h3.section { font-family: "Caveat Brush", "Patrick Hand", cursive; font-weight: 
 .close { font-size: 32px; width: 48px; height: 48px; }
 
 @media (prefers-reduced-motion: reduce) { .tab, .tool { transition: none; } }
+
+select { background: var(--field); color: var(--page-text); border: 1px solid var(--card-edge); border-radius: 16px; padding: 9px 11px; font-family: inherit; font-size: 19px; min-width: 0; width: 100%; }

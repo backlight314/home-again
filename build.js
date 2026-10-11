@@ -11,6 +11,11 @@ The game is one evening in a family album. A paper bird brings a letter torn int
 - Attic: three photos from the photo box are placed on a shelf from earlier to later. Every order is accepted; there are no wrong answers.
 At the end the four pieces form a short letter from the family, read aloud, and a family member says hello.
 
+The game has more books than this one, and each should be built from the family's own life:
+- Work (an office with four rooms): Desk, Phone, Break room, Files. Write one piece for each, in that order. Use the workplace photos (the ones the family saved with the theme "work"), one per room, and the workplace and job the family gave. If the family gave little, keep a piece gentle and general instead of inventing details.
+- Childhood: a toy box with exactly three toys (the first is the family's favourite toy; the other two are common toys of the era, with short general lines), and a recipe for the family's dish with exactly six typical ingredients, each with one short, gentle line. Attach a childhood photo and the speaker's voice message where they fit.
+Every voice message that has clear words should be used once as a piece (a letter piece, a work piece or a childhood piece). The line is its transcript word for word (trim only for length, never paraphrase or add), credited to the speaker, with the voice id attached, so the player hears the real recording in the real voice.
+
 How to write:
 - Address the player the way the family does (for example "Mom" or "Grandpa Joe").
 - Short, warm, concrete sentences. Plain words. No quizzing tone, no "do you remember".
@@ -63,6 +68,37 @@ const GAME_SCHEMA = obj({
     description: 'Exactly four pieces, in room order: Kitchen, Radio room, Porch, Attic.',
     items: obj({ line: str, by: str, voiceId: nullable(str) })
   },
+  work: obj({
+    place: { type: 'string', description: 'Where they worked, e.g. "Harbor Street Library". Empty if the family has not said.' },
+    pieces: {
+      type: 'array',
+      description: 'Exactly four pieces, in room order: Desk, Phone, Break room, Files.',
+      items: obj({ line: str, by: str, photoId: nullable(str), voiceId: nullable(str) })
+    }
+  }),
+  childhood: obj({
+    toys: {
+      type: 'array',
+      description: 'Exactly three toys for the toy box. The first is the family\'s favourite toy.',
+      items: obj({ label: { type: 'string', description: 'Lowercase, e.g. "wooden train".' }, line: { type: 'string', description: 'One short, gentle line about the toy.' } })
+    },
+    toyBy: { type: 'string', description: 'Who tells the toy stories: a family member\'s name, or "the family".' },
+    toyCaption: { type: 'string', description: 'Short album caption, e.g. "The toy box, long ago".' },
+    toyLine: { type: 'string', description: 'The line kept with the toy box album page.' },
+    toyPhotoId: nullable(str),
+    toyVoiceId: nullable(str),
+    dish: { type: 'string', description: 'The dish, e.g. "Grandma\'s apple cake".' },
+    ingredients: {
+      type: 'array',
+      description: 'Exactly six typical ingredients of the dish.',
+      items: obj({ label: { type: 'string', description: 'Lowercase, e.g. "apples".' }, line: { type: 'string', description: 'One short, gentle line.' } })
+    },
+    dishBy: { type: 'string', description: 'Who tells the recipe stories: a family member\'s name, or "the family".' },
+    dishCaption: { type: 'string', description: 'Short album caption.' },
+    dishLine: { type: 'string', description: 'The line kept with the recipe album page.' },
+    dishPhotoId: nullable(str),
+    dishVoiceId: nullable(str)
+  }),
   ending: obj({ caller: { type: 'string', description: 'Name of the family member who says hello at the end.' } }),
   summary: str,
   questions: { type: 'array', items: str }
@@ -78,6 +114,12 @@ function resolve(cfg, mat) {
   cfg.porch.photo = photo(cfg.porch.photoId);
   cfg.attic.photos = [...new Set(cfg.attic.photoIds.map(photo).filter(Boolean))].slice(0, 3);
   cfg.letter = cfg.letter.slice(0, 4).map(l => ({ ...l, voice: voice(l.voiceId) }));
+  cfg.work.pieces = (cfg.work.pieces || []).slice(0, 4).map(w => ({ ...w, photo: photo(w.photoId), voice: voice(w.voiceId) }));
+  const c = cfg.childhood;
+  c.toys = (c.toys || []).slice(0, 3);
+  c.ingredients = (c.ingredients || []).slice(0, 6);
+  c.toyPhoto = photo(c.toyPhotoId); c.toyVoice = voice(c.toyVoiceId);
+  c.dishPhoto = photo(c.dishPhotoId); c.dishVoice = voice(c.dishVoiceId);
   if (!names.has(cfg.ending.caller)) cfg.ending.caller = cfg.people[0]?.name || '';
   cfg.builtAt = new Date().toISOString();
   return cfg;
@@ -128,7 +170,8 @@ function toHomeAgainPack(cfg, mat) {
   const letter = (cfg.letter || []).slice(0, 4).map((l, i) => ({
     room: ['Sunday kitchen', 'Tuesday car', 'Garden', 'Photographs'][i] || 'This week',
     line: l.line,
-    by: l.by || 'Family'
+    by: l.by || 'Family',
+    voice: l.voice || null
   }));
   while (letter.length < 4) {
     letter.push({ room: 'This week', line: 'We love you.', by: people[0]?.name || 'Family' });
@@ -157,14 +200,45 @@ function toHomeAgainPack(cfg, mat) {
   }));
   const voices = mat.voices || [];
   const firstVoice = voices.find((v) => v.url) || voices[0];
+  // Work: four office rooms, each with its own photo of the workplace and its own piece
+  const workNames = ['Your desk', 'The phone', 'Break room', 'The files'];
+  const workKeys = ['desk', 'phone', 'break', 'files'];
+  const workPieces = (cfg.work?.pieces || []).filter((w) => w.line);
+  const workLetter = workPieces.map((w, i) => ({ room: workNames[i], line: w.line, by: w.by || 'the family', voice: w.voice || null }));
+  const workRooms = {};
+  workPieces.forEach((w, i) => {
+    workRooms[workKeys[i]] = { photoDataUrl: w.photo || null, caption: (cfg.work.place ? cfg.work.place + ', ' : '') + workNames[i].toLowerCase(), line: w.line, by: w.by || 'the family', voice: w.voice || null };
+  });
+  // Childhood: the toy box and the family recipe
+  const ch = cfg.childhood || {};
+  const childRooms = {};
+  if ((ch.toys || []).length) {
+    childRooms.toybox = {
+      toys: ch.toys.map((x, i) => ({ id: ['train', 'bear', 'top'][i] || 'ball', label: x.label, line: x.line })),
+      by: ch.toyBy || 'the family', caption: ch.toyCaption || 'The toy box, long ago', line: ch.toyLine || ch.toys[0].line,
+      photoDataUrl: ch.toyPhoto || null, voice: ch.toyVoice || null
+    };
+  }
+  if ((ch.ingredients || []).length && ch.dish) {
+    childRooms.recipe = {
+      prompt: `What goes into ${ch.dish}?`,
+      ingredients: ch.ingredients.map((x) => ({ id: x.label.toLowerCase().replace(/[^a-z]/g, ''), label: x.label, line: x.line })),
+      by: ch.dishBy || 'the family', caption: ch.dishCaption || ch.dish, line: ch.dishLine || ch.ingredients[0].line,
+      photoDataUrl: ch.dishPhoto || null, voice: ch.dishVoice || null
+    };
+  }
   return {
     version: 1,
-    profile: { preferredName: call, addressAs: call, eras: ['thisWeek'] },
+    profile: { preferredName: call, addressAs: call, eras: ['thisWeek'], workplace: cfg.work?.place || (mat.profile && mat.profile.workplace) || '', job: (mat.profile && mat.profile.job) || '' },
+    voices: voices.filter((v) => v.url).map((v) => ({ id: v.id, from: v.from || '', url: v.url, transcript: v.transcript || '' })),
     people,
     memories,
     songs: [{ id: 's1', title: (cfg.radio?.song && cfg.radio.song.title) || 'One More Dance' }],
     letter,
+    ...(workLetter.length ? { workLetter } : {}),
     rooms: {
+      ...workRooms,
+      ...childRooms,
       kitchen: {
         prompt: cfg.kitchen?.place ? `Who sat with you at ${cfg.kitchen.place}?` : 'Who sat with you at lunch last Sunday?',
         rounds

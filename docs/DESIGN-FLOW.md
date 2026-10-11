@@ -91,3 +91,11 @@ Supersedes section 6's single album page.
 - **Today** opens to a morning room (kind `today`): a table with the letter, and a desk with the journal ("What did you do today?"). The clock shows the real time and the calendar the real date.
 - Each place works like the house: the camera glides into a spot and back, the album page's back button returns to that book's place, and finishing both Childhood spots (or the Today letter) completes the book.
 - Content defaults live in `childDefaults` in `js/play.js`; `pack.rooms.toybox`, `recipe` and `walk` override them.
+
+## 9. Update: the Family Workshop feeds every book (built)
+
+- **The guide now asks** where they worked and what they did, for four photos of the workplace, for a favourite toy, a family dish and a childhood photo. It saves them (`workplace`, `job`, `toy`, `dish`) and tags every photo with a theme (`work`, `childhood`, `family`, `week`, `other`). Relatives can also set a photo's theme in the photo dialog ("ABOUT").
+- **The checklist** has two new items, "Where they worked" (4 photos) and "Childhood".
+- **The build** (`build.js`) now produces the Work office pieces (one real workplace photo per room), the Childhood toy box (their toy first, two common ones after) and recipe (their dish and its ingredients), and keeps every recording's own URL.
+- **Recordings**: every voice message with clear words is used once. The line shown is its transcript word for word and the game plays the actual recording: memory cards, the ending letter, and SAY HELLO (the family member greets the player in their own recording, or is read aloud as "Hi Mom, it is Mei" when they have not recorded one).
+- **Photos everywhere**: work and childhood rooms take their themed photos; any room still without a photo borrows one the family uploaded (an unused one first), so every album page ends with a real photo.
