@@ -16,7 +16,7 @@
   let memories = [];
   let chapters = [];
   let found = [false, false, false, false];
-  let placingId = null; // memory whose photo is still flying into its slot
+  let placing = []; // memories whose photos are still flying into their slots, in order
   let currentBook = 'week';
   let pendingPlace = null;
   let viewing = null;
@@ -170,7 +170,7 @@
       { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
       { id: 'work', title: 'Work', color: '#44607d', memories: [{ id: 'job', title: 'The job' }] },
       { id: 'week', title: 'This week', color: '#9c3b2e', memories },
-      { id: 'today', title: 'Today', color: '#6d5262', memories: [todayMemory()] }
+      { id: 'today', title: 'Today', color: '#6d5262', memories: todayMemories() }
     ];
     currentBook = 'week';
   }
@@ -191,6 +191,22 @@
       line: t.line || 'Everyone is with you today' + (call ? ', ' + call : '') + '.',
       by: t.by || 'the family'
     };
+  }
+
+  // The Today album's pages: one for each photo hung in the hall, each with its own
+  // caption, or a single page of the family when no photos are hung.
+  function todayMemories() {
+    const photos = hallPhotos();
+    if (!photos.length) return [todayMemory()];
+    const base = todayMemory();
+    return photos.map((p, i) => ({
+      ...base,
+      id: i ? 'today-' + i : 'today',
+      title: p.caption,
+      photoDataUrl: p.photoDataUrl,
+      caption: p.caption,
+      line: p.caption.charAt(0).toUpperCase() + p.caption.slice(1).replace(/[.!]*$/, '.')
+    }));
   }
 
   function toast(msg) {
@@ -308,7 +324,7 @@
     sheet.dataset.title = book.title.toUpperCase();
     book.memories.forEach((m, i) => {
       const [l, t, rot] = spots[i] || spots[0];
-      const filled = m.activity && found[keys.indexOf(m.activity)] && m.id !== placingId;
+      const filled = m.activity && found[keys.indexOf(m.activity)] && !placing.includes(m.id);
       const slot = document.createElement('div');
       slot.className = 'slot' + (filled ? ' filled' : '');
       slot.id = 'slot-' + m.id;
@@ -325,19 +341,33 @@
       const pr = slot.querySelector('.print');
       if (pr)
         pr.onclick = () => {
-          if (filled) {
+          if (slot.classList.contains('filled')) {
             rereading = true;
             openMemory(m.id);
           } else if (m.activity) show(m.activity);
         };
       sheet.appendChild(slot);
     });
+    buildTags();
+  }
+
+  // a slot whose photo just landed: filled in place, so nothing else on the page redraws
+  function fillSlot(m) {
+    const slot = $('slot-' + m.id);
+    const pr = slot && slot.querySelector('.print');
+    if (!pr) return;
+    pr.innerHTML = memPrint(m);
+    slot.classList.add('filled');
+  }
+
+  function buildTags() {
+    const book = chapter(currentBook);
     const tags = $('tags');
     tags.innerHTML = '';
     book.memories.forEach((m, i) => {
       const b = document.createElement('button');
       const playable = !!m.activity;
-      const isDone = playable && found[keys.indexOf(m.activity)] && m.id !== placingId;
+      const isDone = playable && found[keys.indexOf(m.activity)] && !placing.includes(m.id);
       b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (playable && !isDone ? ' open' : '') + (isDone ? ' done' : '');
       b.innerHTML =
         '<span>' + m.title + (playable && !isDone ? '<small>' + S.open + '</small>' : '') + '</span>';
@@ -352,42 +382,73 @@
     });
   }
 
-  function placeMemory(id) {
+  // A kept memory's photo fades in over the middle of the page, then glides and turns
+  // into its slot (transform only, so it stays smooth). Several from one room (Today's
+  // photos) follow each other a beat apart.
+  function placeMemories(ids) {
+    let left = ids.length;
+    ids.forEach((id, i) =>
+      later(
+        () =>
+          placeMemory(id, () => {
+            if (--left > 0) return;
+            const book = chapter(currentBook);
+            toast(complete(book) ? S.bookFull : S.placed);
+            if (found.every(Boolean)) later(() => show('ending'), 1600);
+            // stay on the album page; the player taps BACK TO THE HOUSE when ready
+          }),
+        i * 700
+      )
+    );
+  }
+
+  function placeMemory(id, done) {
     const m = memory(id);
     const slot = $('slot-' + id);
-    const scr = $('screen').getBoundingClientRect();
+    const sheet = $('sheetpg');
     if (!m || !slot) {
-      found[keys.indexOf(id)] = true;
+      placing = placing.filter((x) => x !== id);
+      done();
       return;
     }
-    const r = slot.getBoundingClientRect();
+    // the flyer lives on the page, sized and turned exactly like its slot, so it lands
+    // without a jump; it starts centred on the screen, larger and a little tilted
     const fly = document.createElement('div');
     fly.className = 'flyer';
+    fly.style.left = slot.style.left;
+    fly.style.top = slot.style.top;
     fly.innerHTML = '<div class="print">' + memPrint(m) + '</div>';
-    fly.style.cssText =
-      'left:' +
-      scr.width * 0.3 +
-      'px;top:' +
-      scr.height * 0.22 +
-      'px;width:' +
-      scr.width * 0.4 +
-      'px;transform:rotate(-1.4deg)';
-    $('screen').appendChild(fly);
-    later(() => {
-      fly.style.left = r.left - scr.left + 'px';
-      fly.style.top = r.top - scr.top + 'px';
-      fly.style.width = r.width + 'px';
-      fly.style.transform = 'rotate(-1.6deg)';
-    }, 450);
-    later(() => {
-      placingId = null;
-      buildAlbum();
-      fly.remove();
-      const book = chapter(currentBook);
-      toast(complete(book) ? S.bookFull : S.placed);
-      if (found.every(Boolean)) later(() => show('ending'), 1600);
-      // stay on the album page; the player taps BACK TO THE HOUSE when ready
-    }, 2100);
+    sheet.appendChild(fly);
+    const scr = $('screen').getBoundingClientRect();
+    const pg = sheet.getBoundingClientRect();
+    const dx = scr.left + scr.width * 0.5 - (pg.left + fly.offsetLeft + fly.offsetWidth / 2);
+    const dy = scr.top + scr.height * 0.42 - (pg.top + fly.offsetTop + fly.offsetHeight / 2);
+    const big = (scr.width * 0.36) / fly.offsetWidth;
+    const rot = (/rotate\(([-\d.]+)deg\)/.exec(slot.style.transform) || [0, 0])[1];
+    const from = 'translate(' + dx + 'px,' + dy + 'px) scale(' + big + ') rotate(-2deg)';
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const img = fly.querySelector('img');
+    const ready = img && img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+    ready.then(() => {
+      if (!fly.isConnected) return; // left the page meanwhile
+      const glide = fly.animate(
+        [
+          { transform: from, opacity: 0, easing: 'ease-out' },
+          { transform: from, opacity: 1, offset: 0.2, easing: 'cubic-bezier(.3, .1, .2, 1)' },
+          { transform: 'rotate(' + rot + 'deg)', opacity: 1 }
+        ],
+        { duration: calm ? 0 : 1500, fill: 'forwards' }
+      );
+      glide.onfinish = () => {
+        placing = placing.filter((x) => x !== id);
+        fillSlot(m); // the slot's print fades in under the flyer...
+        buildTags();
+        fly.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 0 : 450, delay: calm ? 0 : 250, fill: 'forwards' }).onfinish = () => {
+          fly.remove(); // ...then the flyer fades away on top of it
+          done();
+        };
+      };
+    });
   }
 
   function paintHouseWindows() {
@@ -539,7 +600,7 @@
     const backBtn = document.getElementById('globalBack');
     if (backBtn) backBtn.textContent = inRoom() ? '← Back to the house' : '← Leave';
     if (name !== 'today') closeDayLog();
-    placingId = null;
+    placing = [];
     hush();
     clearAll();
     if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach((f) => f.remove());
@@ -569,12 +630,14 @@
       speak(n === 0 ? 'What happened this week?' : n < keys.length ? 'What else do you remember from this week?' : 'The week is coming together');
     }
     if (name === 'album') {
-      placingId = pendingPlace;
+      // the kept memory, then any other pages from the same room
+      const kept = pendingPlace && memory(pendingPlace);
+      const book = chapter(currentBook);
+      placing = kept ? [kept.id, ...book.memories.filter((m) => m.activity === kept.activity && m.id !== kept.id).map((m) => m.id)] : [];
       buildAlbum();
       if (pendingPlace) {
-        const id = pendingPlace;
         pendingPlace = null;
-        placeMemory(id);
+        placeMemories(placing.slice());
       } else {
         speak('These are this week’s pages.');
       }
@@ -735,7 +798,7 @@
     const b = list[bi];
     $('station').textContent = b.t;
     $('station').classList.toggle('clear', b.clear);
-    $('keepSong').classList.toggle('hide', !b.clear);
+    $('keepSong').classList.remove('hide'); // any song can be kept, not only the one from the car
     const prompt = (pack.rooms.radio && pack.rooms.radio.prompt) || 'Turn the dial until a song comes in';
     $('rCap').innerHTML =
       (b.clear ? 'This one was on in the car' : prompt) + '<span class="sub">TUESDAY · IN THE CAR</span>';

@@ -69,9 +69,10 @@
 .memcard .by { font-family: var(--type); font-size: var(--fs-label-min); color: var(--print); }
 .memrow { display: flex; gap: 2.4cqw; align-items: center; flex-wrap: wrap; }
 .hearbtn { display: flex; align-items: center; gap: 1.2cqw; font-family: var(--type); font-size: clamp(24px, 2.4cqw, 34px); color: var(--print); border-bottom: .25cqw solid var(--print); padding-bottom: .3cqw; }
-.flyer { position: absolute; z-index: 8; pointer-events: none;
-  transition: left 1.5s ease-in-out, top 1.5s ease-in-out, width 1.5s ease-in-out, transform 1.5s ease-in-out; }
+/* a photo on its way into the album: same size and crop as its slot, moved by transform only */
+.flyer { position: absolute; z-index: 8; width: 34%; pointer-events: none; transform-origin: 50% 50%; will-change: transform, opacity; opacity: 0; }
 .flyer .print { width: 100%; }
+.flyer .print img { aspect-ratio: 3 / 2; object-fit: cover; object-position: center 15%; }
 
 /* the shelf: five albums lying on the desk */
 .shelf-pg .shelfcap { left: 0; right: 0; top: 6cqw; max-width: none; text-align: center; color: var(--slip); }
@@ -96,7 +97,7 @@
 .bookfly.zoomed .plate { font-size: clamp(32px, 6cqw, 72px); padding: 3cqw 2cqw; }
 .bookfly.opening { transform: perspective(1800px) rotateY(-168deg); opacity: .0; transition: transform 1s ease-in-out, opacity 1s ease-in; }
 
-@media (prefers-reduced-motion: reduce) { .slip-tag.open { animation: none; } .flyer { transition: none; } .bookfly { transition: none; } .memcard .sepia { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .slip-tag.open { animation: none; } .bookfly { transition: none; } .memcard .sepia { transition: none; } }
 
 /* today: the player's own log of the day, said, tapped or typed */
 .today-pg .todaysheet { left: 5cqw; top: 4.5cqw; width: 50cqw; height: 47cqw; overflow-y: auto; padding: 6.5cqw 3.4cqw 2cqw; box-sizing: border-box; }

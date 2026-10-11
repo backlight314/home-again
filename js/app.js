@@ -63,10 +63,15 @@
           attic.photos = week.map(({ ph }, i) => ({ id: 'a' + (i + 1), label: ph.caption || 'a photo from this week', photoDataUrl: ph.url }));
         }
       }
-      // the lunch table gets the album's photo of the meal
+      // the lunch table gets the album photo the pack names by caption ("the soup we drank"),
+      // or else the newest photo of a meal
       const kitchen = pack.rooms && pack.rooms.kitchen;
       if (kitchen && !kitchen.photoDataUrl) {
-        const meal = mat.photos.filter((ph) => !ph.croppedFrom && /soup|lunch|dinner|meal/i.test(ph.caption || '')).pop();
+        const albumPhotos = mat.photos.filter((ph) => !ph.croppedFrom);
+        const want = (kitchen.photoCaption || '').toLowerCase();
+        const meal =
+          (want && albumPhotos.find((ph) => (ph.caption || '').toLowerCase() === want)) ||
+          albumPhotos.filter((ph) => /soup|lunch|dinner|meal/i.test(ph.caption || '')).pop();
         if (meal) kitchen.photoDataUrl = meal.url;
       }
       // and the Sunday lunch memory (the kitchen's, first) shows that same photo
