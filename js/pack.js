@@ -4,6 +4,7 @@
  *
  * GamePack: {
  *   version: 1,
+ *   asOf?: 'YYYY-MM-DD',  // the day the game treats as today (album dates are read against it)
  *   profile: { preferredName, addressAs, eras: string[] },
  *   people: [{ id, name, relation?, photoDataUrl?, palette? }],
  *   memories: [{ id, title, placeYear?, text, photoDataUrl? }],
@@ -14,9 +15,14 @@
  *     kitchen: { prompt, rounds: [{ seat, who, hello, hints }], photoCaption?, photoDataUrl? },
  *     radio: { prompt, bands: [{ t, clear }] },
  *     porch: { prompt, photoDataUrl?, storyText },
- *     attic: { prompt, photos: [{ id, label, svgId?, photoDataUrl? }] },
- *     today: { prompt?, caption?, line?, by?, photos?: [{ caption, photoDataUrl? }] }
+ *     attic: { prompt, photos: [{ id, label, date?, svgId?, photoDataUrl? }] },
+ *     today: { prompt?, caption?, line?, by?, lines?: string[] },
+ *     desk: { prompt?, items?: [{ id, label, say }] },
+ *     phone: { prompt?, lines?: [{ t, say, clear }] },
+ *     break: { prompt? },
+ *     files: { prompt?, folders?: [{ id, label, svgId? }] }
  *   },
+ *   workLetter?: [{ room, line, by }],
  *   ending: { callName }
  * }
  */
@@ -33,9 +39,34 @@
     return prefix + '_' + Math.random().toString(36).slice(2, 9);
   }
 
+  function shortName(name) {
+    const n = String(name || '').trim();
+    if (/christopher/i.test(n)) return 'Chris';
+    return n.split(/\s+/)[0] || n;
+  }
+
+  function todayLines(addressAs, people) {
+    const call = addressAs || 'you';
+    const p1 = people && people[1];
+    const p2 = people && people[2];
+    const who1 = p1 ? shortName(p1.name) : 'your boy';
+    const who2 = p2 ? shortName(p2.name) : 'the family';
+    return [
+      `Hi ${call}.`,
+      'This morning you were already in your chair. The light was on your hands.',
+      'You let the tea sit until it was kind. You always wait like that.',
+      `${who1} rang. You asked after them, the way you always do.`,
+      `${who2} left this week’s pictures on the table, in case you want them.`,
+      'Nothing loud happened. You were gentle with us anyway.',
+      'That kindness is yours. It is still in the room.',
+      'I am glad this day found you. I am glad I did too.'
+    ];
+  }
+
   function demoPack() {
     return {
       version: 1,
+      asOf: '2026-10-10', // the demo's "today": the album photos dated this day hang in the hall
       profile: {
         preferredName: 'Mom',
         addressAs: 'Mom',
@@ -87,7 +118,7 @@
       rooms: {
         kitchen: {
           prompt: 'Who sat with you at lunch last Sunday?',
-          photoCaption: 'the soup we drank', // the album photo laid on the table once everyone is seated
+          photoCaption: 'sunday lunch', // the album photo laid on the table once everyone is seated
           rounds: [
             {
               seat: 'seatC',
@@ -129,11 +160,18 @@
           svgId: 'sc-garden'
         },
         today: {
-          // album photos hung in the hall, named by caption and filled in from the album at Play
-          photos: [
-            { caption: 'you helped with cooking dinner' },
-            { caption: "we celebrated chris's birthday" },
-            { caption: 'we went on a city walk' }
+          prompt: 'From this morning',
+          caption: 'Today',
+          by: 'Alina',
+          lines: [
+            'Hi Mom.',
+            'This morning you were already in your chair. The light was on your hands.',
+            'You let the tea sit until it was kind. You always wait like that.',
+            'Chris rang from the car. You asked if that song was still on.',
+            'Eason left this week’s pictures on the table, in case you want them.',
+            'Nothing loud happened. You were gentle with us anyway.',
+            'That kindness is yours. It is still in the room.',
+            'I am glad this day found you. I am glad I did too.'
           ]
         },
         attic: {
@@ -143,8 +181,18 @@
             { id: 'a2', label: 'Tuesday car', svgId: 'sc-lake' },
             { id: 'a3', label: 'Yesterday tea', svgId: 'sc-snow' }
           ]
-        }
+        },
+        desk: { prompt: 'Find your badge and hang it up' },
+        phone: { prompt: 'Call home. The number is on the note', code: [3, 1, 2] },
+        break: { prompt: 'Which mug is yours?' },
+        files: { prompt: 'Today’s report goes in the out tray' }
       },
+      workLetter: [
+        { room: 'Your desk', line: 'Your badge still hangs by the lamp. Christopher left it there so you would see it first.', by: 'Christopher' },
+        { room: 'The phone', line: 'You called home at lunch. Alina picked up before the second ring.', by: 'Alina' },
+        { room: 'Break room', line: 'Your mug is the blue one. It has always been the blue one.', by: 'Alina' },
+        { room: 'The files', line: 'Eason said today’s report goes in the out tray. You still remember that.', by: 'Eason' }
+      ],
       voice: {
         transcript: 'Last Sunday we had soup. Tuesday the song was on in the car. Yesterday a bee landed on her tea. This week we took pictures so she can see we were here.'
       },
@@ -418,6 +466,12 @@
           photoDataUrl: m2.photoDataUrl || null,
           svgId: m2.photoDataUrl ? null : 'sc-snow'
         },
+        today: {
+          prompt: 'From this morning',
+          caption: 'Today',
+          by: p0.name,
+          lines: todayLines(addressAs, people)
+        },
         attic: {
           prompt: 'Which photo came first this week?',
           photos: memories.slice(0, 3).map((m, i) => ({
@@ -426,8 +480,18 @@
             photoDataUrl: m.photoDataUrl || null,
             svgId: m.photoDataUrl ? null : ['sc-garden', 'sc-lake', 'sc-snow'][i]
           }))
-        }
+        },
+        desk: { prompt: 'Find your badge and hang it up' },
+        phone: { prompt: 'Call home. The number is on the note', code: [3, 1, 2] },
+        break: { prompt: 'Which mug is yours?' },
+        files: { prompt: 'Today’s report goes in the out tray' }
       },
+      workLetter: [
+        { room: 'Your desk', line: `Your badge still hangs by the lamp. ${p1.name} left it there so you would see it first.`, by: p1.name },
+        { room: 'The phone', line: `You called home at lunch. ${p0.name} picked up before the second ring.`, by: p0.name },
+        { room: 'Break room', line: 'Your mug is the blue one. It has always been the blue one.', by: p0.name },
+        { room: 'The files', line: `${p2.name} said today’s report goes in the out tray. You still remember that.`, by: p2.name }
+      ],
       voice: draft.voice
         ? {
             transcript: talk,
@@ -468,6 +532,7 @@
     activePack,
     exportPack,
     generateFromFamily,
+    todayLines,
     packSummary,
     personPalette
   };

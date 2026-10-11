@@ -201,8 +201,10 @@
     const clip = findClip(spoken.who, spoken.text);
 
     return (async () => {
+      // Chrome drops the next utterance if speak() runs in the same tick as cancel().
+      await new Promise((r) => setTimeout(r, 80));
+      if (token !== queueToken) return;
       if (clip) {
-        if (token !== queueToken) return;
         await playClip(clip, token);
         if (token === queueToken) speaking = false;
         return;
@@ -213,7 +215,6 @@
       }
       const voice = roleVoice(spoken.who);
       const tone = roleTone(spoken.who);
-      if (token !== queueToken) return;
       await speakChunk(soften(spoken.text), voice, tone);
       if (token === queueToken) speaking = false;
     })();

@@ -179,6 +179,21 @@ function toHomeAgainPack(cfg, mat) {
         photoDataUrl: cfg.porch?.photo || null,
         svgId: cfg.porch?.photo ? null : 'sc-garden'
       },
+      today: {
+        prompt: 'From this morning',
+        caption: 'Today',
+        by: people[0]?.name || 'the family',
+        lines: [
+          `Hi ${call}.`,
+          'This morning you were already in your chair. The light was on your hands.',
+          'You let the tea sit until it was kind. You always wait like that.',
+          people[1] ? `${people[1].name.split(' ')[0]} rang. You asked after them, the way you always do.` : 'Someone from the family rang. You asked after them.',
+          people[2] ? `${people[2].name.split(' ')[0]} left this week’s pictures on the table, in case you want them.` : 'This week’s pictures are on the table, in case you want them.',
+          'Nothing loud happened. You were gentle with us anyway.',
+          'That kindness is yours. It is still in the room.',
+          'I am glad this day found you. I am glad I did too.'
+        ]
+      },
       attic: {
         prompt: 'Which photo came first this week?',
         photos: (cfg.attic?.photos || []).slice(0, 3).map((url, i) => ({

@@ -6,35 +6,40 @@
   --gold-day: #a85d10;
 }
 
-/* ---------- the toggle ---------- */
+/* ---------- the toggle: a two-option switch, the current mode lit ---------- */
 #timeToggle {
   position: fixed;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
-  min-width: 64px;
-  min-height: 64px;
-  padding: 0 18px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 999px;
+  align-items: stretch;
+  padding: 5px;
+  gap: 4px;
   border: 0;
+  border-radius: 999px;
+  background: rgba(22, 20, 52, .82);
+  box-shadow: 0 0 0 2px rgba(255, 226, 160, .45), 0 8px 24px rgba(10, 6, 30, .45);
   font-family: "Patrick Hand", "Segoe Print", system-ui, sans-serif;
-  font-size: 24px;
-  letter-spacing: .04em;
-  background: #fff1d4;
-  color: #2b2350;
-  box-shadow: 0 0 0 2px rgba(255, 226, 160, .5), 0 8px 24px rgba(10, 6, 30, .45);
+  font-size: 22px;
+  letter-spacing: .03em;
   cursor: pointer;
-  transition: transform .4s, box-shadow .4s;
 }
-#timeToggle:hover, #timeToggle:focus-visible { transform: translateX(-50%) scale(1.04); }
-#timeToggle.inline { position: static; transform: none; min-height: 48px; padding: 0 14px; font-size: 20px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
-#timeToggle.inline:hover, #timeToggle.inline:focus-visible { transform: scale(1.04); }
-html[data-time="day"] #timeToggle { background: #2b2350; color: #ffe2a0; box-shadow: 0 0 0 2px rgba(43, 35, 80, .4), 0 8px 24px rgba(40, 60, 100, .35); }
+#timeToggle .opt {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 54px; padding: 0 18px;
+  border-radius: 999px;
+  color: #e9e4ff;
+  transition: background .35s, color .35s;
+}
+#timeToggle .opt.on { background: #fff1d4; color: #2b2350; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+#timeToggle:hover, #timeToggle:focus-visible { box-shadow: 0 0 0 3px rgba(255, 226, 160, .8), 0 8px 24px rgba(10, 6, 30, .45); }
+#timeToggle.inline { position: static; transform: none; padding: 3px; font-size: 18px; }
+#timeToggle.inline .opt { min-height: 40px; padding: 0 12px; }
+html[data-time="day"] #timeToggle { background: rgba(255, 250, 238, .92); box-shadow: 0 0 0 2px rgba(168, 93, 16, .4), 0 8px 24px rgba(60, 90, 140, .3); }
+html[data-time="day"] #timeToggle .opt { color: #5a4a30; }
+html[data-time="day"] #timeToggle .opt.on { background: #ffd95e; color: #2b2350; }
 
 /* ---------- SVG room scenes ---------- */
 html[data-time="day"] .sk0 { stop-color: #4fa6ea; }
@@ -71,14 +76,16 @@ html[data-time="day"] .nightonly { opacity: 0; }
 /* ---------- text and buttons that sit on a scene: dark ink in daylight ---------- */
 html[data-time="day"] .hub.is3d .caption,
 html[data-time="day"] .kitchen .caption, html[data-time="day"] .radio-pg .caption, html[data-time="day"] .porch .caption,
-html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .today-book .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .work-desk .caption, html[data-time="day"] .work-phone .caption, html[data-time="day"] .work-break .caption, html[data-time="day"] .work-files .caption,
 html[data-time="day"] .shelf-pg .shelfcap {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
 }
 html[data-time="day"] .hub.is3d .caption .sub,
 html[data-time="day"] .kitchen .caption .sub, html[data-time="day"] .radio-pg .caption .sub, html[data-time="day"] .porch .caption .sub,
-html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .today-book .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .work-desk .caption .sub, html[data-time="day"] .work-phone .caption .sub, html[data-time="day"] .work-break .caption .sub, html[data-time="day"] .work-files .caption .sub,
 html[data-time="day"] .shelf-pg .shelfcap .sub {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
@@ -86,6 +93,7 @@ html[data-time="day"] .shelf-pg .shelfcap .sub {
 html[data-time="day"] .hub.is3d .quietbtn, html[data-time="day"] .hub.is3d .closebtn,
 html[data-time="day"] .kitchen .quietbtn, html[data-time="day"] .radio-pg .quietbtn, html[data-time="day"] .porch .quietbtn,
 html[data-time="day"] .attic .quietbtn, html[data-time="day"] .hall .quietbtn, html[data-time="day"] .ending .quietbtn,
+html[data-time="day"] .work-desk .quietbtn, html[data-time="day"] .work-phone .quietbtn, html[data-time="day"] .work-break .quietbtn, html[data-time="day"] .work-files .quietbtn,
 html[data-time="day"] .album-pg .closebtn, html[data-time="day"] .album-pg .quietbtn {
   color: var(--ink-day);
   border-color: rgba(43, 35, 80, .7);
@@ -131,6 +139,8 @@ html[data-time="day"] .book:hover, html[data-time="day"] .book:focus-visible { b
 html[data-time="day"] .book { box-shadow: .4cqw .9cqw 1.8cqw rgba(80, 50, 20, .4), inset 0 0 0 .25cqw rgba(0, 0, 0, .12); }
 html[data-time="day"] .slip-tag { box-shadow: .3cqw .7cqw 1.2cqw rgba(80, 50, 20, .35); }
 html[data-time="day"] .album-pg .sheetpg { box-shadow: 0 1.4cqw 3.4cqw rgba(80, 50, 20, .4); }
+html[data-time="day"] .today-book .today-letter { background: #fffaf0; }
+html[data-time="day"] .today-book .today-letter .ln { color: #1a1428; }
 
 /* ---------- the cover ---------- */
 html[data-time="day"] .intro { background: linear-gradient(180deg, #4fa6ea 0%, #8ccdf2 46%, #d8eef9 72%, #fdf1cf 100%); }
@@ -154,4 +164,14 @@ html[data-time="day"] .calltile { background: rgba(255, 250, 238, .96); color: v
 
 /* ---------- gentle fade when switching ---------- */
 .scene, .intro, .album-pg .desk, .hub3d { transition: filter .5s; }
-@media (prefers-reduced-motion: reduce) { #timeToggle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #timeToggle .opt { transition: none; } }
+
+/* childhood rooms in daylight */
+html[data-time="day"] .childroom .print.picked { outline-color: var(--gold-day); }
+html[data-time="day"] .childroom .caption, html[data-time="day"] .childroom .caption .sub { color: var(--ink-day); text-shadow: var(--halo-day); }
+
+/* the walk and the journal in daylight */
+html[data-time="day"] .pathfill { fill: #d9c7a0; }
+html[data-time="day"] .spot .ring { border-color: var(--gold-day); box-shadow: 0 0 18px rgba(255, 190, 80, .8), inset 0 0 12px rgba(255, 190, 80, .4); }
+html[data-time="day"] .spot.seen .ring { border-color: #fff; box-shadow: 0 0 14px rgba(255, 255, 255, .8); }
+html[data-time="day"] .journal-pg .caption, html[data-time="day"] .journal-pg .caption .sub { color: var(--ink-day); text-shadow: var(--halo-day); }

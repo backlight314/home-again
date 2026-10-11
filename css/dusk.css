@@ -156,7 +156,7 @@
 }
 /* no WebGL: fall back to the flat house */
 .intro .housewrap { display: none; }
-.intro:not(.is3d) .housewrap { display: block; right: 8cqw; top: 14cqw; width: 34%; z-index: 2; }
+.intro.no3d .housewrap { display: block; right: 8cqw; top: 14cqw; width: 34%; z-index: 2; }  /* only when WebGL is unavailable */
 
 .intro .fly {
   position: absolute; z-index: 4; width: 7px; height: 7px; border-radius: 50%;
@@ -261,7 +261,8 @@
 .memcard .print .pname { color: #2b2350; }
 
 /* ---------- the four rooms (kitchen, radio, porch, attic) ---------- */
-.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption {
+.kitchen .caption, .radio-pg .caption, .porch .caption, .attic .caption, .hall .caption, .today-book .caption,
+.work-desk .caption, .work-phone .caption, .work-break .caption, .work-files .caption {
   left: 4cqw;
   top: 4.4cqw;
   max-width: 30cqw;
@@ -272,7 +273,8 @@
   color: #fff;
   text-shadow: 0 2px 14px rgba(10, 8, 36, .7), 0 0 28px rgba(255, 255, 255, .2);
 }
-.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub {
+.kitchen .caption .sub, .radio-pg .caption .sub, .porch .caption .sub, .attic .caption .sub, .hall .caption .sub, .today-book .caption .sub,
+.work-desk .caption .sub, .work-phone .caption .sub, .work-break .caption .sub, .work-files .caption .sub {
   margin-top: 1.2cqw;
   font-family: var(--hand);
   font-size: clamp(24px, 2.3cqw, 32px);
@@ -283,7 +285,8 @@
 }
 
 /* buttons: same cream pills as the cover */
-.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn {
+.kitchen .pressbtn, .radio-pg .pressbtn, .porch .pressbtn, .attic .pressbtn, .hall .pressbtn, .today-book .pressbtn,
+.work-desk .pressbtn, .work-phone .pressbtn, .work-break .pressbtn, .work-files .pressbtn {
   min-height: 64px;
   font-family: var(--hand);
   font-weight: 400;
@@ -296,9 +299,12 @@
   color: #2b2350;
   box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5), 0 0 34px rgba(255, 200, 120, .28);
 }
-.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red { background: #ffd9a0; color: #2b2350; }
-.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active { transform: translateY(2px); }
-.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn {
+.kitchen .pressbtn.red, .radio-pg .pressbtn.red, .porch .pressbtn.red, .attic .pressbtn.red, .hall .pressbtn.red, .today-book .pressbtn.red,
+.work-desk .pressbtn.red, .work-phone .pressbtn.red, .work-break .pressbtn.red, .work-files .pressbtn.red { background: #ffd9a0; color: #2b2350; }
+.kitchen .pressbtn:active, .radio-pg .pressbtn:active, .porch .pressbtn:active, .attic .pressbtn:active, .hall .pressbtn:active, .today-book .pressbtn:active,
+.work-desk .pressbtn:active, .work-phone .pressbtn:active, .work-break .pressbtn:active, .work-files .pressbtn:active { transform: translateY(2px); }
+.kitchen .quietbtn, .radio-pg .quietbtn, .porch .quietbtn, .attic .quietbtn, .hall .quietbtn, .today-book .quietbtn,
+.work-desk .quietbtn, .work-phone .quietbtn, .work-break .quietbtn, .work-files .quietbtn {
   font-family: var(--hand);
   font-weight: 400;
   font-size: clamp(24px, 2.4cqw, 32px);
@@ -384,6 +390,9 @@
   transition: transform 1.4s cubic-bezier(.3, 1.5, .5, 1);
 }
 .hframe.straight { transform: rotate(0deg); cursor: default; }
+/* four or more of today's photos: a wider wall and slightly smaller frames */
+.hframes.many { left: 30%; right: 12%; }
+.hframes.many .hframe { width: 11cqw; min-width: 80px; }
 .hframe .wire { position: absolute; left: 50%; top: -2.6cqw; width: 70%; height: 2.6cqw; transform: translateX(-50%); overflow: visible; }
 .hframe .wire path { fill: none; stroke: rgba(255, 236, 200, .75); stroke-width: 2; }
 .hframe .wire circle { fill: #3c3326; }
@@ -414,7 +423,85 @@
 .hframe .who small { display: block; font-size: .78em; color: #ffe2a0; }
 .hframe .who.cap { font-size: clamp(18px, 1.8cqw, 24px); line-height: 1.15; }
 .hframe.straight .who { opacity: 1; }
-.hall .said { bottom: 26%; }
+.today-book.scr.on {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2.4cqw 4cqw 2cqw;
+  box-sizing: border-box;
+}
+.today-book .caption {
+  position: relative;
+  left: auto;
+  top: auto;
+  max-width: 42%;
+  margin: 0 0 1.2cqw;
+  flex: 0 0 auto;
+  z-index: 6;
+  color: #fff8ec;
+  text-shadow: 0 2px 0 rgba(20, 10, 30, .5), 0 3px 18px rgba(10, 8, 36, .9);
+}
+.today-book .caption .sub {
+  color: #ffe9b8;
+  text-shadow: 0 2px 0 rgba(20, 10, 30, .45), 0 2px 12px rgba(10, 8, 36, .85);
+}
+.today-book .today-letter {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: min(84cqw, 92%);
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 1.8cqw 2.8cqw 2cqw;
+  transform: rotate(-0.3deg);
+  background: #fff8e6;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.today-book .today-letter .ln {
+  color: #1a1428;
+  font-size: clamp(20px, 2.05cqw, 28px);
+  line-height: 1.25;
+  padding: .2cqw .6cqw .25cqw;
+  flex: 0 0 auto;
+}
+.today-book .today-letter .ln span { color: #7a3228; font-size: clamp(22px, 2.1cqw, 28px); }
+.today-book .today-row {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 7;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1cqw 1.5cqw;
+  margin-top: 1.6cqw;
+  flex: 0 0 auto;
+}
+.today-book .today-row .pressbtn,
+.today-book .today-row .quietbtn {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  top: auto;
+}
+.today-book .today-row .pressbtn {
+  font-size: clamp(22px, 2.2cqw, 30px);
+  min-height: 56px;
+  padding: .28em 1.15em .32em;
+}
 @keyframes hsway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
 @media (prefers-reduced-motion: reduce) {
   .hframe { transition-duration: .2s; }
@@ -487,3 +574,42 @@
   color: #fff !important;
   box-shadow: 0 0 0 .25cqw rgba(255, 160, 140, .55), 0 8px 24px rgba(10, 6, 30, .5), 0 0 30px rgba(232, 112, 90, .45) !important;
 }
+
+
+/* ---------- no flash of the old flat screens while the 3D houses load ---------- */
+.hub:not(.no3d) .list { display: none; }          /* the flat door list is only a no-WebGL fallback */
+.intro3d canvas, .hub3d canvas { opacity: 0; transition: opacity .8s ease; }
+.intro.is3d .intro3d canvas, .hub.is3d .hub3d canvas { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .intro3d canvas, .hub3d canvas { transition: none; } }
+
+
+/* ---------- childhood: the toy box and Grandma's apple cake ---------- */
+.childroom .krow .print { width: min(172px, 24%); }
+.childroom .print.picked { outline: 3px solid #ffe2a0; outline-offset: 4px; }
+.childroom .print { transition: transform .3s; }
+.childroom .print:hover, .childroom .print:focus-visible { transform: translateY(-6px) rotate(-1deg); }
+.childroom .print svg { border-radius: 3px; }
+.bowl { position: absolute; left: 50%; top: 30%; width: 24cqw; transform: translateX(-50%); z-index: 4; pointer-events: none; }
+.bowl > svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 14px rgba(8, 6, 28, .45)); }
+.bowlfill { position: absolute; left: 14%; right: 14%; top: -9%; height: 52%; display: flex; justify-content: center; align-items: flex-end; z-index: 1; }
+.bowlfill svg { width: 31%; height: auto; margin: 0 -3%; border-radius: 50%; transform: rotate(var(--r, 0deg)); box-shadow: 0 4px 10px rgba(8, 6, 28, .4); animation: dropin .55s ease-out both; }
+@keyframes dropin { from { opacity: 0; transform: translateY(-4cqw) rotate(var(--r, 0deg)); } to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); } }
+@media (prefers-reduced-motion: reduce) { .bowlfill svg { animation: none; } .childroom .print { transition: none; } }
+.childroom .said { bottom: 34%; font-size: clamp(24px, 2.2cqw, 30px); padding: .35em 1.3em .4em; max-width: 62%; }
+
+/* ---------- Wednesday's walk: tap what you remember in the lane ---------- */
+#walkSpots { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.spot { position: absolute; width: 11cqw; height: 11cqw; margin: -5.5cqw 0 0 -5.5cqw; background: none; border: 0; border-radius: 50%; pointer-events: auto; cursor: pointer; }
+.spot .ring { position: absolute; inset: 24%; border-radius: 50%; border: .5cqw solid rgba(255, 226, 160, .95); box-shadow: 0 0 22px rgba(255, 210, 120, .75), inset 0 0 14px rgba(255, 210, 120, .4); animation: spotpulse 2.6s ease-in-out infinite; }
+.spot:hover .ring, .spot:focus-visible .ring { inset: 14%; }
+.spot.seen .ring { animation: none; border-color: rgba(255, 255, 255, .75); box-shadow: 0 0 14px rgba(255, 255, 255, .5); }
+.spot .tag { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; padding: .15em .8em .2em; border-radius: 999px; background: rgba(22, 20, 52, .78); color: #fff; font-family: var(--hand); font-size: clamp(22px, 2.2cqw, 30px); opacity: 0; transition: opacity .4s; pointer-events: none; }
+.spot:hover .tag, .spot:focus-visible .tag, .spot.seen .tag { opacity: 1; }
+@keyframes spotpulse { 0%, 100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.08); opacity: 1; } }
+.walkroom .said { bottom: 8%; max-width: 70%; }
+@media (prefers-reduced-motion: reduce) { .spot .ring { animation: none; } }
+
+/* ---------- the journal room: a quiet desk behind the day log ---------- */
+.journal-pg .caption { left: 4cqw; top: 4.4cqw; max-width: 40cqw; font-family: var(--hand); font-size: clamp(34px, 4.4cqw, 60px); line-height: 1.04; font-weight: 400; color: #fff; text-shadow: 0 2px 14px rgba(10, 8, 36, .7); }
+.journal-pg .caption .sub { margin-top: 1.2cqw; font-family: var(--hand); font-size: clamp(24px, 2.3cqw, 32px); letter-spacing: .06em; color: rgba(255, 255, 255, .94); }
+.journal-pg .pressbtn { min-height: 64px; font-family: var(--hand); font-size: clamp(26px, 2.8cqw, 36px); letter-spacing: .06em; padding: .3em 1.4em .35em; border-radius: 999px; border: 0; background: #fff1d4; color: #2b2350; box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5); }

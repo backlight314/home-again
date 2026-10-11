@@ -21,12 +21,13 @@ const VIEWS = {
   hall: { box: [0, W, F1, C1], pos: v3(2, 4.2, 4.6), look: v3(2, 3.7, -.6) },
   attic: { box: [-2.8, 2.8, C1 + .15, 6.9], pos: v3(0, 6.35, 4.8), look: v3(0, 6, -.8) }
 };
-const NAMES = { kitchen: 'Sunday kitchen', porch: 'garden', radio: 'Tuesday car', hall: 'today', attic: 'photographs' };
+const NAMES = { kitchen: 'Sunday kitchen', porch: 'garden', radio: 'Tuesday car', hall: 'Wednesday walk', attic: 'photographs' };
+const ENTER = ['kitchen', 'porch', 'radio', 'hall', 'attic'];
 
 const LABELS = [
   { text: 'Photos', room: 'attic', at: [0, 6.1, 1.6] },
   { text: 'Tuesday', room: 'radio', at: [-2, 4.7, 1.6] },
-  { text: 'Today', room: 'hall', at: [2, 4.7, 1.6] },
+  { text: 'Wednesday', room: 'hall', at: [2, 4.7, 1.6] },
   { text: 'Sunday', room: 'kitchen', at: [-2, 2.15, 1.6], here: true },
   { text: 'Garden', room: 'porch', at: [2, 2.15, 1.6] }
 ];
@@ -463,7 +464,7 @@ export function createHub({ mount, kitchenBtn, onRoom, onProp, calm = false, shi
     return { el, room: l.room, at: new THREE.Vector3(...l.at) };
   });
   let hoverRoom = null;
-  const btns = Object.keys(VIEWS).map(name => {
+  const btns = ENTER.map(name => {
     let b = kitchenBtn;
     if (name !== 'kitchen') {
       b = document.createElement('button');
