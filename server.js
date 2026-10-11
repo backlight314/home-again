@@ -7,6 +7,7 @@ import { addPhoto, updatePhoto, addBack, addPortrait, addVoice, updateVoice, sca
 import { ROOT, TYPES, loadDoc, readMedia, storage, loadMaterials, withMaterials, removeMaterial, progress } from './store.js';
 import { upgradeMatching } from './faces.js';
 import { logEvents, insights, snowflakeOn } from './snowflake.js';
+import { loadJournal, addEntry, removeEntry } from './journal.js';
 
 const PORT = Number(process.env.PORT) || 8787;
 const MAX_BODY = 40 * 1024 * 1024;
@@ -85,6 +86,8 @@ const routes = {
   },
   'POST /api/events': (body) => logEvents(body),
   'GET /api/insights': () => insights(),
+  'GET /api/journal': () => loadJournal(),
+  'POST /api/journal': (body) => addEntry(body),
   'GET /api/game': async () => {
     const cfg = await loadDoc('game', null);
     if (!cfg) throw Object.assign(new Error('no game built yet'), { status: 404 });
@@ -104,6 +107,8 @@ http.createServer(async (req, res) => {
         });
         return send(res, 200, { progress: progress(mat, await isBuilt()), materials: mat });
       }
+      const entry = /^\/api\/journal\/([\w-]+)$/.exec(url.pathname);
+      if (req.method === 'DELETE' && entry) return send(res, 200, await removeEntry(entry[1]));
       const face = /^\/api\/photos\/([\w-]+)\/faces\/([\w-]+)$/.exec(url.pathname);
       if (face && req.method === 'POST') return send(res, 200, await nameFace(face[1], face[2], await readBody(req)));
       const item = /^\/api\/(photos|voices)\/([\w-]+)(?:\/(back|portrait|faces|confirm-faces))?$/.exec(url.pathname);
