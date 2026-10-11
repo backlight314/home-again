@@ -71,21 +71,21 @@ html[data-time="day"] .nightonly { opacity: 0; }
 /* ---------- text and buttons that sit on a scene: dark ink in daylight ---------- */
 html[data-time="day"] .hub.is3d .caption,
 html[data-time="day"] .kitchen .caption, html[data-time="day"] .radio-pg .caption, html[data-time="day"] .porch .caption,
-html[data-time="day"] .attic .caption, html[data-time="day"] .ending .caption,
+html[data-time="day"] .attic .caption, html[data-time="day"] .hall .caption, html[data-time="day"] .ending .caption,
 html[data-time="day"] .shelf-pg .shelfcap {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
 }
 html[data-time="day"] .hub.is3d .caption .sub,
 html[data-time="day"] .kitchen .caption .sub, html[data-time="day"] .radio-pg .caption .sub, html[data-time="day"] .porch .caption .sub,
-html[data-time="day"] .attic .caption .sub, html[data-time="day"] .ending .caption .sub,
+html[data-time="day"] .attic .caption .sub, html[data-time="day"] .hall .caption .sub, html[data-time="day"] .ending .caption .sub,
 html[data-time="day"] .shelf-pg .shelfcap .sub {
   color: var(--ink-day);
   text-shadow: var(--halo-day);
 }
 html[data-time="day"] .hub.is3d .quietbtn, html[data-time="day"] .hub.is3d .closebtn,
 html[data-time="day"] .kitchen .quietbtn, html[data-time="day"] .radio-pg .quietbtn, html[data-time="day"] .porch .quietbtn,
-html[data-time="day"] .attic .quietbtn, html[data-time="day"] .ending .quietbtn,
+html[data-time="day"] .attic .quietbtn, html[data-time="day"] .hall .quietbtn, html[data-time="day"] .ending .quietbtn,
 html[data-time="day"] .album-pg .closebtn, html[data-time="day"] .album-pg .quietbtn {
   color: var(--ink-day);
   border-color: rgba(43, 35, 80, .7);
@@ -105,6 +105,9 @@ html[data-time="day"] .mount.next { border-color: var(--gold-day); box-shadow: 0
 html[data-time="day"] .chain { background: rgba(60, 51, 38, .85); }
 html[data-time="day"] .said { background: rgba(255, 250, 238, .96); color: var(--ink-day); box-shadow: 0 0 0 2px rgba(168, 93, 16, .45), 0 10px 26px rgba(60, 50, 40, .3); }
 html[data-time="day"] .wave i { background: var(--gold-day); }
+html[data-time="day"] .hframe .who { color: var(--ink-day); text-shadow: var(--halo-day); }
+html[data-time="day"] .hframe .who small { color: var(--gold-day); }
+html[data-time="day"] .hframe .wire path { stroke: rgba(60, 51, 38, .6); }
 
 /* ---------- the dollhouse hub: labels become cream pills ---------- */
 html[data-time="day"] .hub3d { background: #bfe0f2; }
