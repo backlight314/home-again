@@ -575,3 +575,35 @@
 .intro3d canvas, .hub3d canvas { opacity: 0; transition: opacity .8s ease; }
 .intro.is3d .intro3d canvas, .hub.is3d .hub3d canvas { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .intro3d canvas, .hub3d canvas { transition: none; } }
+
+
+/* ---------- childhood: the toy box and Grandma's apple cake ---------- */
+.childroom .krow .print { width: min(172px, 24%); }
+.childroom .print.picked { outline: 3px solid #ffe2a0; outline-offset: 4px; }
+.childroom .print { transition: transform .3s; }
+.childroom .print:hover, .childroom .print:focus-visible { transform: translateY(-6px) rotate(-1deg); }
+.childroom .print svg { border-radius: 3px; }
+.bowl { position: absolute; left: 50%; top: 30%; width: 24cqw; transform: translateX(-50%); z-index: 4; pointer-events: none; }
+.bowl > svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 14px rgba(8, 6, 28, .45)); }
+.bowlfill { position: absolute; left: 14%; right: 14%; top: -9%; height: 52%; display: flex; justify-content: center; align-items: flex-end; z-index: 1; }
+.bowlfill svg { width: 31%; height: auto; margin: 0 -3%; border-radius: 50%; transform: rotate(var(--r, 0deg)); box-shadow: 0 4px 10px rgba(8, 6, 28, .4); animation: dropin .55s ease-out both; }
+@keyframes dropin { from { opacity: 0; transform: translateY(-4cqw) rotate(var(--r, 0deg)); } to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); } }
+@media (prefers-reduced-motion: reduce) { .bowlfill svg { animation: none; } .childroom .print { transition: none; } }
+.childroom .said { bottom: 34%; font-size: clamp(24px, 2.2cqw, 30px); padding: .35em 1.3em .4em; max-width: 62%; }
+
+/* ---------- Wednesday's walk: tap what you remember in the lane ---------- */
+#walkSpots { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.spot { position: absolute; width: 11cqw; height: 11cqw; margin: -5.5cqw 0 0 -5.5cqw; background: none; border: 0; border-radius: 50%; pointer-events: auto; cursor: pointer; }
+.spot .ring { position: absolute; inset: 24%; border-radius: 50%; border: .5cqw solid rgba(255, 226, 160, .95); box-shadow: 0 0 22px rgba(255, 210, 120, .75), inset 0 0 14px rgba(255, 210, 120, .4); animation: spotpulse 2.6s ease-in-out infinite; }
+.spot:hover .ring, .spot:focus-visible .ring { inset: 14%; }
+.spot.seen .ring { animation: none; border-color: rgba(255, 255, 255, .75); box-shadow: 0 0 14px rgba(255, 255, 255, .5); }
+.spot .tag { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; padding: .15em .8em .2em; border-radius: 999px; background: rgba(22, 20, 52, .78); color: #fff; font-family: var(--hand); font-size: clamp(22px, 2.2cqw, 30px); opacity: 0; transition: opacity .4s; pointer-events: none; }
+.spot:hover .tag, .spot:focus-visible .tag, .spot.seen .tag { opacity: 1; }
+@keyframes spotpulse { 0%, 100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.08); opacity: 1; } }
+.walkroom .said { bottom: 8%; max-width: 70%; }
+@media (prefers-reduced-motion: reduce) { .spot .ring { animation: none; } }
+
+/* ---------- the journal room: a quiet desk behind the day log ---------- */
+.journal-pg .caption { left: 4cqw; top: 4.4cqw; max-width: 40cqw; font-family: var(--hand); font-size: clamp(34px, 4.4cqw, 60px); line-height: 1.04; font-weight: 400; color: #fff; text-shadow: 0 2px 14px rgba(10, 8, 36, .7); }
+.journal-pg .caption .sub { margin-top: 1.2cqw; font-family: var(--hand); font-size: clamp(24px, 2.3cqw, 32px); letter-spacing: .06em; color: rgba(255, 255, 255, .94); }
+.journal-pg .pressbtn { min-height: 64px; font-family: var(--hand); font-size: clamp(26px, 2.8cqw, 36px); letter-spacing: .06em; padding: .3em 1.4em .35em; border-radius: 999px; border: 0; background: #fff1d4; color: #2b2350; box-shadow: 0 0 0 .25cqw rgba(255, 226, 160, .4), 0 8px 24px rgba(10, 6, 30, .5); }

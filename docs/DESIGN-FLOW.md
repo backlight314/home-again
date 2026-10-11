@@ -83,3 +83,11 @@ Supersedes section 6's single album page.
 - Finish a memory, watch its photo fly into its slot. When every slot is filled the book is complete ("This album is full of memories.") and the cover on the shelf gets its ribbon.
 - **close the book** returns to the shelf; **close the albums** returns to the cover.
 - Data: `chapters[].memories[]` in `js/data.js`; layout of slots by memory count is in `js/app.js`.
+
+## 8. Update: three places, one per book (built)
+
+- **This week** is the house. Its five rooms are Sunday (kitchen), Tuesday (radio), Wednesday (the walk: look around the lane and tap what you remember), the garden and the photos. The old "Today" room is gone from the house.
+- **Childhood** opens to a storybook yard (`js/place3d.js`, kind `childhood`): a treehouse with the toy box, and Grandma's little cottage kitchen where the apple cake is made.
+- **Today** opens to a morning room (kind `today`): a table with the letter, and a desk with the journal ("What did you do today?"). The clock shows the real time and the calendar the real date.
+- Each place works like the house: the camera glides into a spot and back, the album page's back button returns to that book's place, and finishing both Childhood spots (or the Today letter) completes the book.
+- Content defaults live in `childDefaults` in `js/play.js`; `pack.rooms.toybox`, `recipe` and `walk` override them.

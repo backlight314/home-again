@@ -162,3 +162,13 @@ html[data-time="day"] .calltile { background: rgba(255, 250, 238, .96); color: v
 /* ---------- gentle fade when switching ---------- */
 .scene, .intro, .album-pg .desk, .hub3d { transition: filter .5s; }
 @media (prefers-reduced-motion: reduce) { #timeToggle .opt { transition: none; } }
+
+/* childhood rooms in daylight */
+html[data-time="day"] .childroom .print.picked { outline-color: var(--gold-day); }
+html[data-time="day"] .childroom .caption, html[data-time="day"] .childroom .caption .sub { color: var(--ink-day); text-shadow: var(--halo-day); }
+
+/* the walk and the journal in daylight */
+html[data-time="day"] .pathfill { fill: #d9c7a0; }
+html[data-time="day"] .spot .ring { border-color: var(--gold-day); box-shadow: 0 0 18px rgba(255, 190, 80, .8), inset 0 0 12px rgba(255, 190, 80, .4); }
+html[data-time="day"] .spot.seen .ring { border-color: #fff; box-shadow: 0 0 14px rgba(255, 255, 255, .8); }
+html[data-time="day"] .journal-pg .caption, html[data-time="day"] .journal-pg .caption .sub { color: var(--ink-day); text-shadow: var(--halo-day); }

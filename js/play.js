@@ -1,8 +1,13 @@
 (function (global) {
   const $ = (id) => document.getElementById(id);
-  const keys = ['kitchen', 'radio', 'porch', 'attic', 'today'];
-  const weekKeys = keys.slice(0, 4); // the four rooms that hold this week's letter pieces
-  const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden'];
+  // every activity that keeps a memory: this week's five rooms, then Today's letter, then Childhood's two
+  const keys = ['kitchen', 'radio', 'porch', 'attic', 'walk', 'today', 'toybox', 'recipe'];
+  const weekKeys = keys.slice(0, 5); // the rooms of the house, each holding a piece of this week
+  const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden', 'sc-walk'];
+  // The Childhood yard and the Today room are 3D places like the house. Each place has spots to go into.
+  const placeRooms = { childhood: { treehouse: 'toybox', cottage: 'recipe' }, today: { letter: 'today', desk: 'journal' } };
+  const placeScreen = { childhood: 'childhub', today: 'todayhub' };
+  const placeOf = { toybox: 'childhood', recipe: 'childhood', today: 'today', journal: 'today' };
   // where the pictures sit on an album page: [left %, top %, turn in degrees, width %]
   const layout = {
     1: [[20, 12, -1, 60]],
@@ -16,7 +21,7 @@
   let letter = [];
   let memories = [];
   let chapters = [];
-  let found = [false, false, false, false];
+  let found = keys.map(() => false);
   let keptOrder = []; // the rooms kept today, in the order they were kept (one album page each)
   let placing = []; // memories whose photos are still flying into their slots, in order
   let currentBook = 'week';
@@ -36,7 +41,7 @@
   let hubFailed = false;
   let hubInside = false;
   let hubMoving = false;
-  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic' };
+  const houseRooms = { kitchen: 'kitchen', radio: 'radio', porch: 'porch', attic: 'attic', hall: 'walk' };
   const weekFound = () => weekKeys.filter((k) => found[keys.indexOf(k)]).length;
 
   // Play events for the family's insights page, sent to the server in small batches.
@@ -173,13 +178,65 @@
       };
     });
     chapters = [
-      { id: 'childhood', title: 'Childhood', color: '#b8893a', memories: [{ id: 'toybox', title: 'Toy box' }, { id: 'recipe', title: 'Recipe' }] },
+      { id: 'childhood', title: 'Childhood', color: '#b8893a', memories: childMemories() },
       { id: 'school', title: 'School & young adult', color: '#5f7a58', memories: [{ id: 'yearbook', title: 'Yearbook' }] },
       { id: 'work', title: 'Work', color: '#44607d', memories: [{ id: 'job', title: 'The job' }] },
       { id: 'week', title: 'This week', color: '#9c3b2e', memories },
       { id: 'today', title: 'Today', color: '#6d5262', memories: todayMemories() }
     ];
     currentBook = 'week';
+  }
+
+  // Childhood and the Wednesday walk: sample content. pack.rooms.toybox / recipe / walk can replace any of it,
+  // so a family's own toys, dish, voices and places slot in without code changes.
+  const childDefaults = {
+    toybox: {
+      prompt: 'Which toy do you remember?',
+      caption: 'The toy box, long ago',
+      line: 'Dad made you that wooden train himself, and you never let go of it.',
+      by: 'Aunt Rose',
+      toys: [
+        { id: 'train', label: 'wooden train', line: 'Dad made that train from scrap wood. You would not let anyone else push it.' },
+        { id: 'bear', label: 'teddy bear', line: 'Your bear had one ear chewed flat. You took him everywhere.' },
+        { id: 'top', label: 'spinning top', line: 'You could make that top spin for ages. Dad timed you.' }
+      ]
+    },
+    recipe: {
+      prompt: 'What goes into Grandma’s apple cake?',
+      caption: 'Grandma’s kitchen, a Sunday afternoon',
+      line: 'Grandma always said the secret was a little extra cinnamon.',
+      by: 'Aunt Rose',
+      done: 'It is in the oven. It smells just like her kitchen.',
+      ingredients: [
+        { id: 'apples', label: 'apples', line: 'Grandma peeled them in one long curl.' },
+        { id: 'flour', label: 'flour', line: 'Flour on your nose, every single time.' },
+        { id: 'eggs', label: 'eggs', line: 'You were in charge of cracking them. Gently.' },
+        { id: 'sugar', label: 'sugar', line: 'A little extra, and she never told Mom.' },
+        { id: 'butter', label: 'butter', line: 'Soft butter, left out on the sill.' },
+        { id: 'cinnamon', label: 'cinnamon', line: 'Her secret. You could smell it down the street.' }
+      ]
+    },
+    walk: {
+      prompt: 'What did you notice on Wednesday’s walk?',
+      caption: 'The lane, Wednesday',
+      line: 'You stopped to watch a robin on the fence. You said it looked like it was listening.',
+      // x and y: where each thing sits in the picture, in percent
+      spots: [
+        { id: 'robin', label: 'the robin', x: 43.9, y: 58.5, line: 'A robin sat on the fence and watched you go by. You said hello to it.' },
+        { id: 'bakery', label: 'the bakery', x: 80.5, y: 64, line: 'The bakery smelled like warm bread. You bought two rolls and kept one for later.' },
+        { id: 'bench', label: 'the bench', x: 24.5, y: 72, line: 'You sat on the bench by the big tree for a while. Nobody hurried you.' }
+      ]
+    }
+  };
+  const childCfg = (k) => Object.assign({}, childDefaults[k], (pack && pack.rooms && pack.rooms[k]) || {});
+
+  function childMemories() {
+    const toy = childCfg('toybox');
+    const rec = childCfg('recipe');
+    return [
+      { id: 'toybox', title: 'Toy box', activity: 'toybox', scene: 'sc-toys', photoDataUrl: toy.photoDataUrl || null, caption: toy.caption, line: toy.line, by: toy.by },
+      { id: 'recipe', title: 'Recipe', activity: 'recipe', scene: 'sc-cake', photoDataUrl: rec.photoDataUrl || null, caption: rec.caption, line: rec.line, by: rec.by }
+    ];
   }
 
   // the album photos a room shows while it is played (the table, the garden, the three in the attic)
@@ -297,8 +354,11 @@
     }, 30);
     setTimeout(() => {
       hubInside = false;
-      if (id === 'today') show('today', true);
-      else {
+      if (id === 'childhood' || id === 'today') {
+        places[id]?.reset();
+        placeInside[id] = false;
+        show(placeScreen[id], true);
+      } else {
         show('hub', true);
         hub?.reset();
       }
@@ -650,6 +710,119 @@
     introLoading = false;
   }
 
+  /* ---------- the Childhood yard and the Today room: 3D places like the house ---------- */
+  const places = { childhood: null, today: null };
+  const placeFailed = { childhood: false, today: false };
+  const placeInside = { childhood: false, today: false };
+  const placeMoving = { childhood: false, today: false };
+  const placeMount = { childhood: 'childhub3d', today: 'todayhub3d' };
+
+  async function ensurePlace(kind) {
+    if (places[kind] || placeFailed[kind]) return places[kind];
+    const sec = $(placeScreen[kind] ? 's-' + placeScreen[kind] : '');
+    if (new URLSearchParams(location.search).has('flat')) {
+      placeFailed[kind] = true;
+      sec.classList.add('no3d');
+      return null;
+    }
+    try {
+      const { createPlace } = await import('./place3d.js?v=merge32');
+      places[kind] = createPlace({ kind, mount: $(placeMount[kind]), onRoom: (name) => enterPlaceRoom(kind, name) });
+      sec.classList.add('is3d');
+      $(placeMount[kind]).onpointermove = (e) => {
+        const r = $(placeMount[kind]).getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        places[kind].pointer(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * -2);
+      };
+      places[kind].setActive(current === placeScreen[kind]);
+      paintPlaceLights(kind);
+    } catch (err) {
+      console.warn('3D place unavailable', kind, err);
+      placeFailed[kind] = true;
+      sec.classList.add('no3d');
+    }
+    return places[kind];
+  }
+
+  function paintPlaceLights(kind) {
+    const pl = places[kind];
+    if (!pl) return;
+    Object.entries(placeRooms[kind]).forEach(([room, activity]) => pl.setLit(room, keys.includes(activity) && found[keys.indexOf(activity)]));
+  }
+
+  const placeCaption = {
+    childhood: ['Where did you play?', 'What else do you remember?', 'You remember it all'],
+    today: ['What is today?', 'Anything else from today?', 'Today is in the album']
+  };
+  function drawPlace(kind) {
+    const acts = Object.values(placeRooms[kind]).filter((a) => keys.includes(a));
+    const n = acts.filter((a) => found[keys.indexOf(a)]).length;
+    const line = placeCaption[kind][n === 0 ? 0 : n < acts.length ? 1 : 2];
+    $(kind === 'childhood' ? 'childCaption' : 'todayCaption').innerHTML =
+      line + '<span class="sub">' + (places[kind] ? 'TAP A PLACE TO GO IN' : 'CHOOSE A PLACE') + '</span>';
+    paintPlaceLights(kind);
+    if (placeFailed[kind]) drawPlaceList(kind); // no WebGL: plain buttons instead of the 3D place
+    return line;
+  }
+
+  const placeLabels = {
+    childhood: { treehouse: 'Toy box', cottage: 'Grandma’s kitchen' },
+    today: { letter: 'The letter', desk: 'Your day' }
+  };
+  function drawPlaceList(kind) {
+    const sec = $('s-' + placeScreen[kind]);
+    let box = sec.querySelector('.list');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'list';
+      sec.appendChild(box);
+    }
+    box.innerHTML = '';
+    Object.keys(placeRooms[kind]).forEach((name) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'roomrow';
+      b.innerHTML = '<span class="n">' + placeLabels[kind][name] + '</span>';
+      b.onclick = () => enterPlaceRoom(kind, name);
+      box.appendChild(b);
+    });
+  }
+
+  async function enterPlaceRoom(kind, name) {
+    if (placeMoving[kind]) return;
+    const activity = placeRooms[kind][name];
+    if (!activity) return;
+    if (keys.includes(activity) && found[keys.indexOf(activity)]) {
+      rereading = true;
+      openMemory(activity);
+      return;
+    }
+    placeMoving[kind] = true;
+    try {
+      if (places[kind]) {
+        placeInside[kind] = true;
+        await places[kind].glideIn(name);
+      }
+      show(activity);
+    } finally {
+      placeMoving[kind] = false;
+    }
+  }
+
+  async function leavePlace(kind) {
+    show(placeScreen[kind]);
+    if (places[kind] && placeInside[kind]) {
+      placeMoving[kind] = true;
+      places[kind].setActive(true);
+      try {
+        await places[kind].glideOut();
+      } finally {
+        placeInside[kind] = false;
+        placeMoving[kind] = false;
+      }
+    }
+  }
+
   async function enterHouseRoom(name) {
     if (hubMoving) return;
     const activity = houseRooms[name];
@@ -687,15 +860,15 @@
   }
 
   // inside a room, the top-left button goes back to the house instead of leaving
-  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'today'];
+  const ROOMS = ['kitchen', 'radio', 'porch', 'attic', 'walk'];
   let current = 'intro';
-  const inRoom = () => ROOMS.includes(current);
+  const inRoom = () => ROOMS.includes(current) || !!placeOf[current];
   function back() {
     if (!inRoom()) return false;
     $('reveal').classList.remove('on');
     closeDayLog();
     rereading = false;
-    if (current === 'today') closeBook();
+    if (placeOf[current]) leavePlace(placeOf[current]);
     else leaveHouse();
     return true;
   }
@@ -704,27 +877,37 @@
     current = name;
     const backBtn = document.getElementById('globalBack');
     if (backBtn) {
-      backBtn.textContent =
-        current === 'today' ? '← The albums' : inRoom() ? '← Back to the house' : '← Leave';
+      backBtn.textContent = placeOf[current]
+        ? placeOf[current] === 'childhood' ? '← Back to childhood' : '← Back to today'
+        : inRoom() ? '← Back to the house' : '← Leave';
     }
-    if (name !== 'today') closeDayLog();
+    if (name !== 'journal') closeDayLog();
     placing = [];
     hush();
     clearAll();
     if (!keepFly) document.querySelectorAll('#screen .bookfly').forEach((f) => f.remove());
     document.querySelectorAll('#screen .flyer').forEach((f) => f.remove());
     document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === 's-' + name));
-    if (keys.includes(name)) {
+    if (keys.includes(name) || name === 'journal') {
       roomT0 = stepT0 = performance.now();
       track('room_enter', name);
     }
     $('chrome').classList.toggle('on', name !== 'intro' && name !== 'ending');
     hub?.setActive(name === 'hub');
     introHub?.setActive(name === 'intro');
+    places.childhood?.setActive(name === 'childhub');
+    places.today?.setActive(name === 'todayhub');
     document.querySelectorAll('#controls button').forEach((b) =>
       b.setAttribute('aria-current', b.dataset.jump === name ? 'true' : 'false')
     );
+    if (name === 'childhub' || name === 'todayhub') {
+      const kind = name === 'childhub' ? 'childhood' : 'today';
+      ensurePlace(kind).then(() => drawPlace(kind));
+      speak(drawPlace(kind));
+    }
     if (name === 'shelf') {
+      ensurePlace('childhood'); // load both places now, so nothing flashes when a book opens
+      ensurePlace('today');
       buildShelf();
       speak('Which album today? This week is open.');
     }
@@ -741,8 +924,11 @@
       const albumBack = $('albumBack');
       if (albumBack) {
         if (currentBook === 'today') {
-          albumBack.dataset.go = 'shelf';
-          albumBack.textContent = 'CLOSE THE BOOK';
+          albumBack.dataset.go = 'todayhub';
+          albumBack.textContent = 'BACK TO TODAY';
+        } else if (currentBook === 'childhood') {
+          albumBack.dataset.go = 'childhub';
+          albumBack.textContent = 'BACK TO CHILDHOOD';
         } else {
           albumBack.dataset.go = 'hub';
           albumBack.textContent = 'BACK TO THE HOUSE';
@@ -761,7 +947,7 @@
         pendingPlace = null;
         placeMemories(placing.slice());
       } else {
-        speak(currentBook === 'today' ? 'From this morning.' : 'These are this week’s pages.');
+        speak(currentBook === 'today' ? 'From this morning.' : currentBook === 'childhood' ? 'These are your childhood pages.' : 'These are this week’s pages.');
       }
     }
     if (name === 'intro') ensureIntroHub();
@@ -771,6 +957,10 @@
     if (name === 'porch') initPorch();
     if (name === 'attic') initAttic();
     if (name === 'today') initToday();
+    if (name === 'journal') initJournal();
+    if (name === 'toybox') initToybox();
+    if (name === 'recipe') initRecipe();
+    if (name === 'walk') initWalk();
     if (name === 'ending') initEnding();
   }
 
@@ -1324,6 +1514,158 @@
     speak('This week is whole.');
   }
 
+  /* ---------- childhood: the toy box ---------- */
+  let toyHeard = new Set();
+  const toyIcon = (id) => (document.getElementById('toy-' + id) ? 'toy-' + id : 'toy-ball');
+
+  function drawToys() {
+    const c = childCfg('toybox');
+    const row = $('toyRow');
+    row.innerHTML = '';
+    c.toys.slice(0, 3).forEach((toy) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'print toy' + (toyHeard.has(toy.id) ? ' picked' : '');
+      b.innerHTML = '<svg viewBox="0 0 100 80"><use href="#' + toyIcon(toy.id) + '"></use></svg><div class="pname">' + toy.label + '</div>';
+      b.onclick = () => tapToy(toy);
+      row.appendChild(b);
+    });
+  }
+
+  function initToybox() {
+    const c = childCfg('toybox');
+    toyHeard = new Set();
+    $('toyCap').innerHTML = c.prompt + '<span class="sub">CHILDHOOD · THE TOY BOX</span>';
+    $('toySaid').hidden = true;
+    $('toyKeep').classList.add('hide');
+    drawToys();
+    speak(c.prompt);
+  }
+
+  // every toy is a good answer: it lifts out, and someone who was there tells its story
+  function tapToy(toy) {
+    const c = childCfg('toybox');
+    toyHeard.add(toy.id);
+    track('toy_tap', 'toybox', { toy: toy.id, ms: since(stepT0) });
+    stepT0 = performance.now();
+    $('toySaidText').textContent = toy.line;
+    $('toySaid').hidden = false;
+    speak(toy.line, 'person', c.by);
+    drawToys();
+    if (toyHeard.size >= 2) later(() => $('toyKeep').classList.remove('hide'), 1200);
+    if (toyHeard.size >= c.toys.slice(0, 3).length) {
+      $('toyCap').innerHTML = 'That is the whole toy box.<span class="sub">CHILDHOOD · THE TOY BOX</span>';
+    }
+  }
+
+  /* ---------- childhood: Grandma's apple cake ---------- */
+  let bowl = [];
+  let ingQueue = [];
+  const ingIcon = (id) => (document.getElementById('ing-' + id) ? 'ing-' + id : 'ing-flour');
+
+  function drawBowl() {
+    $('bowlFill').innerHTML = bowl
+      .map((ing, i) => '<svg viewBox="0 0 100 80" style="--r:' + (i % 2 ? 1 : -1) * (6 + i * 3) + 'deg"><use href="#' + ingIcon(ing.id) + '"></use></svg>')
+      .join('');
+  }
+
+  function drawIngredients() {
+    const row = $('recRow');
+    row.innerHTML = '';
+    ingQueue.slice(0, 3).forEach((ing) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'print ing';
+      b.innerHTML = '<svg viewBox="0 0 100 80"><use href="#' + ingIcon(ing.id) + '"></use></svg><div class="pname">' + ing.label + '</div>';
+      b.onclick = () => addIngredient(ing);
+      row.appendChild(b);
+    });
+  }
+
+  function initRecipe() {
+    const c = childCfg('recipe');
+    bowl = [];
+    ingQueue = c.ingredients.slice();
+    $('recCap').innerHTML = c.prompt + '<span class="sub">CHILDHOOD · GRANDMA’S KITCHEN</span>';
+    $('recSaid').hidden = true;
+    $('recKeep').classList.add('hide');
+    drawBowl();
+    drawIngredients();
+    speak(c.prompt);
+  }
+
+  // any three ingredients make the cake: however feels right, nothing to get wrong
+  function addIngredient(ing) {
+    const c = childCfg('recipe');
+    ingQueue = ingQueue.filter((x) => x.id !== ing.id);
+    bowl.push(ing);
+    track('ingredient_tap', 'recipe', { ingredient: ing.id, ms: since(stepT0) });
+    stepT0 = performance.now();
+    drawBowl();
+    $('recSaidText').textContent = ing.line;
+    $('recSaid').hidden = false;
+    speak(ing.line, 'person', c.by);
+    if (bowl.length >= 3) {
+      $('recRow').innerHTML = '';
+      $('recCap').innerHTML = c.done + '<span class="sub">CHILDHOOD · GRANDMA’S KITCHEN</span>';
+      later(() => $('recKeep').classList.remove('hide'), 1400);
+    } else {
+      drawIngredients();
+    }
+  }
+
+  /* ---------- Wednesday's walk: look around the lane, tap what you remember ---------- */
+  let walkSeen = new Set();
+
+  function drawSpots() {
+    const c = childCfg('walk');
+    const box = $('walkSpots');
+    box.innerHTML = '';
+    c.spots.slice(0, 3).forEach((s) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'spot' + (walkSeen.has(s.id) ? ' seen' : '');
+      b.style.left = s.x + '%';
+      b.style.top = s.y + '%';
+      b.setAttribute('aria-label', s.label);
+      b.innerHTML = '<span class="ring"></span><span class="tag">' + s.label + '</span>';
+      b.onclick = () => tapSpot(s);
+      box.appendChild(b);
+    });
+  }
+
+  function initWalk() {
+    const c = childCfg('walk');
+    walkSeen = new Set();
+    $('walkCap').innerHTML = c.prompt + '<span class="sub">WEDNESDAY · THE WALK</span>';
+    $('walkSaid').hidden = true;
+    $('walkKeep').classList.add('hide');
+    drawSpots();
+    speak(c.prompt);
+  }
+
+  // every spot is worth a story; nothing to find wrong
+  function tapSpot(s) {
+    const c = childCfg('walk');
+    walkSeen.add(s.id);
+    track('spot_tap', 'walk', { spot: s.id, ms: since(stepT0) });
+    stepT0 = performance.now();
+    $('walkSaidText').textContent = s.line;
+    $('walkSaid').hidden = false;
+    speak(s.line, 'person', (pack.people && pack.people[0] && pack.people[0].name) || undefined);
+    drawSpots();
+    if (walkSeen.size >= 2) later(() => $('walkKeep').classList.remove('hide'), 1200);
+    if (walkSeen.size >= c.spots.slice(0, 3).length) {
+      $('walkCap').innerHTML = 'What a good walk.<span class="sub">WEDNESDAY · THE WALK</span>';
+    }
+  }
+
+  /* ---------- today: your day, the journal ---------- */
+  function initJournal() {
+    $('jrnCap').innerHTML = 'Your day<span class="sub">TODAY · ' + gameDay().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() + '</span>';
+    later(openDayLog, 450);
+  }
+
   function keepMemory(activity) {
     rereading = false;
     track('memory_kept', activity, { ms: since(roomT0) });
@@ -1331,6 +1673,7 @@
     if (!keptOrder.includes(activity)) keptOrder.push(activity);
     saveKept();
     paintHouseWindows();
+    if (placeOf[activity]) paintPlaceLights(placeOf[activity]);
     openMemory(activity);
   }
 
@@ -1356,6 +1699,8 @@
       b.onclick = () => {
         if (skips) track('skip', room, { ms: since(roomT0) });
         if (b.dataset.go === 'hub') leaveHouse();
+        else if (b.dataset.go === 'childhub') leavePlace('childhood');
+        else if (b.dataset.go === 'todayhub') leavePlace('today');
         else if (b.dataset.go === 'shelf' && !$('s-intro').classList.contains('on')) closeBook();
         else show(b.dataset.go);
       };
@@ -1396,8 +1741,14 @@
       toggleRead($('hearToday'), (done) => hearTodayLetter().then(done), () => {
         document.querySelectorAll('#todayLetter .ln').forEach((el) => el.classList.remove('say'));
       });
-    $('dayLogBtn').onclick = openDayLog;
-    $('dayClose').onclick = closeDayLog;
+    $('jrnOpen').onclick = openDayLog;
+    $('dayClose').onclick = () => {
+      closeDayLog();
+      if (current === 'journal') leavePlace('today');
+    };
+    $('toyKeep').onclick = () => keepMemory('toybox');
+    $('recKeep').onclick = () => keepMemory('recipe');
+    $('walkKeep').onclick = () => keepMemory('walk');
     DAY_CHIPS.forEach((t) => {
       const c = document.createElement('button');
       c.className = 'chip';
@@ -1520,11 +1871,12 @@
 
   function start(nextPack) {
     pack = nextPack || HomeAgainPack.activePack();
-    letter = (pack.letter || []).slice(0, 4);
-    while (letter.length < 4) {
+    letter = (pack.letter || []).slice(0, weekKeys.length);
+    while (letter.length < weekKeys.length) {
+      const i = letter.length;
       letter.push({
-        room: ['Sunday kitchen', 'Tuesday car', 'Garden', 'Photographs'][letter.length],
-        line: 'We love you.',
+        room: ['Sunday kitchen', 'Tuesday car', 'Garden', 'Photographs', 'Wednesday walk'][i],
+        line: i === 4 ? childDefaults.walk.line : 'We love you.',
         by: (pack.people && pack.people[0] && pack.people[0].name) || 'Family'
       });
     }
@@ -1538,6 +1890,10 @@
     viewing = null;
     hubInside = false;
     hub?.reset();
+    Object.keys(places).forEach((k) => {
+      placeInside[k] = false;
+      places[k]?.reset();
+    });
     clearAll();
     $('reveal').classList.remove('on');
     $('rest').classList.remove('on');
