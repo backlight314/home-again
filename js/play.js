@@ -915,9 +915,19 @@
     }, 12000);
   }
 
-  function atticPhotos() {
-    return (pack.rooms.attic && pack.rooms.attic.photos) || [];
+  // the day the game treats as today: the pack's asOf (YYYY-MM-DD), or the real date
+  function gameDay() {
+    return pack && /^\d{4}-\d{2}-\d{2}$/.test(pack.asOf || '') ? new Date(pack.asOf + 'T12:00') : new Date();
   }
+
+  // the room's photos, oldest first when they carry album dates (that is the right order)
+  function atticPhotos() {
+    const pics = ((pack.rooms.attic && pack.rooms.attic.photos) || []).slice(0, 3);
+    return pics.every((p) => p.date) ? pics.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)) : pics;
+  }
+  const dated = () => atticPhotos().every((p) => p.date);
+  const shortDate = (d) => new Date(d + 'T12:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  let atticDeal = []; // the order the photos lie in the box, shuffled so the box gives nothing away
 
   function drawAttic() {
     const pics = atticPhotos();
@@ -932,6 +942,7 @@
       if (atticSet[i]) {
         const pic = pics.find((p) => p.id === atticSet[i]) || pics[i];
         if (pic && pic.photoDataUrl) inner += `<img src="${pic.photoDataUrl}" alt="">`;
+        if (pic && pic.date) inner += `<span class="when">${shortDate(pic.date)}</span>`;
         else if (pic && pic.svgId)
           inner += `<svg viewBox="0 0 120 80"><use href="#${pic.svgId}"></use></svg>`;
       }
@@ -940,7 +951,7 @@
     }
     const box = $('box');
     box.innerHTML = '';
-    pics.slice(0, 3).forEach((p) => {
+    atticDeal.map((id) => pics.find((p) => p.id === id)).filter(Boolean).forEach((p) => {
       const b = document.createElement('button');
       b.className = 'pick' + (atticSet.includes(p.id) ? ' gone' : '');
       if (p.photoDataUrl) b.innerHTML = `<img src="${p.photoDataUrl}" alt="${p.label || ''}">`;
@@ -949,6 +960,16 @@
       b.setAttribute('aria-label', p.label || 'photo');
       b.onclick = () => {
         if (atticSet.length < 3 && !atticSet.includes(p.id)) {
+          // dated photos go back in the order they happened; a later one is set aside gently
+          if (dated() && p.id !== pics[atticSet.length].id) {
+            b.classList.remove('later');
+            void b.offsetWidth;
+            b.classList.add('later');
+            const say = 'That one came a little later.';
+            $('aCap').innerHTML = say + '<span class="sub">THIS WEEK · PHOTOGRAPHS</span>';
+            speak(say);
+            return;
+          }
           atticSet.push(p.id);
           if (atticSet.length === 3) track('photos_ordered', 'attic', { ms: since(roomT0) });
           drawAttic();
@@ -986,6 +1007,13 @@
 
   function initAttic() {
     atticSet = [];
+    atticDeal = atticPhotos().map((p) => p.id);
+    if (dated()) {
+      // shuffle until it is not already in order
+      for (let n = 0; n < 6 && atticDeal.every((id, i) => id === atticPhotos()[i].id); n++) {
+        atticDeal.sort(() => Math.random() - 0.5);
+      }
+    }
     fitAtticFrames();
     drawAttic();
     speak((pack.rooms.attic && pack.rooms.attic.prompt) || 'Which one came first?');
@@ -993,7 +1021,7 @@
 
   // Today, in the hall: the family's pictures hang a little crooked. Each tap sets one
   // straight, brings it into colour, and that person says hello. Any order, nothing to get wrong.
-  const tilts = [-9, 7, -5];
+  const tilts = [-9, 7, -5, 8];
 
   function todayFaces() {
     return kitchenFaces();
@@ -1021,7 +1049,7 @@
   }
 
   function setTodayCap(text) {
-    const day = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    const day = gameDay().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
     $('tCap').innerHTML = text + '<span class="sub">TODAY · ' + day + '</span>';
   }
 
@@ -1040,6 +1068,7 @@
   function drawFrames() {
     const box = $('tFrames');
     box.innerHTML = '';
+    box.classList.toggle('many', todayItems().length > 3);
     todayItems().forEach((it, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -1111,7 +1140,7 @@
   let dayStop = null;
   let dayLive = false;
   const localDay = () => {
-    const d = new Date();
+    const d = gameDay();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   };
 
@@ -1206,7 +1235,7 @@
   async function openDayLog() {
     hush();
     $('todaySheet').dataset.title =
-      'TODAY · ' + new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+      'TODAY · ' + gameDay().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
     $('tType').value = '';
     drawDayLog();
     $('dayLogOvl').classList.add('on');
