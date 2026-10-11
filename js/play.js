@@ -3,11 +3,12 @@
   const keys = ['kitchen', 'radio', 'porch', 'attic', 'today'];
   const weekKeys = keys.slice(0, 4); // the four rooms that hold this week's letter pieces
   const scenes = ['sc-table', 'sc-lake', 'sc-snow', 'sc-garden'];
+  // where the pictures sit on an album page: [left %, top %, turn in degrees, width %]
   const layout = {
-    1: [[33, 32, 0.8]],
-    2: [[8, 30, -2], [58, 30, 1.6]],
-    3: [[8, 10, -2], [58, 8, 1.6], [33, 52, 0.8]],
-    4: [[8, 9, -2], [58, 8, 1.6], [6, 50, 1.2], [56, 50, -1.6]]
+    1: [[20, 12, -1, 60]],
+    2: [[5, 20, -2, 43], [52, 24, 1.6, 43]],
+    3: [[8, 10, -2, 34], [58, 8, 1.6, 34], [33, 52, 0.8, 34]],
+    4: [[8, 9, -2, 34], [58, 8, 1.6, 34], [6, 50, 1.2, 34], [56, 50, -1.6, 34]]
   };
   const slipSpots = ['t1', 't4', 't2', 't5'];
 
@@ -16,6 +17,7 @@
   let memories = [];
   let chapters = [];
   let found = [false, false, false, false];
+  let keptOrder = []; // the rooms kept today, in the order they were kept (one album page each)
   let placing = []; // memories whose photos are still flying into their slots, in order
   let currentBook = 'week';
   let pendingPlace = null;
@@ -79,6 +81,8 @@
   const done = (c) => c.memories.filter((m) => m.activity && found[keys.indexOf(m.activity)]).length;
   const complete = (c) => c.memories.filter((m) => m.activity).length > 0 && done(c) === c.memories.filter((m) => m.activity).length;
   const memPrint = (m) => {
+    const many = (m.photos || []).length > 1;
+    if (many) return '<span class="collage" style="--n:' + m.photos.length + '">' + m.photos.map((u) => '<img src="' + u + '" alt="">').join('') + '</span>';
     if (m.photoDataUrl) return '<img src="' + m.photoDataUrl + '" alt="">';
     return '<svg viewBox="0 0 120 80"><use href="#' + (m.scene || 'sc-table') + '"></use></svg>';
   };
@@ -154,12 +158,15 @@
     memories = weekKeys.map((activity, i) => {
       const line = letter[i] || { room: activity, line: 'We love you.', by: 'Family' };
       const mem = (pack.memories && pack.memories[i]) || {};
+      // every picture from the room goes onto its page, with the letter piece's own photo
+      const photos = [...new Set([...roomPhotos(activity), mem.photoDataUrl].filter(Boolean))];
       return {
         id: activity,
         title: line.room || mem.title || activity,
         activity,
         scene: mem.svgId || scenes[i],
-        photoDataUrl: mem.photoDataUrl || null,
+        photoDataUrl: photos[0] || null,
+        photos,
         caption: mem.title || line.room,
         line: line.line,
         by: line.by
@@ -173,6 +180,13 @@
       { id: 'today', title: 'Today', color: '#6d5262', memories: todayMemories() }
     ];
     currentBook = 'week';
+  }
+
+  // the album photos a room shows while it is played (the table, the garden, the three in the attic)
+  function roomPhotos(activity) {
+    const r = (pack.rooms && pack.rooms[activity]) || {};
+    if (activity === 'attic') return atticPhotos().map((p) => p.photoDataUrl);
+    return [r.photoDataUrl];
   }
 
   function todayLetter() {
@@ -329,78 +343,143 @@
     }, 1000);
   }
 
+  // The album is a book of pages: each room kept today gets its own page, in the order
+  // it was kept, holding every picture from that room. The player flips between them.
+  const pageAt = {}; // the page each book is open at
+  let pageNow = []; // the pictures on the page being shown
+  let turning = false;
+
+  // the rooms a book has pages for, in the order they were kept
+  const bookPages = (book) => keptOrder.filter((a) => book.memories.some((m) => m.activity === a));
+
+  // one picture per photo: a week room's page shows all its photos; the Today page shows
+  // each of the hall's photos (each its own memory, so tapping one reads its caption)
+  function pageItems(book, activity) {
+    return book.memories
+      .filter((m) => m.activity === activity)
+      .flatMap((m) => ((m.photos || []).length ? m.photos : [m.photoDataUrl || null]).map((src) => ({ m, src })))
+      .map((it, i) => ({ ...it, key: 'p-' + activity + '-' + i }));
+  }
+  const itemPrint = (it) => (it.src ? '<img src="' + it.src + '" alt="">' : memPrint({ scene: it.m.scene }));
+
   function buildAlbum() {
     const book = chapter(currentBook);
     const sheet = $('sheetpg');
-    const n = book.memories.length;
-    const spots = layout[n] || layout[4];
+    const pages = bookPages(book);
+    const at = Math.max(0, Math.min(pageAt[book.id] || 0, pages.length - 1));
+    pageAt[book.id] = at;
     sheet.innerHTML = '';
-    sheet.dataset.title = book.title.toUpperCase();
-    book.memories.forEach((m, i) => {
-      const [l, t, rot] = spots[i] || spots[0];
-      const filled = m.activity && found[keys.indexOf(m.activity)] && !placing.includes(m.id);
+    pageNow = pages.length ? pageItems(book, pages[at]) : [];
+    const first = pageNow[0] && pageNow[0].m;
+    const roomName = first ? (book.memories.filter((m) => m.activity === pages[at]).length > 1 ? book.title : first.title) : '';
+    sheet.dataset.title = book.title.toUpperCase() + (roomName && roomName !== book.title ? ' · ' + roomName.toUpperCase() : '');
+    if (!pages.length) {
+      const empty = document.createElement('div');
+      empty.className = 'emptypg';
+      empty.textContent = 'Keep a memory from a room and its pictures start the first page.';
+      sheet.appendChild(empty);
+    }
+    const spots = layout[pageNow.length] || layout[4];
+    pageNow.forEach((it, i) => {
+      const [l, t, rot, w] = spots[i] || spots[0];
+      const filled = !placing.includes(it.key);
       const slot = document.createElement('div');
       slot.className = 'slot' + (filled ? ' filled' : '');
-      slot.id = 'slot-' + m.id;
-      slot.style.cssText = 'left:' + l + '%;top:' + t + '%;transform:rotate(' + rot + 'deg)';
+      slot.id = 'slot-' + it.key;
+      slot.style.cssText = 'left:' + l + '%;top:' + t + '%;width:' + (w || 34) + '%;transform:rotate(' + rot + 'deg)';
       slot.innerHTML =
         '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>' +
-        (m.scene || m.photoDataUrl
-          ? '<button class="print" aria-label="' +
-            (m.caption || m.title) +
-            '">' +
-            (filled ? memPrint(m) : '') +
-            '</button>'
-          : '');
-      const pr = slot.querySelector('.print');
-      if (pr)
-        pr.onclick = () => {
-          if (slot.classList.contains('filled')) {
-            rereading = true;
-            openMemory(m.id);
-          } else if (m.activity) show(m.activity);
-        };
+        '<button class="print" aria-label="' + (it.m.caption || it.m.title) + '">' + (filled ? itemPrint(it) : '') + '</button>';
+      slot.querySelector('.print').onclick = () => {
+        if (!slot.classList.contains('filled')) return;
+        rereading = true;
+        openMemory(it.m.id);
+      };
       sheet.appendChild(slot);
     });
+    // page turning: arrows, a count, and a swipe on the page
+    $('pgPrev').hidden = $('pgNext').hidden = pages.length < 2;
+    $('pgPrev').disabled = at === 0;
+    $('pgNext').disabled = at >= pages.length - 1;
+    $('pgCount').textContent = pages.length > 1 ? 'page ' + (at + 1) + ' of ' + pages.length : '';
     buildTags();
   }
 
+  function turnPage(to) {
+    const book = chapter(currentBook);
+    const pages = bookPages(book);
+    const from = pageAt[book.id] || 0;
+    if (turning || placing.length || to < 0 || to >= pages.length || to === from) return;
+    const sheet = $('sheetpg');
+    const fwd = to > from;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (calm) {
+      pageAt[book.id] = to;
+      buildAlbum();
+      return;
+    }
+    // the page lifts on its spine, the next one lies down in its place
+    turning = true;
+    const flat = 'perspective(2400px) rotateY(0deg) rotate(-.5deg)';
+    const edge = 'perspective(2400px) rotateY(' + (fwd ? -90 : 90) + 'deg) rotate(-.5deg)';
+    const back = 'perspective(2400px) rotateY(' + (fwd ? 90 : -90) + 'deg) rotate(-.5deg)';
+    sheet.style.transformOrigin = fwd ? 'left center' : 'right center';
+    sheet.animate([{ transform: flat }, { transform: edge }], { duration: 320, easing: 'ease-in' }).onfinish = () => {
+      pageAt[book.id] = to;
+      buildAlbum();
+      sheet.style.transformOrigin = fwd ? 'right center' : 'left center';
+      sheet.animate([{ transform: back }, { transform: flat }], { duration: 380, easing: 'ease-out' }).onfinish = () => {
+        sheet.style.transformOrigin = '';
+        turning = false;
+      };
+    };
+    speak('Page ' + (to + 1) + '.');
+  }
+
   // a slot whose photo just landed: filled in place, so nothing else on the page redraws
-  function fillSlot(m) {
-    const slot = $('slot-' + m.id);
+  function fillSlot(it) {
+    const slot = $('slot-' + it.key);
     const pr = slot && slot.querySelector('.print');
     if (!pr) return;
-    pr.innerHTML = memPrint(m);
+    pr.innerHTML = itemPrint(it);
     slot.classList.add('filled');
   }
 
+  // a tag for each room of the book: a kept room opens its page, the others go to the room
   function buildTags() {
     const book = chapter(currentBook);
     const tags = $('tags');
     tags.innerHTML = '';
-    book.memories.forEach((m, i) => {
+    const rooms = [...new Set(book.memories.filter((m) => m.activity).map((m) => m.activity))];
+    const pages = bookPages(book);
+    rooms.forEach((activity, i) => {
+      const mems = book.memories.filter((m) => m.activity === activity);
+      const title = mems.length > 1 ? book.title : mems[0].title;
+      const isDone = found[keys.indexOf(activity)] && !placing.some((k) => k.startsWith('p-' + activity + '-'));
       const b = document.createElement('button');
-      const playable = !!m.activity;
-      const isDone = playable && found[keys.indexOf(m.activity)] && !placing.includes(m.id);
-      b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (playable && !isDone ? ' open' : '') + (isDone ? ' done' : '');
-      b.innerHTML =
-        '<span>' + m.title + (playable && !isDone ? '<small>' + S.open + '</small>' : '') + '</span>';
+      b.className = 'slip-tag ' + (slipSpots[i] || 't1') + (isDone ? ' done' : ' open');
+      b.innerHTML = '<span>' + title + (isDone ? '' : '<small>' + S.open + '</small>') + '</span>';
       b.onclick = () => {
-        if (isDone) {
-          rereading = true;
-          openMemory(m.id);
-        } else if (playable) show(m.activity);
-        else toast(S.comingSoon);
+        if (isDone) turnPage(pages.indexOf(activity));
+        else show(activity);
       };
+      tags.appendChild(b);
+    });
+    // books that are not playable yet keep their quiet tags
+    book.memories.filter((m) => !m.activity).forEach((m, j) => {
+      const b = document.createElement('button');
+      b.className = 'slip-tag ' + (slipSpots[rooms.length + j] || 't1');
+      b.innerHTML = '<span>' + m.title + '</span>';
+      b.onclick = () => toast(S.comingSoon);
       tags.appendChild(b);
     });
   }
 
-  // A kept memory's photo fades in over the middle of the page, then glides and turns
-  // into its slot (transform only, so it stays smooth). Several from one room (Today's
-  // photos) follow each other a beat apart.
+  // A kept room's photos fade in over the middle of the page, then glide and turn into
+  // their slots (transform only, so it stays smooth), one after another.
   function placeMemories(ids) {
     let left = ids.length;
+    if (!left) return;
     ids.forEach((id, i) =>
       later(
         () =>
@@ -416,12 +495,12 @@
     );
   }
 
-  function placeMemory(id, done) {
-    const m = memory(id);
-    const slot = $('slot-' + id);
+  function placeMemory(key, done) {
+    const it = pageNow.find((x) => x.key === key);
+    const slot = $('slot-' + key);
     const sheet = $('sheetpg');
-    if (!m || !slot) {
-      placing = placing.filter((x) => x !== id);
+    if (!it || !slot) {
+      placing = placing.filter((x) => x !== key);
       done();
       return;
     }
@@ -431,7 +510,8 @@
     fly.className = 'flyer';
     fly.style.left = slot.style.left;
     fly.style.top = slot.style.top;
-    fly.innerHTML = '<div class="print">' + memPrint(m) + '</div>';
+    fly.style.width = slot.style.width;
+    fly.innerHTML = '<div class="print">' + itemPrint(it) + '</div>';
     sheet.appendChild(fly);
     const scr = $('screen').getBoundingClientRect();
     const pg = sheet.getBoundingClientRect();
@@ -454,8 +534,8 @@
         { duration: calm ? 0 : 1500, fill: 'forwards' }
       );
       glide.onfinish = () => {
-        placing = placing.filter((x) => x !== id);
-        fillSlot(m); // the slot's print fades in under the flyer...
+        placing = placing.filter((x) => x !== key);
+        fillSlot(it); // the slot's print fades in under the flyer...
         buildTags();
         fly.animate([{ opacity: 1 }, { opacity: 0 }], { duration: calm ? 0 : 450, delay: calm ? 0 : 250, fill: 'forwards' }).onfinish = () => {
           fly.remove(); // ...then the flyer fades away on top of it
@@ -668,10 +748,14 @@
           albumBack.textContent = 'BACK TO THE HOUSE';
         }
       }
-      // the kept memory, then any other pages from the same room
+      // a room just kept: open at its page and fly all its pictures in
       const kept = pendingPlace && memory(pendingPlace);
       const book = chapter(currentBook);
-      placing = kept ? [kept.id, ...book.memories.filter((m) => m.activity === kept.activity && m.id !== kept.id).map((m) => m.id)] : [];
+      placing = [];
+      if (kept) {
+        pageAt[book.id] = bookPages(book).indexOf(kept.activity);
+        placing = pageItems(book, kept.activity).map((it) => it.key);
+      }
       buildAlbum();
       if (pendingPlace) {
         pendingPlace = null;
@@ -1244,6 +1328,8 @@
     rereading = false;
     track('memory_kept', activity, { ms: since(roomT0) });
     found[keys.indexOf(activity)] = true; // counted now, so leaving mid-animation loses nothing
+    if (!keptOrder.includes(activity)) keptOrder.push(activity);
+    saveKept();
     paintHouseWindows();
     openMemory(activity);
   }
@@ -1251,6 +1337,18 @@
   function wireOnce() {
     if (started) return;
     started = true;
+
+    // flip the album: the arrows, or a swipe across the page
+    $('pgPrev').onclick = () => turnPage((pageAt[currentBook] || 0) - 1);
+    $('pgNext').onclick = () => turnPage((pageAt[currentBook] || 0) + 1);
+    let swipeX = null;
+    $('sheetpg').addEventListener('pointerdown', (e) => (swipeX = e.clientX));
+    $('sheetpg').addEventListener('pointerup', (e) => {
+      if (swipeX === null) return;
+      const dx = e.clientX - swipeX;
+      swipeX = null;
+      if (Math.abs(dx) > 60) turnPage((pageAt[currentBook] || 0) + (dx < 0 ? 1 : -1));
+    });
 
     document.querySelectorAll('#view-play [data-go]').forEach((b) => {
       const room = (b.closest('.scr') || {}).id?.slice(2);
@@ -1383,6 +1481,43 @@
     controls.appendChild(rb);
   }
 
+  // What is in the photobook stays there for the rest of the day, on this device; at
+  // midnight (the tablet's clock) the book starts empty again.
+  const KEPT_KEY = 'homeAgain.kept';
+  const clockDay = () => {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+  function loadKept() {
+    try {
+      const k = JSON.parse(localStorage.getItem(KEPT_KEY) || 'null');
+      if (k && k.day === clockDay() && Array.isArray(k.rooms)) return k.rooms.filter((r) => keys.includes(r));
+    } catch (_) {}
+    return [];
+  }
+  function saveKept() {
+    try {
+      localStorage.setItem(KEPT_KEY, JSON.stringify({ day: clockDay(), rooms: keptOrder }));
+    } catch (_) {}
+  }
+  let midnight = null;
+  function resetAtMidnight() {
+    clearTimeout(midnight);
+    const next = new Date();
+    next.setHours(24, 0, 1, 0);
+    midnight = setTimeout(() => {
+      keptOrder = [];
+      found = keys.map(() => false);
+      try { localStorage.removeItem(KEPT_KEY); } catch (_) {}
+      paintHouseWindows();
+      const on = (document.querySelector('#screen .scr.on') || {}).id;
+      if (on === 's-hub') buildRooms();
+      if (on === 's-shelf') buildShelf();
+      if (on === 's-album') buildAlbum();
+      resetAtMidnight();
+    }, next - Date.now());
+  }
+
   function start(nextPack) {
     pack = nextPack || HomeAgainPack.activePack();
     letter = (pack.letter || []).slice(0, 4);
@@ -1393,7 +1528,9 @@
         by: (pack.people && pack.people[0] && pack.people[0].name) || 'Family'
       });
     }
-    found = keys.map(() => false);
+    keptOrder = loadKept();
+    found = keys.map((k) => keptOrder.includes(k));
+    resetAtMidnight();
     session = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     track('session_start', 'intro');
     rereading = false;

@@ -26,6 +26,20 @@
 .slot .print { width: 100%; height: 100%; opacity: 0; transition: opacity var(--motion); cursor: pointer; }
 .slot.filled .print { opacity: 1; }
 
+/* turning the album's pages */
+.pgturn { position: absolute; top: 26cqw; z-index: 6; width: 5.4cqw; height: 5.4cqw; min-width: 56px; min-height: 56px; border-radius: 50%;
+  border: 0; background: #f3ead8; color: #2b241f; font-weight: 700; font-size: clamp(34px, 3.6cqw, 48px); line-height: 1;
+  box-shadow: 0 .6cqw 1.6cqw rgba(15,8,12,.45); cursor: pointer; display: grid; place-items: center; padding-bottom: .3cqw; }
+.pgturn.prev { left: 19.5cqw; }
+.pgturn.next { right: 19.5cqw; }
+.pgturn:disabled { opacity: .35; cursor: default; }
+.pgturn[hidden] { display: none; }
+.pgcount { position: absolute; left: 0; right: 0; bottom: 2.2cqw; z-index: 6; text-align: center; pointer-events: none;
+  font-family: var(--hand); font-size: clamp(22px, 2.2cqw, 30px); color: #5a4a3a; }
+.album-pg .sheetpg { touch-action: pan-y; }
+.emptypg { position: absolute; left: 12%; right: 12%; top: 38%; text-align: center; font-family: var(--hand); font-size: clamp(24px, 2.6cqw, 34px);
+  color: var(--ink-soft); line-height: 1.3; }
+
 #tags {
   position: absolute;
   inset: 0;
@@ -73,6 +87,10 @@
 .flyer { position: absolute; z-index: 8; width: 34%; pointer-events: none; transform-origin: 50% 50%; will-change: transform, opacity; opacity: 0; }
 .flyer .print { width: 100%; }
 .flyer .print img { aspect-ratio: 3 / 2; object-fit: cover; object-position: center 15%; }
+/* a page holding all of a room's photos: they sit side by side, each cropped to fit */
+.collage { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4%; aspect-ratio: 3 / 2; }
+.slot .print .collage img, .flyer .print .collage img, .memcard .sepia .collage img, .print .collage img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; object-position: center 25%; }
+.memcard .sepia .collage { aspect-ratio: 1; }
 
 /* the shelf: five albums lying on the desk */
 .shelf-pg .shelfcap { left: 0; right: 0; top: 6cqw; max-width: none; text-align: center; color: var(--slip); }
